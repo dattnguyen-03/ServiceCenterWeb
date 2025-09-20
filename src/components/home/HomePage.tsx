@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Button, Col, Row, Typography, Dropdown, Space, Card, Statistic, Tag, Avatar } from 'antd';
+import { Button, Col, Row, Typography, Dropdown, Space, Card, Statistic, Tag, Avatar, Modal } from 'antd';
 import { 
   DownOutlined, 
   GlobalOutlined, 
@@ -227,12 +227,16 @@ const FeatureSectionCard = ({ icon, title, description }: { icon: React.ReactNod
   </div>
 );
 
-const PublicHomePage = () => (
-  <>
-    {/* Header/Navbar only for HomePage */}
-    <header className="border-b sticky top-0 bg-white/80 backdrop-blur-lg z-50">
-      <div className="container mx-auto px-6 py-3 flex justify-between items-center">
-        <div className="flex items-center">
+const PublicHomePage = () => {
+  const navigate = useNavigate();
+  const [demoVisible, setDemoVisible] = useState(false);
+
+  return (
+    <>
+      {/* Header/Navbar only for HomePage */}
+      <header className="border-b sticky top-0 bg-white/80 backdrop-blur-lg z-50">
+        <div className="container mx-auto px-6 py-3 flex justify-between items-center">
+          <div className="flex items-center">
            <div className="bg-blue-600 text-white p-2 rounded-lg mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0v-4a2 2 0 012-2h10a2 2 0 012 2v4m-6 0v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2" />
@@ -291,26 +295,35 @@ const PublicHomePage = () => (
 
     {/* Hero Section + Slider */}
     <main className="bg-gradient-to-br from-blue-100 via-white to-blue-50">
-      <div className="container mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div className="text-center md:text-left flex flex-col justify-center">
-          <Tag color="blue" className="mb-4 text-base font-semibold px-4 py-2">PHẦN MỀM GARA #1 VIỆT NAM</Tag>
+      <div className="container mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        <div className="text-center lg:text-left flex flex-col justify-center lg:col-span-5">
           <Title level={1} className="!text-4xl md:!text-6xl font-extrabold !mb-4 text-gray-900 leading-tight">
-            Vận Hành Garage <span className="text-blue-600">Chuyên Nghiệp</span> Hơn
+            Kết Nối Garage và <span className="text-blue-600">Chủ Xe</span>
           </Title>
           <Paragraph className="max-w-xl text-lg text-gray-600 mb-6">
-            GarageBox là giải pháp tất cả trong một giúp bạn quản lý lịch hẹn, theo dõi công việc, kiểm soát kho và chăm sóc khách hàng. Tăng hiệu suất, tối đa doanh thu.
+            GarageBox là giải pháp toàn diện, giúp chủ xe dễ dàng đặt lịch và theo dõi bảo dưỡng, đồng thời hỗ trợ các garage vận hành chuyên nghiệp và hiệu quả hơn.
           </Paragraph>
           <div className="mt-2 flex flex-col md:flex-row gap-4 justify-center md:justify-start">
-            <Button type="primary" size="large" className="!bg-blue-600 hover:!bg-blue-700 !h-12 !px-8 !text-base !font-semibold shadow-lg">
+            <Button
+              type="primary"
+              size="large"
+              className="!bg-blue-600 hover:!bg-blue-700 !h-12 !px-8 !text-base !font-semibold shadow-lg"
+              onClick={() => navigate('/login')}
+            >
               Bắt đầu miễn phí
             </Button>
-            <Button size="large" icon={<PlayCircleOutlined />} className="!h-12 !px-8 !text-base !font-semibold border-blue-600 text-blue-600 shadow">
+            <Button
+              size="large"
+              icon={<PlayCircleOutlined />}
+              className="!h-12 !px-8 !text-base !font-semibold border-blue-600 text-blue-600 shadow"
+              onClick={() => setDemoVisible(true)}
+            >
               Xem Demo
             </Button>
           </div>
         </div>
-        <div className="flex justify-center md:justify-end">
-          <div className="w-full max-w-md">
+        <div className="lg:col-span-7 flex justify-center">
+          <div className="w-full">
             <Slider
               dots
               infinite
@@ -322,105 +335,139 @@ const PublicHomePage = () => (
               className="rounded-3xl shadow-2xl border-4 border-blue-200"
             >
               <div>
-                <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop" alt="Garage Hero" className="rounded-3xl w-full h-72 object-cover" />
+                <img src="https://vinfast.otohungyen.com/wp-content/uploads/2021/04/Rectangle5850-1.png" alt="Garage Hero" className="rounded-3xl w-full h-96 object-cover" />
               </div>
               <div>
-                <img src="https://vinfast-vn.vn/wp-content/uploads/2023/10/vinfast-vf9-1.png" alt="Garage Team" className="rounded-3xl w-full h-72 object-cover" />
+                <img src="https://cmu-cdn.vinfast.vn/2022/10/1945d3c5-sua_chua_dong_son_vinfast_2.png" alt="Garage Team" className="rounded-3xl w-full h-96 object-cover" />
               </div>
               <div>
-                <img src="https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?q=80&w=2070&auto=format&fit=crop" alt="Garage Service" className="rounded-3xl w-full h-72 object-cover" />
+                <img src="https://cdn.dailyxe.com.vn/image/dai-ly-vinfast-mien-bac-1-332991j.jpg" alt="Garage Service" className="rounded-3xl w-full h-96 object-cover" />
               </div>
               <div>
-                <img src="https://tapdoanxedien.com/upimages/articles/vespa/xe-dien-vespa-espero-classic-pro-mau-xanh-da.jpg" alt="Garage Customer" className="rounded-3xl w-full h-72 object-cover" />
+                <img src="https://cdn2.tuoitre.vn/thumb_w/480/471584752817336320/2024/10/26/vinfast-mo-rong-mang-luoi-xuong-dich-vu-17299051277801226705121.jpg" alt="Garage Customer" className="rounded-3xl w-full h-96 object-cover" />
               </div>
             </Slider>
           </div>
         </div>
       </div>
     </main>
-    {/* Info Section */}
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
-        <div className="flex flex-col items-center text-center">
-          <Avatar size={96} src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
-          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Nguyễn Văn Nam</h3>
-          <p className="text-gray-600">Khách hàng thân thiết, chủ gara VinFast</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <Avatar size={96} src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
-          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Trần Minh Staff</h3>
-          <p className="text-gray-600">Kỹ thuật viên GarageBox, 5 năm kinh nghiệm</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <Avatar size={96} src="https://images.pexels.com/photos/1674752/pexels-photo-1674752.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
-          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Admin Hệ Thống</h3>
-          <p className="text-gray-600">Quản lý hệ thống, hỗ trợ khách hàng 24/7</p>
-        </div>
-      </div>
-    </section>
-
     {/* Features Section */}
     <section className="py-20 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-14">
           <Title level={2} className="!text-3xl md:!text-4xl font-bold text-gray-900 mb-2">Tại sao chọn GarageBox?</Title>
           <Paragraph className="max-w-2xl mx-auto text-gray-600 text-lg">
-            Bộ công cụ mạnh mẽ dành riêng cho các garage hiện đại.
+            Những lợi ích vượt trội cho cả chủ xe và đối tác garage.
           </Paragraph>
         </div>
         <Row gutter={[32, 32]} justify="center">
-          <Col xs={24} md={8}><FeatureSectionCard icon={<ScheduleOutlined />} title="Quản lý công việc thông minh" description="Tạo/giao phiếu sửa chữa, theo dõi tiến độ thời gian thực, thông báo tự động cho khách hàng." /></Col>
-          <Col xs={24} md={8}><FeatureSectionCard icon={<InboxOutlined />} title="Kiểm soát tồn kho hiệu quả" description="Quản lý phụ tùng, tự động cập nhật số lượng, cảnh báo khi sắp hết hàng." /></Col>
-          <Col xs={24} md={8}><FeatureSectionCard icon={<DollarCircleOutlined />} title="Thanh toán & Báo cáo" description="Tạo báo giá, hóa đơn chuyên nghiệp, theo dõi chỉ số tài chính quan trọng." /></Col>
+          <Col xs={24} md={8}><FeatureSectionCard icon={<CarOutlined />} title="Dành cho Chủ xe" description="Dễ dàng tìm kiếm garage uy tín, đặt lịch hẹn online, theo dõi lịch sử bảo dưỡng và nhận thông báo nhắc nhở." /></Col>
+          <Col xs={24} md={8}><FeatureSectionCard icon={<ToolOutlined />} title="Dành cho Garage" description="Quản lý lịch hẹn, phiếu sửa chữa, tồn kho phụ tùng và chăm sóc khách hàng trên một nền tảng duy nhất." /></Col>
+          <Col xs={24} md={8}><FeatureSectionCard icon={<ScheduleOutlined />} title="Quy trình minh bạch" description="Cập nhật tiến độ sửa chữa theo thời gian thực, báo giá rõ ràng và thanh toán tiện lợi cho cả hai bên." /></Col>
         </Row>
       </div>
     </section>
 
-    {/* Workflow Section */}
+    {/* Workflow Section - làm đẹp lại */}
     <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-blue-100">
       <div className="container mx-auto px-6">
         <div className="text-center mb-14">
           <Title level={2} className="!text-3xl md:!text-4xl font-bold text-gray-900 mb-2">Quy trình làm việc đơn giản</Title>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">1</div>
-            <h3 className="text-lg font-semibold mb-2">Tiếp nhận & Đặt lịch</h3>
-            <p className="text-gray-600 text-center">Ghi nhận thông tin khách hàng và xe, tạo lịch hẹn nhanh qua giao diện trực quan.</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">2</div>
-            <h3 className="text-lg font-semibold mb-2">Lập phiếu & Sửa chữa</h3>
-            <p className="text-gray-600 text-center">Tạo phiếu sửa chữa, chỉ định kỹ thuật viên, cập nhật tiến độ công việc.</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">3</div>
-            <h3 className="text-lg font-semibold mb-2">Thanh toán & Bàn giao</h3>
-            <p className="text-gray-600 text-center">In hóa đơn, ghi nhận thanh toán, bàn giao xe cho khách hàng.</p>
-          </div>
-        </div>
+        <Row gutter={[32, 32]} justify="center" align="middle">
+          <Col xs={24} md={8}>
+            <div className="flex flex-col items-center bg-white rounded-2xl shadow-lg p-8 h-full border border-blue-100 hover:shadow-2xl transition">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">1</div>
+              <h3 className="text-lg font-semibold mb-2">Tiếp nhận & Đặt lịch</h3>
+              <p className="text-gray-600 text-center">Ghi nhận thông tin khách hàng và xe, tạo lịch hẹn nhanh qua giao diện trực quan.</p>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <div className="flex flex-col items-center bg-white rounded-2xl shadow-lg p-8 h-full border border-blue-100 hover:shadow-2xl transition">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">2</div>
+              <h3 className="text-lg font-semibold mb-2">Lập phiếu & Sửa chữa</h3>
+              <p className="text-gray-600 text-center">Tạo phiếu sửa chữa, chỉ định kỹ thuật viên, cập nhật tiến độ công việc.</p>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <div className="flex flex-col items-center bg-white rounded-2xl shadow-lg p-8 h-full border border-blue-100 hover:shadow-2xl transition">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-blue-300">3</div>
+              <h3 className="text-lg font-semibold mb-2">Thanh toán & Bàn giao</h3>
+              <p className="text-gray-600 text-center">In hóa đơn, ghi nhận thanh toán, bàn giao xe cho khách hàng.</p>
+            </div>
+          </Col>
+        </Row>
         <div className="mt-12 flex justify-center">
-          <img src="https://images.unsplash.com/photo-1579632652768-6cb96cf43965?q=80&w=1935&auto=format&fit=crop" alt="Workflow" className="rounded-2xl shadow-xl w-full max-w-2xl border-4 border-blue-200" />
+          <img
+            src="https://images2.thanhnien.vn/528068263637045248/2023/9/11/edit-sua-oto-dien-3-169439663847451556909.png"
+            alt="Workflow"
+            className="rounded-3xl shadow-2xl w-full max-w-5xl border-4 border-blue-200 object-cover transition-transform duration-500 hover:scale-105 hover:shadow-3xl"
+            style={{ aspectRatio: '16/7', objectFit: 'cover' }}
+          />
         </div>
       </div>
     </section>
-
-    {/* CTA Section */}
-    <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-      <div className="container mx-auto px-6 py-20 text-center">
-        <Title level={2} className="!text-3xl md:!text-4xl font-bold !text-white mb-4">Sẵn sàng phát triển garage của bạn?</Title>
-        <Paragraph className="max-w-2xl mx-auto text-blue-100 text-lg mt-4 mb-8">
-          Tham gia cùng hàng ngàn garage khác đã tin dùng GarageBox để hiện đại hóa hoạt động kinh doanh.
-        </Paragraph>
-        <Button type="primary" size="large" className="!bg-white !text-blue-600 hover:!bg-gray-100 !h-12 !px-8 !text-base !font-semibold shadow-xl">
-          Dùng thử miễn phí ngay
-        </Button>
+    {/* Info Section */}
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+        <div className="flex flex-col items-center text-center">
+          <Avatar size={96} src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
+          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Nguyễn Văn Nam</h3>
+          <p className="text-gray-600">Chủ xe VinFast, khách hàng của GarageBox</p>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Avatar size={96} src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
+          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Trần Minh Hùng</h3>
+          <p className="text-gray-600">Chủ Gara H-Auto, đối tác của GarageBox</p>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Avatar size={96} src="https://images.pexels.com/photos/1674752/pexels-photo-1674752.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" />
+          <h3 className="text-xl font-bold text-gray-900 mt-4 mb-2">Lê Thị An</h3>
+          <p className="text-gray-600">Quản lý hệ thống, hỗ trợ khách hàng 24/7</p>
+        </div>
       </div>
     </section>
-  </>
-  
-);
-
+    {/* Modal Video Demo */}
+    <Modal
+      open={demoVisible}
+      onCancel={() => setDemoVisible(false)}
+      footer={null}
+      centered
+      width={800}
+      bodyStyle={{
+        padding: 0,
+        background: "transparent",
+      }}
+      style={{
+        background: "transparent",
+      }}
+      styles={{
+        content: {
+          background: 'transparent',
+          boxShadow: 'none',
+          padding: 0,
+        }
+      }}
+      destroyOnClose
+      maskStyle={{ background: "rgba(0,0,0,0.7)" }}
+      closable={false}
+    >
+      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+        {demoVisible && (
+          <video
+            src="/asset/videodemo.mp4"
+            controls
+            autoPlay
+            className="absolute top-0 left-0 w-full h-full object-cover rounded-lg"
+          >
+            Trình duyệt của bạn không hỗtrợ video.
+          </video>
+        )}
+      </div>
+    </Modal>
+    </>
+  );
+};
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();

@@ -97,7 +97,9 @@ const LoginForm: React.FC = () => {
           <div className="flex flex-col items-center z-10">
             <Car className="w-12 h-12 mb-4 text-white drop-shadow-2xl" />
             <h1 className="text-3xl font-extrabold mb-2 text-white drop-shadow-xl tracking-tight" style={{ fontFamily: "Montserrat, sans-serif" }}>
+              <Link to="/">
               EV Service Manager
+              </Link>
             </h1>
             <p className="text-base font-medium mb-2 text-white/90 text-center drop-shadow">
               Hệ thống quản lý dịch vụ xe điện<br />Chào mừng bạn quay lại!
