@@ -2,6 +2,8 @@ import AppFooter from './components/common/Footer';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
+import { LoadingProvider } from './contexts/LoadingContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import RedirectIfLoggedIn from './components/auth/RedirectIfLoggedIn';
 
 // Layouts
@@ -40,7 +42,7 @@ import PartsUsage from './components/technician/PartsUsage';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 
 const AppContent: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -189,14 +191,18 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children, role }) => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <AppContent />
-          <AppFooter />
-        </div>
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <LoadingProvider>
+          <Router>
+            <div className="flex flex-col min-h-screen">
+              <AppContent />
+              <AppFooter />
+            </div>
+          </Router>
+        </LoadingProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 

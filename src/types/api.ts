@@ -1,0 +1,478 @@
+// Base API Response Types
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  errors?: Record<string, string[]>;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Auth Types
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phone: string;
+  address?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+// User Types
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address?: string;
+  role: 'admin' | 'staff' | 'technician' | 'customer';
+  status: 'active' | 'inactive' | 'suspended';
+  createdAt: string;
+  updatedAt: string;
+  profileImage?: string;
+}
+
+// Customer Types
+export interface Customer extends User {
+  vehicles: Vehicle[];
+  appointments: Appointment[];
+  serviceHistory: ServiceRecord[];
+}
+
+export interface Vehicle {
+  id: string;
+  customerId: string;
+  make: string;
+  model: string;
+  year: number;
+  licensePlate: string;
+  color: string;
+  mileage: number;
+  vin?: string;
+  engineType: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Appointment Types
+export interface Appointment {
+  id: string;
+  customerId: string;
+  vehicleId: string;
+  serviceType: string;
+  scheduledDate: string;
+  timeSlot: string;
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  notes?: string;
+  assignedTechnician?: string;
+  estimatedDuration: number;
+  estimatedCost: number;
+  createdAt: string;
+  updatedAt: string;
+  customer?: Customer;
+  vehicle?: Vehicle;
+  technician?: User;
+}
+
+export interface CreateAppointmentRequest {
+  vehicleId: string;
+  serviceType: string;
+  scheduledDate: string;
+  timeSlot: string;
+  notes?: string;
+}
+
+// Service Types
+export interface ServiceRecord {
+  id: string;
+  appointmentId: string;
+  customerId: string;
+  vehicleId: string;
+  serviceType: string;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  startDate: string;
+  completedDate?: string;
+  totalCost: number;
+  parts: PartUsage[];
+  laborCost: number;
+  notes?: string;
+  assignedTechnician: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkOrder {
+  id: string;
+  serviceRecordId: string;
+  technicianId: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'assigned' | 'in-progress' | 'completed' | 'on-hold';
+  estimatedHours: number;
+  actualHours?: number;
+  startTime?: string;
+  endTime?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Parts Types
+export interface Part {
+  id: string;
+  name: string;
+  partNumber: string;
+  category: string;
+  supplier: string;
+  unitPrice: number;
+  stockQuantity: number;
+  minStockLevel: number;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PartUsage {
+  id: string;
+  serviceRecordId: string;
+  partId: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  part?: Part;
+}
+
+// Staff Types
+export interface Staff extends User {
+  employeeId: string;
+  department: string;
+  position: string;
+  hireDate: string;
+  salary?: number;
+  permissions: string[];
+}
+
+// Dashboard Types
+export interface DashboardStats {
+  totalCustomers: number;
+  totalAppointments: number;
+  todayAppointments: number;
+  completedServices: number;
+  revenue: number;
+  pendingServices: number;
+}
+
+// Payment Types
+export interface Payment {
+  id: string;
+  serviceRecordId: string;
+  customerId: string;
+  amount: number;
+  paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'online';
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  transactionId?: string;
+  paymentDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePaymentRequest {
+  serviceRecordId: string;
+  amount: number;
+  paymentMethod: Payment['paymentMethod'];
+  notes?: string;
+}
+
+// Filter Types
+export interface AppointmentFilters extends PaginationParams {
+  status?: Appointment['status'];
+  serviceType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  customerId?: string;
+  technicianId?: string;
+}
+
+export interface CustomerFilters extends PaginationParams {
+  search?: string;
+  status?: User['status'];
+}
+
+export interface ServiceFilters extends PaginationParams {
+  status?: ServiceRecord['status'];
+  dateFrom?: string;
+  dateTo?: string;
+  customerId?: string;
+  technicianId?: string;
+}
+
+// Report Types
+export interface RevenueReport {
+  period: string;
+  totalRevenue: number;
+  serviceRevenue: number;
+  partsRevenue: number;
+  appointments: number;
+  completedServices: number;
+}
+
+export interface ServiceReport {
+  serviceType: string;
+  count: number;
+  revenue: number;
+  averageTime: number;
+}
+
+// Error Types
+export interface ApiError {
+  message: string;
+  code?: string;
+  details?: any;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+// Order Types
+export interface Order {
+  id: string;
+  customerId: string;
+  vehicleId: string;
+  serviceType: string;
+  description: string;
+  status: OrderStatus;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assignedTechnician?: string;
+  estimatedCost: number;
+  actualCost?: number;
+  estimatedCompletionDate: string;
+  actualCompletionDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  customer?: Customer;
+  vehicle?: Vehicle;
+  technician?: User;
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'on-hold';
+
+export interface UpdateOrderStatusRequest {
+  status: OrderStatus;
+  notes?: string;
+  estimatedCompletionDate?: string;
+}
+
+// Enhanced Appointment Types
+export type AppointmentStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+
+export interface UpdateAppointmentStatusRequest {
+  status: AppointmentStatus;
+  notes?: string;
+  assignedTechnician?: string;
+}
+
+// Work Report Types
+export interface WorkReport {
+  id: string;
+  technicianId: string;
+  orderId?: string;
+  appointmentId?: string;
+  title: string;
+  description: string;
+  workDate: string;
+  hoursWorked: number;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  technician?: User;
+  order?: Order;
+  appointment?: Appointment;
+}
+
+export interface CreateWorkReportRequest {
+  orderId?: string;
+  appointmentId?: string;
+  title: string;
+  description: string;
+  workDate: string;
+  hoursWorked: number;
+  notes?: string;
+}
+
+// Service Request Types
+export interface ServiceRequest {
+  id: string;
+  customerId: string;
+  vehicleId: string;
+  requestType: 'maintenance' | 'repair' | 'inspection' | 'emergency';
+  title: string;
+  description: string;
+  status: ServiceRequestStatus;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assignedTechnician?: string;
+  estimatedCost?: number;
+  requestedDate: string;
+  scheduledDate?: string;
+  completedDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  customer?: Customer;
+  vehicle?: Vehicle;
+  technician?: User;
+}
+
+export type ServiceRequestStatus = 'pending' | 'assigned' | 'in-progress' | 'completed' | 'cancelled' | 'on-hold';
+
+export interface UpdateServiceRequestRequest {
+  status?: ServiceRequestStatus;
+  assignedTechnician?: string;
+  scheduledDate?: string;
+  estimatedCost?: number;
+  notes?: string;
+}
+
+// Enhanced Dashboard Stats
+export interface StaffDashboardStats extends DashboardStats {
+  assignedOrders: number;
+  pendingAppointments: number;
+  completedToday: number;
+  averageServiceTime: number;
+}
+
+export interface TechnicianDashboardStats extends DashboardStats {
+  assignedTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  averageTaskTime: number;
+  currentWorkload: number;
+}
+
+// Technician Task Types
+export interface TechnicianTask {
+  id: string;
+  technicianId: string;
+  orderId?: string;
+  appointmentId?: string;
+  serviceRequestId?: string;
+  title: string;
+  description: string;
+  taskType: 'diagnostic' | 'repair' | 'maintenance' | 'inspection' | 'test';
+  status: 'assigned' | 'in-progress' | 'completed' | 'on-hold' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  estimatedHours: number;
+  actualHours?: number;
+  startTime?: string;
+  endTime?: string;
+  requiredParts?: string[];
+  tools?: string[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  order?: Order;
+  appointment?: Appointment;
+  serviceRequest?: ServiceRequest;
+}
+
+export interface CreateTechnicianTaskRequest {
+  orderId?: string;
+  appointmentId?: string;
+  serviceRequestId?: string;
+  title: string;
+  description: string;
+  taskType: TechnicianTask['taskType'];
+  priority: TechnicianTask['priority'];
+  estimatedHours: number;
+  requiredParts?: string[];
+  tools?: string[];
+  notes?: string;
+}
+
+export interface UpdateTechnicianTaskRequest {
+  status?: TechnicianTask['status'];
+  actualHours?: number;
+  startTime?: string;
+  endTime?: string;
+  notes?: string;
+  progressNotes?: string;
+}
+
+// Parts Request Types
+export interface PartRequest {
+  id: string;
+  technicianId: string;
+  taskId?: string;
+  orderId?: string;
+  partId: string;
+  quantity: number;
+  urgency: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'approved' | 'fulfilled' | 'cancelled';
+  reason: string;
+  notes?: string;
+  requestedDate: string;
+  approvedDate?: string;
+  fulfilledDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  technician?: User;
+  part?: Part;
+  task?: TechnicianTask;
+}
+
+export interface CreatePartRequestRequest {
+  taskId?: string;
+  orderId?: string;
+  partId: string;
+  quantity: number;
+  urgency: PartRequest['urgency'];
+  reason: string;
+  notes?: string;
+}
