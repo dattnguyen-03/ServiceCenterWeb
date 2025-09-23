@@ -72,22 +72,22 @@ const CustomerDashboard: React.FC = () => {
       title: 'Đặt lịch hẹn', 
       icon: <CalendarOutlined />, 
       color: 'blue', 
-      link: '/booking',
+      link: '/customer/booking',
       description: 'Đặt lịch bảo dưỡng xe'
     },
     { 
-      title: 'Thêm xe mới', 
+      title: 'Đặt lịch dịch vụ', 
       icon: <CarOutlined />, 
       color: 'green', 
       link: '/vehicles/add',
-      description: 'Đăng ký xe điện mới'
+      description: 'Đặt lịch dịch vụ mói'
     },
     { 
-      title: 'Trạm sạc', 
+      title: 'Quản lý hồ sơ và chi phí', 
       icon: <ThunderboltOutlined />, 
       color: 'orange', 
       link: '/charging-stations',
-      description: 'Tìm trạm sạc gần nhất'
+      description: 'Quản lý hồ sơ và chi phí'
     },
     { 
       title: 'Hỗ trợ', 
