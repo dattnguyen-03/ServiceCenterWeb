@@ -73,20 +73,20 @@ const CustomerDashboard: React.FC = () => {
       icon: <CalendarOutlined />, 
       color: 'blue', 
       link: '/customer/booking',
-      description: 'Đặt lịch bảo dưỡng xe'
+      description: 'Đặt lịch bảo dưỡng xe và dịch vụ mới'
     },
     { 
-      title: 'Đặt lịch dịch vụ', 
+      title: 'Xe của tôi', 
       icon: <CarOutlined />, 
       color: 'green', 
-      link: '/vehicles/add',
-      description: 'Đặt lịch dịch vụ mói'
+      link: '/customer/vehicles',
+      description: 'Quản lý xe của bạn'
     },
     { 
       title: 'Quản lý hồ sơ và chi phí', 
       icon: <ThunderboltOutlined />, 
       color: 'orange', 
-      link: '/charging-stations',
+      link: '/customer/profile',
       description: 'Quản lý hồ sơ và chi phí'
     },
     { 

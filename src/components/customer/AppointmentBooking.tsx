@@ -61,7 +61,7 @@ const AppointmentBooking: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Form Inputs */}
+          {/* Left Column: Form Inputs, static column */ }
           <div className="lg:col-span-2 space-y-4">
             {/* Vehicle Selection */}
             <div className="bg-white rounded-xl shadow-md p-6">
@@ -168,7 +168,7 @@ const AppointmentBooking: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Summary & Booking */}
+          {/* Right Column: Summary & Booking, dynamic column */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Tóm tắt lịch hẹn</h3>
