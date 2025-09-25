@@ -29,7 +29,8 @@ export const mockVehicles: Vehicle[] = [
     lastService: '2024-02-01',
     nextServiceDue: '2024-05-01',
     mileage: 28900
-  }
+  },
+  
 ];
 
 export const mockAppointments: ServiceAppointment[] = [

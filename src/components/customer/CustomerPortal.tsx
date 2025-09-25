@@ -66,7 +66,7 @@ const CustomerPortal: React.FC = () => {
             <Menu mode="horizontal" className="border-b-0 flex-grow justify-center bg-transparent" selectedKeys={[location.pathname]}>
               <Menu.Item key="/customer/dashboard"><Link to="/customer/dashboard">Trang chủ</Link></Menu.Item>
               <Menu.Item key="/customer/vehicles"><Link to="/customer/vehicles">Xe của tôi</Link></Menu.Item>
-              <Menu.Item key="/customer/booking"><Link to="/customer/booking">Đặt lịch</Link></Menu.Item>
+              <Menu.Item key="/customer/booking"><Link to="/customer/booking">Đặt lịch hẹn</Link></Menu.Item>
               <Menu.Item key="/customer/history"><Link to="/customer/history">Lịch sử</Link></Menu.Item>
               <Menu.Item key="/customer/payment"><Link to="/customer/payment">Thanh Toán</Link></Menu.Item>
               <Menu.Item key="/customer/my-services"><Link to="/customer/my-services">Dịch Vụ</Link></Menu.Item>
