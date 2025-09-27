@@ -1,10 +1,10 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5109/api',
   TIMEOUT: 30000,
   ENDPOINTS: {
     AUTH: {
-      LOGIN: '/auth/login',
+      LOGIN: '/LoginAPI',
       REGISTER: '/auth/register',
       REFRESH: '/auth/refresh',
       LOGOUT: '/auth/logout',

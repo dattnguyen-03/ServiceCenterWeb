@@ -11,20 +11,47 @@ import {
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await httpClient.post<AuthResponse>(
+    // Convert to backend expected format
+    const backendCredentials = {
+      username: credentials.email, // frontend truyền username vào trường email
+      password: credentials.password
+    };
+
+    const response: any = await httpClient.post<any>(
       API_CONFIG.ENDPOINTS.AUTH.LOGIN,
-      credentials
+      backendCredentials
     );
-    
-    if (response.success && response.data) {
+
+    // Kiểm tra trực tiếp các field từ backend
+    if (response.token && response.user) {
+      const userData = response.user;
+      const user: User = {
+        id: userData.userID?.toString() || userData.username || '',
+        fullName: userData.name || userData.username || '',
+        email: userData.email || '',
+        phone: '',
+        address: '',
+        role: (userData.role || '').toLowerCase() as 'admin' | 'staff' | 'technician' | 'customer',
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const authResponse: AuthResponse = {
+        user,
+        accessToken: response.token,
+        refreshToken: response.token // Backend chưa có refresh token riêng
+      };
+
       // Store tokens and user info
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data;
+      localStorage.setItem('accessToken', authResponse.accessToken);
+      localStorage.setItem('refreshToken', authResponse.refreshToken);
+      localStorage.setItem('user', JSON.stringify(authResponse.user));
+
+      return authResponse;
     }
-    
-    throw new Error(response.message || 'Đăng nhập thất bại');
+
+    throw new Error('Đăng nhập thất bại');
   }
 
   async register(userData: RegisterRequest): Promise<User> {

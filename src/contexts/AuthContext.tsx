@@ -1,48 +1,60 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
-import { mockUsers } from '../data/mockData';
+import { User as LocalUser } from '../types';
+import { User as ApiUser, LoginRequest } from '../types/api';
+import { authService } from '../services/authService';
+
+// Convert API User to Local User format
+const convertApiUserToLocalUser = (apiUser: ApiUser): LocalUser => ({
+  id: apiUser.id,
+  name: apiUser.fullName,
+  email: apiUser.email,
+  role: apiUser.role,
+  avatar: apiUser.profileImage,
+});
 
 export interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  user: LocalUser | null;
+  login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: LocalUser | null) => void;
+  isAuthenticated: boolean;
+  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Initialize auth state from localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const initializeAuth = () => {
       try {
-        setUser(JSON.parse(savedUser));
+        const currentUser = authService.getCurrentUser();
+        const token = authService.getAccessToken();
+        
+        if (currentUser && token) {
+          setUser(convertApiUserToLocalUser(currentUser));
+        }
       } catch (error) {
-        console.error('Error parsing user from localStorage:', error);
-        localStorage.removeItem('user');
+        console.error('Error initializing auth state:', error);
+        // Clear corrupted data
+        authService.logout();
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (credentials: LoginRequest): Promise<void> => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const foundUser = mockUsers.find(u => u.email === email);
-      if (foundUser) {
-        setUser(foundUser);
-        localStorage.setItem('user', JSON.stringify(foundUser));
-      } else {
-        throw new Error('Invalid credentials');
-      }
+      const authResponse = await authService.login(credentials);
+      setUser(convertApiUserToLocalUser(authResponse.user));
     } catch (error) {
       throw error;
     } finally {
@@ -50,10 +62,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = (): void => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await authService.logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if API call fails, clear local state
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const refreshToken = async (): Promise<void> => {
+    try {
+      await authService.refreshToken();
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // If refresh fails, logout user
+      await logout();
+      throw error;
+    }
+  };
+
+  const isAuthenticated = authService.isAuthenticated();
 
   const value: AuthContextType = {
     user,
@@ -61,6 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     isLoading,
     setUser,
+    isAuthenticated,
+    refreshToken,
   };
 
   return (
