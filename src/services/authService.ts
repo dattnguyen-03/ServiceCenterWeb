@@ -69,7 +69,9 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await httpClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT);
+      // TODO: Implement logout API endpoint on backend
+      // await httpClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT);
+      console.log('Logout: Clearing local storage only');
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {

@@ -54,7 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const authResponse = await authService.login(credentials);
-      setUser(convertApiUserToLocalUser(authResponse.user));
+      const user = convertApiUserToLocalUser(authResponse.user);
+      console.log('Login successful, setting user:', user);
+      setUser(user);
     } catch (error) {
       throw error;
     } finally {

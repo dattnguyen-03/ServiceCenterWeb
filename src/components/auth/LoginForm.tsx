@@ -23,10 +23,10 @@ const LoginForm: React.FC = () => {
 
     try {
       await login({ 
-        email: username.trim(), // truyền username vào trường email để backend nhận đúng
+        email: username.trim(), 
         password: password.trim()
       });
-      navigate("/", { replace: true });
+      // Không cần navigate, để RedirectIfLoggedIn xử lý redirect
     } catch (err: any) {
       setError(getNetworkErrorMessage(err));
     }

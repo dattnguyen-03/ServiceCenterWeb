@@ -10,13 +10,16 @@ const RedirectIfLoggedIn: React.FC<RedirectIfLoggedInProps> = ({ children }) => 
   const { user } = useAuth();
 
   if (user) {
+    console.log('RedirectIfLoggedIn: User role is', user.role);
     switch (user.role) {
-      case 'admin':
-        return <Navigate to="/admin" replace />;
+        case 'admin':
+          return <Navigate to="/admin/dashboard" replace />;
       case 'staff':
-        return <Navigate to="/staff" replace />;
+        return <Navigate to="/staff/dashboard" replace />;
       case 'technician':
         return <Navigate to="/technician" replace />;
+      case 'customer':
+        return <Navigate to="/customer/dashboard" replace />;
       default:
         return <Navigate to="/" replace />;
     }
