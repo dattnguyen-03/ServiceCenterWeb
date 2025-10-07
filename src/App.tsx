@@ -23,11 +23,13 @@ import ProfileManagement from './components/customer/ProfileManagement';
 import VehicleManagement from './components/customer/VehicleManagement';
 import CustomerDashboard from './components/customer/CustomerDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
+import AdminProfile from './components/admin/AdminProfile';
 import CustomerManagement from './components/admin/CustomerManagement';
 import PartsManagement from './components/admin/PartsManagement';
 import FinancialReports from './components/admin/FinancialReports';
 import StaffManagement from './components/admin/StaffManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
+import StaffProfile from './components/staff/StaffProfile';
 import ServiceProgress from './components/staff/ServiceProgress';
 import AppointmentManagement from './components/staff/AppointmentManagement';
 import ServiceTicket from './components/staff/ServiceTicket';
@@ -106,6 +108,7 @@ const AppContent: React.FC = () => {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="profile" element={<AdminProfile />} />
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="appointments" element={<AppointmentManagement />} />
         <Route path="service-tickets" element={<ServiceTicket />} />
@@ -125,6 +128,7 @@ const AppContent: React.FC = () => {
       >
         <Route index element={<Navigate to="dashboard" />} />
         <Route path="dashboard" element={<StaffDashboard />} />
+        <Route path="profile" element={<StaffProfile />} />
         <Route path="customers" element={<CustomerVehicleManagement />} />
         <Route path="appointments" element={<AppointmentManagement />} />
         <Route path="service-tickets" element={<ServiceTicket />} />

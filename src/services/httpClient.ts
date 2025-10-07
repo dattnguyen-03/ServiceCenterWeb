@@ -41,16 +41,12 @@ class HttpClient {
       
       // Check if response is ok before trying to parse JSON
       if (!response.ok) {
-        // Handle 401 Unauthorized - try to refresh token
+        // Handle 401 Unauthorized - chỉ logout nếu thực sự không thể xác thực
         if (response.status === 401 && !isRetry && endpoint !== API_CONFIG.ENDPOINTS.AUTH.REFRESH) {
-          try {
-            await this.handleTokenRefresh();
-            // Retry the request with new token
-            return this.request<T>(endpoint, options, true);
-          } catch (refreshError) {
-            this.handleAuthFailure();
-            throw refreshError;
-          }
+          console.error('401 Unauthorized - Token có thể hết hạn hoặc không hợp lệ');
+          // Backend không support refresh token, nên logout trực tiếp
+          this.handleAuthFailure();
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
         }
         
         let errorMessage = `HTTP ${response.status}`;

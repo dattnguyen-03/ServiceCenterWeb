@@ -167,6 +167,23 @@ class AuthService {
     const user = this.getCurrentUser();
     return user ? roles.includes(user.role) : false;
   }
+
+  // Profile management methods
+  async getProfile(): Promise<any> {
+    const response = await httpClient.get('/GetProfileAPI');
+    // Backend trả về { message: "...", data: {...} }
+    return response.data; // Chỉ lấy phần data
+  }
+
+  async updateProfile(profileData: any): Promise<any> {
+    const response = await httpClient.put('/EditUserAPI', profileData);
+    return response.data || response;
+  }
+
+  async changePassword(passwordData: any): Promise<any> {
+    const response = await httpClient.post('/ChangePasswordAPI', passwordData);
+    return response.data || response;
+  }
 }
 
 export const authService = new AuthService();
