@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Avatar, Dropdown, Space } from 'antd';
+import { Layout, Avatar, Dropdown, Space, Menu } from 'antd';
 import { UserOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,17 +12,18 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   const { user } = useAuth();
 
-  const menu = (
-    <div className="bg-white rounded-xl shadow-2xl border p-2" style={{ width: 200 }}>
-      <div
-        onClick={onLogout}
-        className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-red-500"
-      >
-        <LogoutOutlined className="mr-2" />
-        <span>Đăng xuất</span>
-      </div>
-    </div>
-  );
+  const menuItems = [
+    {
+      key: 'logout',
+      label: (
+        <div className="flex items-center text-red-500">
+          <LogoutOutlined className="mr-2" />
+          <span>Đăng xuất</span>
+        </div>
+      ),
+      onClick: onLogout,
+    },
+  ];
 
   return (
     <AntHeader
@@ -40,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
       </div>
       <Space align="center">
         <Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
-        <Dropdown overlay={menu} placement="bottomRight">
+        <Dropdown menu={{ items: menuItems }} placement="bottomRight">
           <Space className="cursor-pointer">
             <span className="text-base">{user?.name || 'Staff'}</span>
             <DownOutlined />

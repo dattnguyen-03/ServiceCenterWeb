@@ -4,6 +4,7 @@ export { adminService } from './adminService';
 export { customerService } from './customerService';
 export { staffService } from './staffService';
 export { technicianService } from './technicianService';
+export { vehicleService } from './vehicleService';
 export { httpClient } from './httpClient';
 
 // Re-export commonly used types

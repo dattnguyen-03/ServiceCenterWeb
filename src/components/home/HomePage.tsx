@@ -36,23 +36,28 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
   </div>
 );
 
-const featuresDropdownContent = (
-  <div className="bg-white rounded-xl shadow-2xl border" style={{ width: 550 }}>
-    <div className="p-6">
-      <Row gutter={[16, 16]}>
-        <Col span={12}><FeatureCard icon={<ScheduleOutlined />} title="Quy trình làm việc" description="Giao việc, lập lịch và theo dõi tiến độ theo thời gian thực." /></Col>
-        <Col span={12}><FeatureCard icon={<DollarCircleOutlined />} title="Báo giá" description="Gửi báo giá chuyên nghiệp chỉ trong vài giây." /></Col>
-        <Col span={12}><FeatureCard icon={<InboxOutlined />} title="Tồn kho" description="Nắm rõ tồn kho từ phụ tùng đến lốp xe." /></Col>
-        <Col span={12}><FeatureCard icon={<ToolOutlined />} title="Kiểm tra phương tiện" description="Phát hiện sớm vấn đề và xây dựng lòng tin." /></Col>
-      </Row>
-    </div>
-    <div className="bg-gray-50 p-4 text-center rounded-b-xl">
-      <Link to="/features" className="text-blue-600 font-semibold hover:text-blue-700">
-        Xem tất cả tính năng <RightOutlined />
-      </Link>
-    </div>
-  </div>
-);
+const featuresDropdownItems = [
+  {
+    key: 'features',
+    label: (
+      <div className="bg-white rounded-xl shadow-2xl border" style={{ width: 550 }}>
+        <div className="p-6">
+          <Row gutter={[16, 16]}>
+            <Col span={12}><FeatureCard icon={<ScheduleOutlined />} title="Quy trình làm việc" description="Giao việc, lập lịch và theo dõi tiến độ theo thời gian thực." /></Col>
+            <Col span={12}><FeatureCard icon={<DollarCircleOutlined />} title="Báo giá" description="Gửi báo giá chuyên nghiệp chỉ trong vài giây." /></Col>
+            <Col span={12}><FeatureCard icon={<InboxOutlined />} title="Tồn kho" description="Nắm rõ tồn kho từ phụ tùng đến lốp xe." /></Col>
+            <Col span={12}><FeatureCard icon={<ToolOutlined />} title="Kiểm tra phương tiện" description="Phát hiện sớm vấn đề và xây dựng lòng tin." /></Col>
+          </Row>
+        </div>
+        <div className="bg-gray-50 p-4 text-center rounded-b-xl">
+          <Link to="/features" className="text-blue-600 font-semibold hover:text-blue-700">
+            Xem tất cả tính năng <RightOutlined />
+          </Link>
+        </div>
+      </div>
+    ),
+  },
+];
 
 const SimpleMenuItem = ({ title, description }: { title: string, description: string }) => (
   <div className="flex items-start p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
@@ -63,29 +68,44 @@ const SimpleMenuItem = ({ title, description }: { title: string, description: st
   </div>
 );
 
-const solutionsDropdownContent = (
-  <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
-    <SimpleMenuItem title="Gara ô tô" description="Giải pháp toàn diện cho gara của bạn." />
-    <SimpleMenuItem title="Cửa hàng lốp" description="Quản lý lốp xe hiệu quả." />
-    <SimpleMenuItem title="Trung tâm detailing" description="Tối ưu hóa quy trình chăm sóc xe." />
-  </div>
-);
+const solutionsDropdownItems = [
+  {
+    key: 'solutions',
+    label: (
+      <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
+        <SimpleMenuItem title="Gara ô tô" description="Giải pháp toàn diện cho gara của bạn." />
+        <SimpleMenuItem title="Cửa hàng lốp" description="Quản lý lốp xe hiệu quả." />
+        <SimpleMenuItem title="Trung tâm detailing" description="Tối ưu hóa quy trình chăm sóc xe." />
+      </div>
+    ),
+  },
+];
 
-const companyDropdownContent = (
-  <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
-    <SimpleMenuItem title="Về chúng tôi" description="Tìm hiểu thêm về GarageBox." />
-    <SimpleMenuItem title="Tuyển dụng" description="Gia nhập đội ngũ của chúng tôi." />
-    <SimpleMenuItem title="Báo chí" description="Thông tin từ truyền thông." />
-  </div>
-);
+const companyDropdownItems = [
+  {
+    key: 'company',
+    label: (
+      <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
+        <SimpleMenuItem title="Về chúng tôi" description="Tìm hiểu thêm về GarageBox." />
+        <SimpleMenuItem title="Tuyển dụng" description="Gia nhập đội ngũ của chúng tôi." />
+        <SimpleMenuItem title="Báo chí" description="Thông tin từ truyền thông." />
+      </div>
+    ),
+  },
+];
 
-const resourcesDropdownContent = (
-  <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
-    <SimpleMenuItem title="Blog" description="Bài viết và tin tức mới nhất." />
-    <SimpleMenuItem title="Hướng dẫn" description="Tài liệu hướng dẫn sử dụng." />
-    <SimpleMenuItem title="Trung tâm hỗ trợ" description="Nhận sự trợ giúp khi bạn cần." />
-  </div>
-);
+const resourcesDropdownItems = [
+  {
+    key: 'resources',
+    label: (
+      <div className="bg-white rounded-xl shadow-2xl border p-4" style={{ width: 300 }}>
+        <SimpleMenuItem title="Blog" description="Bài viết và tin tức mới nhất." />
+        <SimpleMenuItem title="Hướng dẫn" description="Tài liệu hướng dẫn sử dụng." />
+        <SimpleMenuItem title="Trung tâm hỗ trợ" description="Nhận sự trợ giúp khi bạn cần." />
+      </div>
+    ),
+  },
+];
 
 const CustomerVehicleDashboard = () => {
   const vehicles = mockVehicles.filter(v => v.customerId === '1');
@@ -245,7 +265,7 @@ const PublicHomePage = () => {
           <Title level={3} className="!mb-0 ml-2">GarageBox</Title>
         </div>
         <nav className="hidden md:flex items-center space-x-8 text-base">
-          <Dropdown overlay={featuresDropdownContent} placement="bottomLeft">
+          <Dropdown menu={{ items: featuresDropdownItems }} placement="bottomLeft">
             <a onClick={e => e.preventDefault()} className="flex items-center text-gray-600 hover:text-blue-600">
               <Space>
                 Tính năng
@@ -253,7 +273,7 @@ const PublicHomePage = () => {
               </Space>
             </a>
           </Dropdown>
-          <Dropdown overlay={solutionsDropdownContent} placement="bottomLeft">
+          <Dropdown menu={{ items: solutionsDropdownItems }} placement="bottomLeft">
             <a onClick={e => e.preventDefault()} className="flex items-center text-gray-600 hover:text-blue-600">
               <Space>
                 Giải pháp
@@ -261,7 +281,7 @@ const PublicHomePage = () => {
               </Space>
             </a>
           </Dropdown>
-          <Dropdown overlay={companyDropdownContent} placement="bottomLeft">
+          <Dropdown menu={{ items: companyDropdownItems }} placement="bottomLeft">
             <a onClick={e => e.preventDefault()} className="flex items-center text-gray-600 hover:text-blue-600">
               <Space>
                 Công ty
@@ -269,7 +289,7 @@ const PublicHomePage = () => {
               </Space>
             </a>
           </Dropdown>
-          <Dropdown overlay={resourcesDropdownContent} placement="bottomLeft">
+          <Dropdown menu={{ items: resourcesDropdownItems }} placement="bottomLeft">
             <a onClick={e => e.preventDefault()} className="flex items-center text-gray-600 hover:text-blue-600">
               <Space>
                 Tài nguyên
@@ -448,7 +468,7 @@ const PublicHomePage = () => {
           padding: 0,
         }
       }}
-      destroyOnClose
+      destroyOnHidden
       maskStyle={{ background: "rgba(0,0,0,0.7)" }}
       closable={false}
     >

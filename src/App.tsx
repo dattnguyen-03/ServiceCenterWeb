@@ -19,8 +19,9 @@ import MyServices from './components/customer/MyServices';
 import AppointmentBooking from './components/customer/AppointmentBooking';
 import ServiceHistory from './components/customer/ServiceHistory';
 import PaymentPage from './components/customer/PaymentPage';
-import ProfileManagement from './components/customer/ProfileManagement';
 import VehicleManagement from './components/customer/VehicleManagement';
+import VehicleDetail from './components/customer/VehicleDetail';
+import ServicePackages from './components/customer/ServicePackages';
 import CustomerDashboard from './components/customer/CustomerDashboard';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminProfile from './components/admin/AdminProfile';
@@ -28,11 +29,14 @@ import CustomerManagement from './components/admin/CustomerManagement';
 import PartsManagement from './components/admin/PartsManagement';
 import FinancialReports from './components/admin/FinancialReports';
 import StaffManagement from './components/admin/StaffManagement';
+import AdminServicePackageManagement from './components/admin/ServicePackageManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
+import StaffServicePackageManagement from './components/staff/ServicePackageManagement';
 import StaffProfile from './components/staff/StaffProfile';
 import ServiceProgress from './components/staff/ServiceProgress';
 import AppointmentManagement from './components/staff/AppointmentManagement';
-import ServiceTicket from './components/staff/ServiceTicket';
+import StaffServiceTicket from './components/staff/StaffServiceTicket';
+import AdminServiceTicket from './components/admin/AdminServiceTicket';
 import CustomerVehicleManagement from './components/staff/CustomerVehicleManagement';
 import Billing from './components/staff/Billing';
 import TechnicianDashboard from './components/technician/TechnicianDashboard';
@@ -42,6 +46,8 @@ import AppointmentBookingManagement from './components/customer/AppointmentBooki
 import TechnicianSchedule from './components/technician/Schedule';
 import PartsUsage from './components/technician/PartsUsage';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import CustomerProfile from './components/customer/CustomerProfile';
+import TechnicianProfile from './components/technician/TechnicianProfile';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -93,8 +99,10 @@ const AppContent: React.FC = () => {
         <Route path="booking" element={<AppointmentBooking />} />
         <Route path="history" element={<ServiceHistory />} />
         <Route path="payment" element={<PaymentPage />} />
-        <Route path="profile" element={<ProfileManagement />} />
+        <Route path="profile" element={<CustomerProfile />} />
         <Route path="vehicles" element={<VehicleManagement />} />
+        <Route path="vehicles/:vehicleId" element={<VehicleDetail />} />
+        <Route path="service-packages" element={<ServicePackages />} />
         <Route path="management-booking" element={<AppointmentBookingManagement />} />
       </Route>
 
@@ -111,9 +119,10 @@ const AppContent: React.FC = () => {
         <Route path="profile" element={<AdminProfile />} />
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="appointments" element={<AppointmentManagement />} />
-        <Route path="service-tickets" element={<ServiceTicket />} />
+        <Route path="service-tickets" element={<AdminServiceTicket />} />
         <Route path="service-progress" element={<ServiceProgress />} />
         <Route path="parts" element={<PartsManagement />} />
+        <Route path="service-packages" element={<AdminServicePackageManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
       </Route>
@@ -131,7 +140,8 @@ const AppContent: React.FC = () => {
         <Route path="profile" element={<StaffProfile />} />
         <Route path="customers" element={<CustomerVehicleManagement />} />
         <Route path="appointments" element={<AppointmentManagement />} />
-        <Route path="service-tickets" element={<ServiceTicket />} />
+        <Route path="service-tickets" element={<StaffServiceTicket />} />
+        <Route path="service-packages" element={<StaffServicePackageManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
       </Route>
@@ -149,6 +159,7 @@ const AppContent: React.FC = () => {
         <Route path="work-orders" element={<WorkOrders />} />
         <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
+        <Route path="profile" element={<TechnicianProfile />} />
       </Route>
 
       <Route path="*" element={<AuthRedirect />} />

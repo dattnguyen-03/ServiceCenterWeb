@@ -3,6 +3,7 @@ import {
   Home, Calendar, Car, FileText, Users, Package, 
   DollarSign, Settings, Wrench, ClipboardList 
 } from 'lucide-react';
+import { UserOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
@@ -36,7 +37,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           { id: 'dashboard', label: 'Dashboard', icon: Home },
           { id: 'schedule', label: 'Lịch làm việc', icon: Calendar },
           { id: 'work-orders', label: 'Lệnh công việc', icon: Wrench },
-          { id: 'parts-usage', label: 'Kiểm Tra Phụ Tùng', icon: Car }
+          { id: 'parts-usage', label: 'Kiểm Tra Phụ Tùng', icon: Car },
+          { id: 'profile', label: 'Hồ sơ cá nhân', icon: UserOutlined }
         ];
       case 'admin':
         return [

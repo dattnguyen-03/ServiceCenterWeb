@@ -52,17 +52,37 @@ class HttpClient {
         let errorMessage = `HTTP ${response.status}`;
         try {
           const errorData = await response.json();
+          console.log(`[API Error Response] ${response.status}`, errorData);
           errorMessage = errorData.message || errorMessage;
         } catch {
           // If JSON parsing fails, use default message
           errorMessage = response.status === 404 ? 'API endpoint không tồn tại' : 
                        response.status === 500 ? 'Lỗi server nội bộ' :
+                       response.status === 400 ? 'Dữ liệu không hợp lệ' :
                        response.status === 0 ? 'Không thể kết nối server' : errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      // Try to parse as JSON first
+      let data;
+      const contentType = response.headers.get('content-type');
+      
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          // If not JSON, get as text (for DELETE endpoints that return strings)
+          const textData = await response.text();
+          // If it's a simple success message, wrap it in ApiResponse format
+          data = { success: true, message: textData };
+        }
+      } catch {
+        // Fallback: try to get as text
+        const textData = await response.text();
+        data = { success: true, message: textData };
+      }
+      
       console.log(`[API Response] ${response.status}`, data);
 
       // If backend returns direct response (like LoginAPI), wrap it in ApiResponse format
@@ -175,8 +195,21 @@ class HttpClient {
     });
   }
 
-  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  async delete<T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+    let url = endpoint;
+    if (params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          searchParams.append(key, value.toString());
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+    return this.request<T>(url, { method: 'DELETE' });
   }
 
   async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {

@@ -11,6 +11,7 @@ import {
   ToolOutlined,
   TeamOutlined,
   DollarOutlined,
+  GiftOutlined,
   LogoutOutlined,
   DownOutlined,
 } from '@ant-design/icons';
@@ -57,6 +58,11 @@ const AdminLayout: React.FC = () => {
       key: '/admin/parts',
       icon: <ToolOutlined />,
       label: <Link to="/admin/parts">Phụ tùng</Link>,
+    },
+    {
+      key: '/admin/service-packages',
+      icon: <GiftOutlined />,
+      label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
     },
     {
       key: '/admin/staff',

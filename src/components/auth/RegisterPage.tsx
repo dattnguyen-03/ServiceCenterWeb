@@ -1,32 +1,30 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Typography } from "antd";
 import { UserOutlined, MailOutlined, LockOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../../services";
 
 const { Title, Text } = Typography;
 
 const RegisterPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const onFinish = async (values: any) => {
     setLoading(true);
     setApiError(null);
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: values.fullName,
-          email: values.email,
-          password: values.password,
-        }),
+      await authService.register({
+        username: values.username,
+        password: values.password,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Đăng ký thất bại");
-      }
       alert("Đăng ký thành công!");
+      navigate("/login");
     } catch (err: any) {
       setApiError(err.message);
     } finally {
@@ -77,7 +75,24 @@ const RegisterPage: React.FC = () => {
 
           <Form name="register" onFinish={onFinish} scrollToFirstError layout="vertical">
             <Form.Item
-              name="fullName"
+              name="username"
+              label="Tên đăng nhập"
+              rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Nhập tên đăng nhập" size="large" />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              label="Mật khẩu"
+              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              hasFeedback
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu" size="large" />
+            </Form.Item>
+
+            <Form.Item
+              name="name"
               label="Họ và tên"
               rules={[{ required: true, message: "Vui lòng nhập họ và tên!", whitespace: true }]}
             >
@@ -96,32 +111,19 @@ const RegisterPage: React.FC = () => {
             </Form.Item>
 
             <Form.Item
-              name="password"
-              label="Mật khẩu"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-              hasFeedback
+              name="phone"
+              label="Số điện thoại"
+              rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu" size="large" />
+              <Input placeholder="Nhập số điện thoại" size="large" />
             </Form.Item>
 
             <Form.Item
-              name="confirm"
-              label="Xác nhận mật khẩu"
-              dependencies={["password"]}
-              hasFeedback
-              rules={[
-                { required: true, message: "Vui lòng xác nhận mật khẩu!" },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue("password") === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error("Hai mật khẩu không khớp!"));
-                  },
-                }),
-              ]}
+              name="address"
+              label="Địa chỉ"
+              rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu" size="large" />
+              <Input placeholder="Nhập địa chỉ" size="large" />
             </Form.Item>
 
             {apiError && (

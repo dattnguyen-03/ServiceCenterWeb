@@ -1,12 +1,11 @@
-import React from 'react';
-import { Card, Row, Col, Button, Statistic, Typography, Badge, Progress, List, Avatar } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Button, Statistic, Typography, Badge, Progress, List, Spin } from 'antd';
 import { 
   CarOutlined, 
   ThunderboltOutlined, 
   DashboardOutlined, 
   CalendarOutlined, 
   PlusOutlined, 
-  BellOutlined, 
   RightOutlined,
   ToolOutlined,
   ClockCircleOutlined,
@@ -16,13 +15,15 @@ import {
   PhoneOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { mockVehicles } from '../../data/mockData';
 import { Link } from 'react-router-dom';
+import { vehicleService } from '../../services/vehicleService';
+import { VehicleResponse } from '../../types/api';
 
 const { Title, Text } = Typography;
 
 const CustomerDashboard: React.FC = () => {
-  const vehicles = mockVehicles.filter(v => v.customerId === '1');
+  const [vehicles, setVehicles] = useState<VehicleResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const currentDate = new Date();
   const formattedDate = new Intl.DateTimeFormat('vi-VN', { 
     weekday: 'long', 
@@ -30,6 +31,24 @@ const CustomerDashboard: React.FC = () => {
     month: 'long', 
     day: 'numeric'
   }).format(currentDate);
+
+  // Load vehicles from API
+  useEffect(() => {
+    loadVehicles();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      setLoading(true);
+      const vehicles = await vehicleService.getVehiclesByCustomer();
+      setVehicles(vehicles);
+    } catch (error: any) {
+      console.error('Error loading vehicles:', error);
+      setVehicles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDaysRemaining = (dueDate: string) => {
     const today = new Date();
@@ -97,6 +116,16 @@ const CustomerDashboard: React.FC = () => {
       description: 'Liên hệ hỗ trợ kỹ thuật'
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <Spin size="large" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -203,7 +232,7 @@ const CustomerDashboard: React.FC = () => {
           >
             <Row gutter={[16, 16]}>
               {vehicles.map((vehicle) => (
-                <Col key={vehicle.id} xs={24} xl={12}>
+                <Col key={vehicle.vehicleID} xs={24} xl={12}>
                   <Card
                     className="hover:shadow-lg transition-all duration-300 border border-gray-200"
                     bodyStyle={{ padding: 0 }}
@@ -218,7 +247,7 @@ const CustomerDashboard: React.FC = () => {
                           <div>
                             <h3 className="text-lg font-bold mb-0">{vehicle.model}</h3>
                             <p className="text-blue-100 opacity-90 mb-0 text-sm">
-                              VIN: {vehicle.vin}
+                              Biển số: {vehicle.licensePlate}
                             </p>
                           </div>
                         </div>
@@ -236,21 +265,23 @@ const CustomerDashboard: React.FC = () => {
                           <div className="text-center p-3 bg-blue-50 rounded-lg">
                             <ThunderboltOutlined className="text-blue-500 text-lg mb-1" />
                             <div className="text-sm text-gray-600">Pin</div>
-                            <div className="font-bold text-blue-600">{vehicle.batteryCapacity}</div>
+                            <div className="font-bold text-blue-600">{vehicle.batteryCapacity || 'N/A'}</div>
                           </div>
                         </Col>
                         <Col span={8}>
                           <div className="text-center p-3 bg-green-50 rounded-lg">
                             <DashboardOutlined className="text-green-500 text-lg mb-1" />
                             <div className="text-sm text-gray-600">Km</div>
-                            <div className="font-bold text-green-600">{vehicle.mileage.toLocaleString()}</div>
+                            <div className="font-bold text-green-600">{(vehicle.mileage || 0).toLocaleString()}</div>
                           </div>
                         </Col>
                         <Col span={8}>
                           <div className="text-center p-3 bg-amber-50 rounded-lg">
                             <CalendarOutlined className="text-amber-500 text-lg mb-1" />
                             <div className="text-sm text-gray-600">Bảo dưỡng</div>
-                            <div className="font-bold text-amber-600">14 ngày</div>
+                            <div className="font-bold text-amber-600">
+                              {vehicle.nextServiceDate ? getDaysRemaining(vehicle.nextServiceDate) : 'Chưa có'}
+                            </div>
                           </div>
                         </Col>
                       </Row>

@@ -5,7 +5,7 @@ export const API_CONFIG = {
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/LoginAPI',
-      REGISTER: '/auth/register',
+  REGISTER: '/RegisterAPI',
       REFRESH: '/auth/refresh',
       LOGOUT: '/auth/logout',
       FORGOT_PASSWORD: '/auth/forgot-password',
@@ -59,6 +59,16 @@ export const API_CONFIG = {
       APPOINTMENTS: '/appointments',
       PARTS: '/parts',
       VEHICLES: '/vehicles',
+    },
+    VEHICLE: {
+      CREATE: '/CreateVehicleAPI',
+      EDIT: '/EditVehicleAPI',
+      GET: '/GetVehicleAPI',
+      VIEW: '/ViewVehicleAPI',
+      DELETE: '/DeleteVehicleAPI',
+    },
+    SERVICE_PACKAGE: {
+      GET: '/GetServicePackageAPI',
     }
   }
 };

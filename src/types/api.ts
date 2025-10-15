@@ -31,12 +31,12 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  fullName: string;
-  email: string;
+  username: string;
   password: string;
-  confirmPassword: string;
+  name: string;
+  email: string;
   phone: string;
-  address?: string;
+  address: string;
 }
 
 export interface AuthResponse {
@@ -93,6 +93,46 @@ export interface Vehicle {
   engineType: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// Vehicle API Types (matching backend API)
+export interface CreateVehicleRequest {
+  model: string;
+  vin: string;
+  licensePlate: string;
+  year: number;
+  notes?: string;
+  lastServiceDate?: string;
+}
+
+export interface EditVehicleRequest {
+  vehicleID: number;
+  model: string;
+  vin: string;
+  licensePlate: string;
+  year: number;
+  notes?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+}
+
+export interface VehicleResponse {
+  vehicleID: number;
+  model: string;
+  vin: string;
+  licensePlate: string;
+  year: number;
+  notes?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  customerId?: string;
+  batteryCapacity?: string;
+  mileage?: number;
+  status?: string;
+}
+
+export interface GetVehicleRequest {
+  vehicleId: number;
 }
 
 // Appointment Types
@@ -475,4 +515,19 @@ export interface CreatePartRequestRequest {
   urgency: PartRequest['urgency'];
   reason: string;
   notes?: string;
+}
+
+// Service Package Types
+export interface ServicePackage {
+  packageID: number;
+  name: string;
+  description: string;
+  price: number;
+  durationMonths: number;
+}
+
+export interface GetServicePackageResponse {
+  success: boolean;
+  data: ServicePackage[];
+  message?: string;
 }

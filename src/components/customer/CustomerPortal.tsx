@@ -30,24 +30,37 @@ const CustomerPortal: React.FC = () => {
     navigate('/', { replace: true }); 
   };
 
-  const userMenu = (
-    <div className="bg-white rounded-xl shadow-2xl border p-2" style={{ width: 200 }}>
-       <Link to="/customer/profile">
-         <SimpleMenuItem title="Trang cá nhân" description="Xem và sửa thông tin" />
-       </Link>
-       <Link to="/customer/management-booking">
-       <SimpleMenuItem title="Lịch hẹn" description="Quản lý lịch hẹn của bạn" />
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: (
+        <Link to="/customer/profile">
+          <SimpleMenuItem title="Trang cá nhân" description="Xem và sửa thông tin" />
         </Link>
-       <hr className="my-2" />
-       <div
-        onClick={handleLogout}
-        className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-      >
-        <LogoutOutlined className="mr-2" />
-        <Text>Đăng xuất</Text>
-      </div>
-    </div>
-  );
+      ),
+    },
+    {
+      key: 'booking',
+      label: (
+        <Link to="/customer/management-booking">
+          <SimpleMenuItem title="Lịch hẹn" description="Quản lý lịch hẹn của bạn" />
+        </Link>
+      ),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      label: (
+        <div className="flex items-center">
+          <LogoutOutlined className="mr-2" />
+          <Text>Đăng xuất</Text>
+        </div>
+      ),
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <Layout className="min-h-screen">
@@ -63,20 +76,26 @@ const CustomerPortal: React.FC = () => {
           </div>
           
           {user && (
-            <Menu mode="horizontal" className="border-b-0 flex-grow justify-center bg-transparent" selectedKeys={[location.pathname]}>
-              <Menu.Item key="/customer/dashboard"><Link to="/customer/dashboard">Trang chủ</Link></Menu.Item>
-              <Menu.Item key="/customer/vehicles"><Link to="/customer/vehicles">Xe của tôi</Link></Menu.Item>
-              <Menu.Item key="/customer/booking"><Link to="/customer/booking">Đặt lịch hẹn</Link></Menu.Item>
-              <Menu.Item key="/customer/history"><Link to="/customer/history">Lịch sử</Link></Menu.Item>
-              <Menu.Item key="/customer/payment"><Link to="/customer/payment">Thanh Toán</Link></Menu.Item>
-              <Menu.Item key="/customer/my-services"><Link to="/customer/my-services">Dịch Vụ</Link></Menu.Item>
-            </Menu>
+            <Menu 
+              mode="horizontal" 
+              className="border-b-0 flex-grow justify-center bg-transparent" 
+              selectedKeys={[location.pathname]}
+              items={[
+                { key: '/customer/dashboard', label: <Link to="/customer/dashboard">Trang chủ</Link> },
+                { key: '/customer/vehicles', label: <Link to="/customer/vehicles">Xe của tôi</Link> },
+                { key: '/customer/service-packages', label: <Link to="/customer/service-packages">Gói dịch vụ</Link> },
+                { key: '/customer/booking', label: <Link to="/customer/booking">Đặt lịch hẹn</Link> },
+                { key: '/customer/history', label: <Link to="/customer/history">Lịch sử</Link> },
+                { key: '/customer/payment', label: <Link to="/customer/payment">Thanh Toán</Link> },
+                { key: '/customer/my-services', label: <Link to="/customer/my-services">Dịch Vụ</Link> },
+              ]}
+            />
           )}
 
           <div className="flex items-center space-x-4">
             <Button icon={<GlobalOutlined />}>Tiếng Việt</Button>
             {user ? (
-              <Dropdown overlay={userMenu} placement="bottomRight">
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <a onClick={e => e.preventDefault()}>
                   <Avatar icon={<UserOutlined />} />
                 </a>

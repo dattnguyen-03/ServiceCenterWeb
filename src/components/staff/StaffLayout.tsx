@@ -10,6 +10,7 @@ import {
   ClockCircleOutlined,
   TeamOutlined,
   DollarOutlined,
+  GiftOutlined,
   LogoutOutlined,
   DownOutlined,
 } from '@ant-design/icons';
@@ -46,6 +47,11 @@ const StaffLayout: React.FC = () => {
       key: '/staff/service-tickets',
       icon: <FileTextOutlined />,
       label: <Link to="/staff/service-tickets">Phiếu dịch vụ</Link>,
+    },
+    {
+      key: '/staff/service-packages',
+      icon: <GiftOutlined />,
+      label: <Link to="/staff/service-packages">Gói dịch vụ</Link>,
     },
     {
       key: '/staff/progress',
