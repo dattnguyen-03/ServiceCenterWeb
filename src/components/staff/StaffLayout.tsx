@@ -44,6 +44,11 @@ const StaffLayout: React.FC = () => {
       label: <Link to="/staff/appointments">Lịch hẹn</Link>,
     },
     {
+      key: '/staff/appointment-confirmation',
+      icon: <ClockCircleOutlined />,
+      label: <Link to="/staff/appointment-confirmation">Xác nhận dịch vụ</Link>,
+    },
+    {
       key: '/staff/service-tickets',
       icon: <FileTextOutlined />,
       label: <Link to="/staff/service-tickets">Phiếu dịch vụ</Link>,

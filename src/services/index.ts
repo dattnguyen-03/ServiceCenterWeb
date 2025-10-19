@@ -7,6 +7,8 @@ export { technicianService } from './technicianService';
 export { vehicleService } from './vehicleService';
 export { appointmentService } from './appointmentService';
 export { serviceCenterService } from './serviceCenterService';
+export { serviceOrderService } from './serviceOrderService';
+export { technicianListService } from './technicianListService';
 export { httpClient } from './httpClient';
 
 // Re-export commonly used types

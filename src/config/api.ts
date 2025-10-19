@@ -53,6 +53,12 @@ export const API_CONFIG = {
       SCHEDULE: '/technician/schedule',
       AVAILABILITY: '/technician/availability',
       NOTIFICATIONS: '/technician/notifications',
+      GET_ALL: '/GetTechnicianAPI', // For Staff/Admin to get technician list
+    },
+    SERVICE_ORDER: {
+      CREATE: '/CreateServiceOrderAPI',
+      VIEW: '/ViewServiceOrderAPI', // For Technician to view assigned orders
+      UPDATE: '/UpdateServiceOrderAPI', // For Technician to update progress
     },
     COMMON: {
       SERVICES: '/services',
@@ -76,10 +82,12 @@ export const API_CONFIG = {
     APPOINTMENT: {
       BOOK: '/BookAppointmentAPI',
       VIEW: '/ViewAppointmentAPI',
+      GET_ALL: '/GetAppointmentAPI', // For Staff/Admin to view all appointments
     },
+
+   
   }
 };
-
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,

@@ -37,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           { id: 'dashboard', label: 'Dashboard', icon: Home },
           { id: 'schedule', label: 'Lịch làm việc', icon: Calendar },
           { id: 'work-orders', label: 'Lệnh công việc', icon: Wrench },
+          { id: 'service-order-progress', label: 'Cập nhật tiến độ', icon: ClipboardList },
           { id: 'parts-usage', label: 'Kiểm Tra Phụ Tùng', icon: Car },
           { id: 'profile', label: 'Hồ sơ cá nhân', icon: UserOutlined }
         ];

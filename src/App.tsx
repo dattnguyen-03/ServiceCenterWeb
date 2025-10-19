@@ -48,6 +48,8 @@ import PartsUsage from './components/technician/PartsUsage';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import CustomerProfile from './components/customer/CustomerProfile';
 import TechnicianProfile from './components/technician/TechnicianProfile';
+import AppointmentConfirmation from './components/staff/AppointmentConfirmation';
+import ServiceOrderProgress from './components/technician/ServiceOrderProgress';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -140,6 +142,7 @@ const AppContent: React.FC = () => {
         <Route path="profile" element={<StaffProfile />} />
         <Route path="customers" element={<CustomerVehicleManagement />} />
         <Route path="appointments" element={<AppointmentManagement />} />
+        <Route path="appointment-confirmation" element={<AppointmentConfirmation />} />
         <Route path="service-tickets" element={<StaffServiceTicket />} />
         <Route path="service-packages" element={<StaffServicePackageManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
@@ -157,6 +160,7 @@ const AppContent: React.FC = () => {
         <Route index element={<Navigate to="dashboard" />} />
         <Route path="dashboard" element={<TechnicianDashboard />} />
         <Route path="work-orders" element={<WorkOrders />} />
+        <Route path="service-order-progress" element={<ServiceOrderProgress />} />
         <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />
