@@ -163,6 +163,15 @@ export interface CreateAppointmentRequest {
   notes?: string;
 }
 
+// Lightweight view model returned by ViewAppointmentAPI (BE contract)
+export interface AppointmentSummary {
+  vehicleModel: string;
+  serviceType: string;
+  centerName: string;
+  requestedDate: string; // ISO string
+  status: string; // Pending | Confirmed | Completed | Cancelled
+}
+
 // Service Types
 export interface ServiceRecord {
   id: string;
@@ -223,6 +232,15 @@ export interface PartUsage {
   unitPrice: number;
   totalPrice: number;
   part?: Part;
+}
+
+// Service Center Types
+export interface ServiceCenter {
+  centerID: number;
+  name: string;
+  address: string;
+  phone: string;
+  managerName: string;
 }
 
 // Staff Types

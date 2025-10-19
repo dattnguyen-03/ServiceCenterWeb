@@ -5,6 +5,8 @@ export { customerService } from './customerService';
 export { staffService } from './staffService';
 export { technicianService } from './technicianService';
 export { vehicleService } from './vehicleService';
+export { appointmentService } from './appointmentService';
+export { serviceCenterService } from './serviceCenterService';
 export { httpClient } from './httpClient';
 
 // Re-export commonly used types

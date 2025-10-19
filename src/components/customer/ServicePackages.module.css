@@ -1,0 +1,223 @@
+/* Custom styles for ServicePackages component */
+.custom-tabs .ant-tabs-tab {
+  border-radius: 12px !important;
+  border: 2px solid transparent !important;
+  margin-right: 8px !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.custom-tabs .ant-tabs-tab:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+  background-color: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+}
+
+.custom-tabs .ant-tabs-tab-btn {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+.custom-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+.custom-tabs .ant-tabs-content-holder {
+  padding: 0 !important;
+}
+
+/* Badge status styling */
+.ant-badge-status-dot {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+/* Card hover effects */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Step indicator custom styling */
+.ant-steps-item-process .ant-steps-item-icon {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+.ant-steps-item-finish .ant-steps-item-icon {
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+.ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+  color: white !important;
+}
+.card-package:hover {
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Vertical tidy meta list for package card */
+.pkgStripe {
+  height: 4px;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a5f3fc 0%, #86efac 100%);
+}
+
+.pkgMeta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.pkgMetaRow {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.pkgMetaIcon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  color: #0ea5e9; /* sky-500 */
+}
+
+.pkgMetaLabel {
+  color: #475569; /* slate-600 */
+  font-size: 0.9rem;
+}
+
+.pkgMetaValue {
+  color: #0f766e; /* teal-700 */
+  font-weight: 600;
+}
+
+/* Dark catalog style (like the screenshot) */
+.catalogCard {
+  background: #0f172a !important; /* slate-900 */
+  border: 1px solid #1f2937 !important; /* gray-800 */
+}
+
+.catalogBanner {
+  position: relative;
+  height: 120px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 20% 20%, #1f2937 0%, #0b1221 70%);
+}
+
+.catalogBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.65) 100%);
+}
+
+.catalogPriceRow {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.catalogPrice {
+  color: #e2e8f0; /* slate-200 */
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.catalogDuration {
+  color: #94a3b8; /* slate-400 */
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.catalogTag :global(.ant-tag) {
+  background: rgba(148,163,184,0.15);
+  border-color: rgba(148,163,184,0.2);
+  color: #e2e8f0;
+}
+
+.darkMeta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 10px;
+  background: #0b1221;
+  border: 1px solid #111827; /* gray-900 */
+  border-radius: 12px;
+}
+
+.darkMetaRow {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.darkMetaIcon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa; /* sky-400 */
+}
+
+.darkMetaLabel {
+  color: #94a3b8; /* slate-400 */
+  font-size: 0.9rem;
+}
+
+.darkMetaValue {
+  color: #e2e8f0; /* slate-200 */
+  font-weight: 700;
+}
+
+.darkButton {
+  background: #0b1221 !important;
+  border-color: #111827 !important;
+  color: #cbd5e1 !important;
+}
+
+.darkButton:hover {
+  background: #0f172a !important;
+  border-color: #1f2937 !important;
+  color: #e2e8f0 !important;
+}
+
+.darkButtonPrimary {
+  background: linear-gradient(90deg, #34d399 0%, #60a5fa 100%) !important;
+  border: none !important;
+  color: white !important;
+}

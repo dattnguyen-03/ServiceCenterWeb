@@ -69,7 +69,14 @@ export const API_CONFIG = {
     },
     SERVICE_PACKAGE: {
       GET: '/GetServicePackageAPI',
-    }
+    },
+    SERVICE_CENTER: {
+      GET: '/GetServiceCentersAPI',
+    },
+    APPOINTMENT: {
+      BOOK: '/BookAppointmentAPI',
+      VIEW: '/ViewAppointmentAPI',
+    },
   }
 };
 

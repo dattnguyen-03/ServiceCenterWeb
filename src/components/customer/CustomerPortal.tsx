@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Dropdown, Avatar, Space, Typography, Button } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Space, Typography, Button, MenuProps } from 'antd';
 import { 
   UserOutlined, 
   LogoutOutlined, 
@@ -30,7 +30,7 @@ const CustomerPortal: React.FC = () => {
     navigate('/', { replace: true }); 
   };
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       label: (
@@ -84,7 +84,7 @@ const CustomerPortal: React.FC = () => {
                 { key: '/customer/dashboard', label: <Link to="/customer/dashboard">Trang chủ</Link> },
                 { key: '/customer/vehicles', label: <Link to="/customer/vehicles">Xe của tôi</Link> },
                 { key: '/customer/service-packages', label: <Link to="/customer/service-packages">Gói dịch vụ</Link> },
-                { key: '/customer/booking', label: <Link to="/customer/booking">Đặt lịch hẹn</Link> },
+                { key: '/customer/booking', label: <Link to="/customer/booking">Dịch vụ của tôi</Link> },
                 { key: '/customer/history', label: <Link to="/customer/history">Lịch sử</Link> },
                 { key: '/customer/payment', label: <Link to="/customer/payment">Thanh Toán</Link> },
                 { key: '/customer/my-services', label: <Link to="/customer/my-services">Dịch Vụ</Link> },
