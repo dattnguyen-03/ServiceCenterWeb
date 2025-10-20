@@ -50,6 +50,9 @@ import CustomerProfile from './components/customer/CustomerProfile';
 import TechnicianProfile from './components/technician/TechnicianProfile';
 import AppointmentConfirmation from './components/staff/AppointmentConfirmation';
 import ServiceOrderProgress from './components/technician/ServiceOrderProgress';
+import AdminAppointmentConfirmation from './components/admin/AdminAppointmentConfirmation';
+import AdminServiceProgress from './components/admin/AdminServiceProgress';
+import AdminAppointmentManagement from './components/admin/AdminAppointmentManagement';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -120,9 +123,9 @@ const AppContent: React.FC = () => {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="profile" element={<AdminProfile />} />
         <Route path="customers" element={<CustomerManagement />} />
-        <Route path="appointments" element={<AppointmentManagement />} />
+        <Route path="appointments" element={<AdminAppointmentConfirmation />} />
         <Route path="service-tickets" element={<AdminServiceTicket />} />
-        <Route path="service-progress" element={<ServiceProgress />} />
+        <Route path="service-progress" element={<AdminServiceProgress />} />
         <Route path="parts" element={<PartsManagement />} />
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
         <Route path="staff" element={<StaffManagement />} />

@@ -9,70 +9,23 @@ import {
   ExclamationCircleOutlined,
   SearchOutlined
 } from '@ant-design/icons';
+import { adminServiceOrderService, AdminServiceOrder } from '../../services/adminServiceOrderService';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 
-interface ServiceTicket {
-  id: string;
-  customerName: string;
-  customerPhone: string;
-  vehicleInfo: string;
-  serviceType: string;
-  description: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  priority: 'high' | 'medium' | 'low';
-  createdAt: string;
-  appointmentTime: string;
-  assignedTechnician?: string;
-  estimatedDuration: number;
-  actualDuration?: number;
-  notes: string;
-}
 
 const AdminServiceTicket: React.FC = () => {
-  const [tickets, setTickets] = useState<ServiceTicket[]>([]);
+  const [tickets, setTickets] = useState<AdminServiceOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<ServiceTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<AdminServiceOrder | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedTechnician, setSelectedTechnician] = useState<number | null>(null);
 
-  // Mock data - replace with API calls
-  const mockTickets: ServiceTicket[] = [
-    {
-      id: 'SV001',
-      customerName: 'Nguyễn Văn A',
-      customerPhone: '0901234567',
-      vehicleInfo: 'VinFast VF8 - 30A-12345',
-      serviceType: 'Bảo dưỡng định kỳ',
-      description: 'Bảo dưỡng 10,000 km',
-      status: 'pending',
-      priority: 'high',
-      createdAt: '2024-01-15',
-      appointmentTime: '2024-01-16 09:00',
-      estimatedDuration: 120,
-      notes: 'Khách hẹn lấy xe trong ngày'
-    },
-    {
-      id: 'SV002',
-      customerName: 'Trần Thị B',
-      customerPhone: '0907654321',
-      vehicleInfo: 'Tesla Model Y - 30B-67890',
-      serviceType: 'Sửa chữa',
-      description: 'Thay phanh trước',
-      status: 'in-progress',
-      priority: 'medium',
-      createdAt: '2024-01-14',
-      appointmentTime: '2024-01-15 14:00',
-      assignedTechnician: 'Kỹ thuật viên 1',
-      estimatedDuration: 180,
-      actualDuration: 90,
-      notes: 'Đã thay phanh, đang kiểm tra hệ thống'
-    }
-  ];
 
   useEffect(() => {
     loadTickets();
@@ -81,8 +34,8 @@ const AdminServiceTicket: React.FC = () => {
   const loadTickets = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with API call
-      setTickets(mockTickets);
+      const data = await adminServiceOrderService.getAllServiceOrders();
+      setTickets(data);
     } catch (error: any) {
       console.error('Error loading tickets:', error);
       message.error(error.message || 'Không thể tải danh sách phiếu dịch vụ');
@@ -92,26 +45,53 @@ const AdminServiceTicket: React.FC = () => {
     }
   };
 
-  const handleViewDetail = (ticket: ServiceTicket) => {
+  const handleViewDetail = (ticket: AdminServiceOrder) => {
     setSelectedTicket(ticket);
     setDetailModalVisible(true);
   };
 
-  const handleAssignTechnician = (ticket: ServiceTicket) => {
+  const handleAssignTechnician = (ticket: AdminServiceOrder) => {
     setSelectedTicket(ticket);
     setAssignModalVisible(true);
   };
 
-  const handleStatusChange = (_ticketId: string, _newStatus: string) => {
-    // TODO: Implement status change API call
-    message.success('Cập nhật trạng thái thành công!');
-    loadTickets();
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      await adminServiceOrderService.updateServiceOrderStatus({
+        OrderID: orderId,
+        Status: newStatus
+      });
+      message.success('Cập nhật trạng thái thành công!');
+      loadTickets();
+    } catch (error: any) {
+      message.error(error.message || 'Cập nhật trạng thái thất bại!');
+    }
+  };
+
+  const handleAssignTechnicianSubmit = async () => {
+    if (!selectedTicket || !selectedTechnician) {
+      message.error('Vui lòng chọn kỹ thuật viên');
+      return;
+    }
+
+    try {
+      await adminServiceOrderService.assignTechnician({
+        OrderID: selectedTicket.OrderID,
+        TechnicianID: selectedTechnician
+      });
+      message.success('Phân công kỹ thuật viên thành công!');
+      setAssignModalVisible(false);
+      setSelectedTechnician(null);
+      loadTickets();
+    } catch (error: any) {
+      message.error(error.message || 'Phân công kỹ thuật viên thất bại!');
+    }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending': return 'orange';
-      case 'in-progress': return 'blue';
+      case 'inprogress': return 'blue';
       case 'completed': return 'green';
       case 'cancelled': return 'red';
       default: return 'default';
@@ -119,50 +99,33 @@ const AdminServiceTicket: React.FC = () => {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending': return 'Chờ xử lý';
-      case 'in-progress': return 'Đang thực hiện';
+      case 'inprogress': return 'Đang thực hiện';
       case 'completed': return 'Hoàn thành';
       case 'cancelled': return 'Đã hủy';
       default: return status;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'red';
-      case 'medium': return 'orange';
-      case 'low': return 'green';
-      default: return 'default';
-    }
-  };
-
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'Cao';
-      case 'medium': return 'Trung bình';
-      case 'low': return 'Thấp';
-      default: return priority;
-    }
-  };
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
-                         ticket.id.toLowerCase().includes(searchText.toLowerCase()) ||
-                         ticket.vehicleInfo.toLowerCase().includes(searchText.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+                         ticket.OrderID.toString().includes(searchText.toLowerCase()) ||
+                         ticket.vehicleModel.toLowerCase().includes(searchText.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || ticket.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const columns = [
     {
       title: 'Mã phiếu',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'OrderID',
+      key: 'OrderID',
       width: 100,
-      render: (id: string) => (
+      render: (id: number) => (
         <Tag color="blue" className="font-mono">
-          {id}
+          #{id}
         </Tag>
       ),
     },
@@ -170,18 +133,12 @@ const AdminServiceTicket: React.FC = () => {
       title: 'Khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
-      render: (name: string, record: ServiceTicket) => (
+      render: (name: string, record: AdminServiceOrder) => (
         <div>
           <Text strong>{name}</Text>
-          <div className="text-sm text-gray-500">{record.customerPhone}</div>
+          <div className="text-sm text-gray-500">{record.vehicleModel}</div>
         </div>
       ),
-    },
-    {
-      title: 'Thông tin xe',
-      dataIndex: 'vehicleInfo',
-      key: 'vehicleInfo',
-      ellipsis: true,
     },
     {
       title: 'Loại dịch vụ',
@@ -192,42 +149,37 @@ const AdminServiceTicket: React.FC = () => {
       ),
     },
     {
-      title: 'Ưu tiên',
-      dataIndex: 'priority',
-      key: 'priority',
-      width: 100,
-      render: (priority: string) => (
-        <Tag color={getPriorityColor(priority)}>
-          {getPriorityText(priority)}
-        </Tag>
-      ),
+      title: 'Trung tâm',
+      dataIndex: 'centerName',
+      key: 'centerName',
+      ellipsis: true,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string, record: ServiceTicket) => (
+      render: (status: string, record: AdminServiceOrder) => (
         <Select
           value={status}
-          onChange={(value) => handleStatusChange(record.id, value)}
+          onChange={(value) => handleStatusChange(record.OrderID, value)}
           style={{ width: 120 }}
           size="small"
         >
-          <Option value="pending">Chờ xử lý</Option>
-          <Option value="in-progress">Đang thực hiện</Option>
-          <Option value="completed">Hoàn thành</Option>
-          <Option value="cancelled">Đã hủy</Option>
+          <Option value="Pending">Chờ xử lý</Option>
+          <Option value="InProgress">Đang thực hiện</Option>
+          <Option value="Completed">Hoàn thành</Option>
+          <Option value="Cancelled">Đã hủy</Option>
         </Select>
       ),
     },
     {
       title: 'Kỹ thuật viên',
-      dataIndex: 'assignedTechnician',
-      key: 'assignedTechnician',
+      dataIndex: 'technicianName',
+      key: 'technicianName',
       width: 150,
       render: (technician: string) => (
-        technician ? (
+        technician && technician !== 'Chưa phân công' ? (
           <Tag color="green">{technician}</Tag>
         ) : (
           <Tag color="orange">Chưa phân công</Tag>
@@ -238,7 +190,7 @@ const AdminServiceTicket: React.FC = () => {
       title: 'Hành động',
       key: 'actions',
       width: 150,
-      render: (_: any, record: ServiceTicket) => (
+      render: (_: any, record: AdminServiceOrder) => (
         <Space>
           <Button
             type="text"
@@ -248,7 +200,7 @@ const AdminServiceTicket: React.FC = () => {
           >
             Xem
           </Button>
-          {!record.assignedTechnician && (
+          {(!record.technicianName || record.technicianName === 'Chưa phân công') && (
             <Button
               type="text"
               icon={<UserOutlined />}
@@ -308,7 +260,7 @@ const AdminServiceTicket: React.FC = () => {
           <Card className="text-center">
             <Statistic
               title="Chờ xử lý"
-              value={tickets.filter(t => t.status === 'pending').length}
+              value={tickets.filter(t => t.status.toLowerCase() === 'pending').length}
               prefix={<ClockCircleOutlined className="text-orange-500" />}
               valueStyle={{ color: '#f59e0b' }}
             />
@@ -318,7 +270,7 @@ const AdminServiceTicket: React.FC = () => {
           <Card className="text-center">
             <Statistic
               title="Đang thực hiện"
-              value={tickets.filter(t => t.status === 'in-progress').length}
+              value={tickets.filter(t => t.status.toLowerCase() === 'inprogress').length}
               prefix={<ExclamationCircleOutlined className="text-blue-500" />}
               valueStyle={{ color: '#3b82f6' }}
             />
@@ -328,7 +280,7 @@ const AdminServiceTicket: React.FC = () => {
           <Card className="text-center">
             <Statistic
               title="Hoàn thành"
-              value={tickets.filter(t => t.status === 'completed').length}
+              value={tickets.filter(t => t.status.toLowerCase() === 'completed').length}
               prefix={<CheckCircleOutlined className="text-green-500" />}
               valueStyle={{ color: '#10b981' }}
             />
@@ -356,7 +308,7 @@ const AdminServiceTicket: React.FC = () => {
             >
               <Option value="all">Tất cả</Option>
               <Option value="pending">Chờ xử lý</Option>
-              <Option value="in-progress">Đang thực hiện</Option>
+              <Option value="inprogress">Đang thực hiện</Option>
               <Option value="completed">Hoàn thành</Option>
               <Option value="cancelled">Đã hủy</Option>
             </Select>
@@ -400,27 +352,19 @@ const AdminServiceTicket: React.FC = () => {
         {selectedTicket && (
           <Descriptions column={1} bordered>
             <Descriptions.Item label="Mã phiếu">
-              <Tag color="blue">{selectedTicket.id}</Tag>
+              <Tag color="blue">#{selectedTicket.OrderID}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Khách hàng">
-              <div>
-                <Text strong>{selectedTicket.customerName}</Text>
-                <div className="text-sm text-gray-500">{selectedTicket.customerPhone}</div>
-              </div>
+              <Text strong>{selectedTicket.customerName}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Thông tin xe">
-              <Text>{selectedTicket.vehicleInfo}</Text>
+              <Text>{selectedTicket.vehicleModel}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Loại dịch vụ">
               <Tag color="blue">{selectedTicket.serviceType}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Mô tả">
-              <Text>{selectedTicket.description}</Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Ưu tiên">
-              <Tag color={getPriorityColor(selectedTicket.priority)}>
-                {getPriorityText(selectedTicket.priority)}
-              </Tag>
+            <Descriptions.Item label="Trung tâm">
+              <Text>{selectedTicket.centerName}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
               <Tag color={getStatusColor(selectedTicket.status)}>
@@ -428,24 +372,17 @@ const AdminServiceTicket: React.FC = () => {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Kỹ thuật viên">
-              {selectedTicket.assignedTechnician ? (
-                <Tag color="green">{selectedTicket.assignedTechnician}</Tag>
+              {selectedTicket.technicianName && selectedTicket.technicianName !== 'Chưa phân công' ? (
+                <Tag color="green">{selectedTicket.technicianName}</Tag>
               ) : (
                 <Tag color="orange">Chưa phân công</Tag>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Thời gian ước tính">
-              <Text>{selectedTicket.estimatedDuration} phút</Text>
+            <Descriptions.Item label="Ngày tạo">
+              <Text>{new Date(selectedTicket.createDate).toLocaleDateString('vi-VN')}</Text>
             </Descriptions.Item>
-            <Descriptions.Item label="Thời gian thực tế">
-              {selectedTicket.actualDuration ? (
-                <Text>{selectedTicket.actualDuration} phút</Text>
-              ) : (
-                <Text type="secondary">Chưa hoàn thành</Text>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ghi chú">
-              <Text>{selectedTicket.notes}</Text>
+            <Descriptions.Item label="Ngày hẹn">
+              <Text>{new Date(selectedTicket.requestDate).toLocaleDateString('vi-VN')}</Text>
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -463,12 +400,7 @@ const AdminServiceTicket: React.FC = () => {
           <Button
             key="assign"
             type="primary"
-            onClick={() => {
-              // TODO: Implement assign technician API call
-              message.success('Phân công kỹ thuật viên thành công!');
-              setAssignModalVisible(false);
-              loadTickets();
-            }}
+            onClick={handleAssignTechnicianSubmit}
             className="!bg-blue-600 hover:!bg-blue-700"
           >
             Phân công
@@ -478,7 +410,7 @@ const AdminServiceTicket: React.FC = () => {
         <div className="space-y-4">
           <div>
             <Text strong>Phiếu dịch vụ: </Text>
-            <Tag color="blue">{selectedTicket?.id}</Tag>
+            <Tag color="blue">#{selectedTicket?.OrderID}</Tag>
           </div>
           <div>
             <Text strong>Khách hàng: </Text>
@@ -493,10 +425,12 @@ const AdminServiceTicket: React.FC = () => {
             <Select
               style={{ width: '100%', marginTop: 8 }}
               placeholder="Chọn kỹ thuật viên"
+              value={selectedTechnician}
+              onChange={setSelectedTechnician}
             >
-              <Option value="tech1">Kỹ thuật viên 1</Option>
-              <Option value="tech2">Kỹ thuật viên 2</Option>
-              <Option value="tech3">Kỹ thuật viên 3</Option>
+              <Option value={1}>Phạm Kỹ Thuật</Option>
+              <Option value={2}>Lê Kỹ Thuật</Option>
+              <Option value={3}>Nguyễn Kỹ Thuật</Option>
             </Select>
           </div>
         </div>

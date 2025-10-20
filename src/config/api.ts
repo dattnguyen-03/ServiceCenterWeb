@@ -27,6 +27,8 @@ export const API_CONFIG = {
       PARTS: '/admin/parts',
       FINANCE: '/admin/finance',
       REPORTS: '/admin/reports',
+      GET_ALL_CUSTOMERS: '/GetAllCustomersAPI',
+      GET_CUSTOMER_DETAILS: '/GetCustomerDetailsAPI',
     },
     STAFF: {
       DASHBOARD: '/staff/dashboard',

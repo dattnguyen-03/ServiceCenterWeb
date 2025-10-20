@@ -42,7 +42,7 @@ const AdminLayout: React.FC = () => {
     {
       key: '/admin/appointments',
       icon: <CalendarOutlined />,
-      label: <Link to="/admin/appointments">Lịch hẹn</Link>,
+      label: <Link to="/admin/appointments">Xác nhận lịch hẹn</Link>,
     },
     {
       key: '/admin/service-tickets',
