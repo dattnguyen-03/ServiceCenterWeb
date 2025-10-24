@@ -30,32 +30,7 @@ interface Staff {
   }[];
 }
 
-// Mock data - This will be replaced by API data
-const mockStaffMembers: Staff[] = [
-  {
-    id: 'T001',
-    name: 'Nguyễn Văn A',
-    role: 'Senior Technician',
-    specialization: ['EV Systems', 'Battery Maintenance'],
-    phone: '0901234567',
-    email: 'technician.a@service.com',
-    status: 'active',
-    certifications: [
-      {
-        name: 'EV System Specialist',
-        issueDate: '2023-01-01',
-        expiryDate: '2024-01-01',
-      },
-    ],
-    schedule: [
-      {
-        shift: 'morning',
-        date: '2023-09-14',
-      },
-    ],
-  },
-  // Add more mock data...
-];
+import { getAllUsers, searchUsers, createUser, editUser, deleteUser, type UserListItem } from '../../api/users';
 
 const StaffManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -63,17 +38,29 @@ const StaffManagement: React.FC = () => {
   const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
+  const mapUsers = (data: UserListItem[]): Staff[] =>
+    data.map((u) => ({
+      id: String(u.userID),
+      name: u.name,
+      role: u.role,
+      specialization: [],
+      phone: u.phone,
+      email: u.email,
+      status: 'active',
+      certifications: [],
+      schedule: [],
+    }));
 
   useEffect(() => {
-    // TODO: Replace with API call
     const fetchStaff = async () => {
       setLoading(true);
-      // const response = await api.getStaff();
-      // setStaffMembers(response.data);
-      setStaffMembers(mockStaffMembers); // Using mock data for now
-      setLoading(false);
+      try {
+        const { data } = await getAllUsers();
+        setStaffMembers(mapUsers(data));
+      } finally {
+        setLoading(false);
+      }
     };
-
     fetchStaff();
   }, []);
 
@@ -201,27 +188,38 @@ const StaffManagement: React.FC = () => {
     Modal.confirm({
       title: 'Xác nhận xóa',
       content: 'Bạn có chắc chắn muốn xóa nhân viên này?',
-      onOk() {
-        // TODO: Call API to delete staff
-        console.log('Delete staff:', id);
-        setStaffMembers(prev => prev.filter(staff => staff.id !== id));
+      async onOk() {
+        await deleteUser(Number(id));
+        const { data } = await getAllUsers();
+        setStaffMembers(mapUsers(data));
       },
     });
   };
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = async (values: any) => {
     if (editingStaff) {
-      // TODO: Call API to update staff
-      console.log('Update staff:', { ...editingStaff, ...values });
-      setStaffMembers(prev => prev.map(staff => staff.id === editingStaff.id ? { ...staff, ...values } : staff));
+      await editUser({
+        userID: Number(editingStaff.id),
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+      });
     } else {
-      // TODO: Call API to create staff
-      const newStaff = { id: `T${Date.now()}`, ...values };
-      console.log('Create staff:', newStaff);
-      setStaffMembers(prev => [...prev, newStaff]);
+      await createUser({
+        username: values.username,
+        password: values.password,
+        role: values.role,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+      });
     }
     setIsModalVisible(false);
     form.resetFields();
+    const { data } = await getAllUsers();
+    setStaffMembers(mapUsers(data));
   };
 
   return (
@@ -242,6 +240,20 @@ const StaffManagement: React.FC = () => {
           </Button>
         }
       >
+        <Input.Search
+          allowClear
+          placeholder="Tìm theo Username/Name/Email"
+          onSearch={async (val) => {
+            setLoading(true);
+            try {
+              const { data } = val ? await searchUsers(val) : await getAllUsers();
+              setStaffMembers(mapUsers(data));
+            } finally {
+              setLoading(false);
+            }
+          }}
+          style={{ width: 360, marginBottom: 16 }}
+        />
         <Spin spinning={loading}>
           <Table
             columns={columns}
@@ -267,6 +279,24 @@ const StaffManagement: React.FC = () => {
           layout="vertical"
           onFinish={handleSubmit}
         >
+          {!editingStaff && (
+            <>
+              <Form.Item
+                name="username"
+                label="Username"
+                rules={[{ required: true, message: 'Vui lòng nhập username' }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                label="Mật khẩu"
+                rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+              >
+                <Input.Password />
+              </Form.Item>
+            </>
+          )}
           <Form.Item
             name="name"
             label="Tên nhân viên"
@@ -274,31 +304,19 @@ const StaffManagement: React.FC = () => {
           >
             <Input prefix={<UserOutlined />} />
           </Form.Item>
-
           <Form.Item
             name="role"
-            label="Vị trí"
-            rules={[{ required: true, message: 'Vui lòng chọn vị trí' }]}
+            label="Vai trò"
+            rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
           >
-            <Select>
-              <Select.Option value="Senior Technician">Kỹ thuật viên cao cấp</Select.Option>
+            <Select disabled={!!editingStaff}>
+              <Select.Option value="Customer">Khách hàng</Select.Option>
+              <Select.Option value="Staff">Nhân viên</Select.Option>
               <Select.Option value="Technician">Kỹ thuật viên</Select.Option>
-              <Select.Option value="Service Advisor">Cố vấn dịch vụ</Select.Option>
+              <Select.Option value="Admin">Quản trị</Select.Option>
             </Select>
           </Form.Item>
-
-          <Form.Item
-            name="specialization"
-            label="Chuyên môn"
-            rules={[{ required: true, message: 'Vui lòng chọn chuyên môn' }]}
-          >
-            <Select mode="multiple">
-              <Select.Option value="EV Systems">Hệ thống EV</Select.Option>
-              <Select.Option value="Battery Maintenance">Bảo dưỡng pin</Select.Option>
-              <Select.Option value="Motor Systems">Hệ thống động cơ</Select.Option>
-              <Select.Option value="Charging Systems">Hệ thống sạc</Select.Option>
-            </Select>
-          </Form.Item>
+          {/* specialization and schedule are not used by backend */}
 
           <Form.Item
             name="phone"
@@ -322,17 +340,7 @@ const StaffManagement: React.FC = () => {
             <Input prefix={<MailOutlined />} />
           </Form.Item>
 
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-          >
-            <Select>
-              <Select.Option value="active">Đang làm việc</Select.Option>
-              <Select.Option value="off-duty">Ngoài ca</Select.Option>
-              <Select.Option value="on-leave">Nghỉ phép</Select.Option>
-            </Select>
-          </Form.Item>
+          {/* status is UI-only; not persisted */}
         </Form>
       </Modal>
     </div>

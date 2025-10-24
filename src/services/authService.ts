@@ -176,7 +176,7 @@ class AuthService {
   }
 
   async updateProfile(profileData: any): Promise<any> {
-    const response = await httpClient.put('/EditUserAPI', profileData);
+    const response = await httpClient.put('/EditProfileAPI', profileData);
     return response.data || response;
   }
 
