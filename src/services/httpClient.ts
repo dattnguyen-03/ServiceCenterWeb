@@ -212,6 +212,13 @@ class HttpClient {
     return this.request<T>(url, { method: 'DELETE' });
   }
 
+  async deleteWithBody<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+      body: JSON.stringify(data),
+    });
+  }
+
   async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PATCH',

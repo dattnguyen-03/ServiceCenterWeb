@@ -7,28 +7,17 @@ import {
   Button, 
   Spin, 
   Tag, 
-  Descriptions, 
-  Timeline, 
-  Statistic,
-  Divider,
-  Space
+  Timeline
 } from 'antd';
 import { 
   CarOutlined, 
-  ThunderboltOutlined, 
-  DashboardOutlined, 
-  CalendarOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  ArrowLeftOutlined,
-  ToolOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { VehicleResponse } from '../../types/api';
 import { vehicleService } from '../../services/vehicleService';
-import { sweetAlert } from '../../utils/sweetAlert';
+import { showError } from '../../utils/sweetAlert';
 
 const VehicleDetail: React.FC = () => {
   const { vehicleId } = useParams<{ vehicleId: string }>();
@@ -49,7 +38,7 @@ const VehicleDetail: React.FC = () => {
       setVehicle(vehicleData);
     } catch (error: any) {
       console.error('Error loading vehicle detail:', error);
-      sweetAlert.error('Lỗi tải thông tin xe', error.message || 'Không thể tải thông tin xe');
+      showError('Lỗi tải thông tin xe', error.message || 'Không thể tải thông tin xe');
       navigate('/customer/vehicles');
     } finally {
       setLoading(false);
@@ -106,219 +95,331 @@ const VehicleDetail: React.FC = () => {
   const maintenanceStatus = getMaintenanceStatus(vehicle.nextServiceDate);
 
   return (
-    <div className="p-4 md:p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center mb-6">
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate('/customer/vehicles')}
-            className="mr-4 !border-gray-300 !text-gray-600 hover:!border-blue-400 hover:!text-blue-600 !rounded-xl !h-10 !font-medium !bg-white hover:!bg-blue-50 transition-all duration-300"
-          >
-            Quay lại
-          </Button>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-              <CarOutlined className="text-white text-xl" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-1">
-                Chi tiết xe {vehicle.model}
-              </h1>
-              <p className="text-gray-600">Thông tin chi tiết và lịch sử bảo dưỡng</p>
-            </div>
-          </div>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
+      {/* Gradient Header */}
+      <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-b-3xl shadow-lg mb-8">
+        <div className="flex items-center mb-3">
+          <CarOutlined style={{ fontSize: 32, marginRight: 12 }} />
+          <h1 className="text-4xl font-bold">Chi tiết xe {vehicle.model}</h1>
         </div>
+        <p className="text-blue-100 text-lg">Thông tin chi tiết và lịch sử bảo dưỡng</p>
       </div>
 
-      <Row gutter={[24, 24]}>
-        {/* Vehicle Information */}
-        <Col xs={24} lg={16}>
-          <Card 
-            className="rounded-2xl shadow-lg border border-gray-100"
-            title={
-              <div className="flex items-center">
-                <CarOutlined className="text-blue-500 mr-3" />
-                <span className="text-lg font-semibold">Thông tin xe</span>
-              </div>
-            }
-          >
-            <Descriptions column={2} size="middle">
-              <Descriptions.Item label="Model xe" className="font-medium">
-                <span className="text-lg font-bold text-gray-900">{vehicle.model}</span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Năm sản xuất">
-                <Tag color="blue">{vehicle.year}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="VIN" span={2}>
-                <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
-                  {vehicle.vin}
-                </code>
-              </Descriptions.Item>
-              <Descriptions.Item label="Biển số xe">
-                <Tag color="green" className="text-base font-medium">
-                  {vehicle.licensePlate}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="ID xe">
-                <Tag color="purple">#{vehicle.vehicleID}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Ghi chú" span={2}>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  {vehicle.notes || 'Không có ghi chú'}
+      <div className="px-6 pb-6">
+        <Row gutter={[24, 24]}>
+          {/* Vehicle Information */}
+          <Col xs={24} lg={16}>
+            <Card 
+              style={{
+                borderRadius: 20,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
+                🚗 Thông tin xe
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                <div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Model xe</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#1f2937' }}>{vehicle.model}</div>
                 </div>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-
-          {/* Maintenance History */}
-          <Card 
-            className="rounded-2xl shadow-lg border border-gray-100 mt-6"
-            title={
-              <div className="flex items-center">
-                <ToolOutlined className="text-orange-500 mr-3" />
-                <span className="text-lg font-semibold">Lịch sử bảo dưỡng</span>
-              </div>
-            }
-          >
-            <Timeline>
-              <Timeline.Item 
-                dot={<CheckCircleOutlined className="text-green-500" />}
-                color="green"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium text-gray-900">Bảo dưỡng cuối cùng</div>
-                    <div className="text-sm text-gray-600">Kiểm tra tổng thể</div>
-                  </div>
-                  <div className="text-right">
-                    <Tag color="green">
-                      {vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
-                    </Tag>
-                    <div className="text-sm text-gray-500 mt-1">
-                      {vehicle.lastServiceDate ? getDaysRemaining(vehicle.lastServiceDate) : 'Chưa có dữ liệu'}
-                    </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Năm sản xuất</div>
+                  <Tag style={{ borderRadius: 20, fontWeight: 600, padding: '4px 12px' }} color="blue">
+                    {vehicle.year}
+                  </Tag>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>VIN</div>
+                  <code style={{
+                    background: '#f3f4f6',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontFamily: 'monospace',
+                    color: '#1f2937',
+                    display: 'block'
+                  }}>
+                    {vehicle.vin}
+                  </code>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Biển số xe</div>
+                  <Tag style={{ borderRadius: 20, fontWeight: 600, padding: '4px 12px' }} color="green">
+                    {vehicle.licensePlate}
+                  </Tag>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>ID xe</div>
+                  <Tag style={{ borderRadius: 20, fontWeight: 600, padding: '4px 12px' }} color="purple">
+                    #{vehicle.vehicleID}
+                  </Tag>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Ghi chú</div>
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: 12,
+                    borderRadius: 10,
+                    border: '1px solid #e5e7eb',
+                    color: '#4b5563'
+                  }}>
+                    {vehicle.notes || 'Không có ghi chú'}
                   </div>
                 </div>
-              </Timeline.Item>
+              </div>
+            </Card>
+
+            {/* Maintenance History */}
+            <Card 
+              style={{
+                borderRadius: 20,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb',
+                marginTop: 24
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
+                🔧 Lịch sử bảo dưỡng
+              </h3>
+              <Timeline
+                items={[
+                  {
+                    dot: (
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                        borderRadius: 50,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontWeight: 700,
+                        boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)'
+                      }}>
+                        ✓
+                      </div>
+                    ),
+                    children: (
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)',
+                        border: '2px solid #86efac',
+                        borderRadius: 12,
+                        padding: 16,
+                        marginLeft: 16
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+                          <div>
+                            <p style={{ fontWeight: 700, fontSize: 16, color: '#1f2937', margin: 0, marginBottom: 4 }}>
+                              Bảo dưỡng cuối cùng
+                            </p>
+                            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Kiểm tra tổng thể</p>
+                          </div>
+                          <Tag style={{ borderRadius: 20, fontWeight: 600 }} color="green">
+                            ✅ Hoàn tất
+                          </Tag>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>
+                          📅 {vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                        </p>
+                        {vehicle.lastServiceDate && (
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0 0' }}>
+                            {getDaysRemaining(vehicle.lastServiceDate)}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  },
+                  {
+                    dot: (
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        background: `linear-gradient(135deg, ${maintenanceStatus.color === 'green' ? '#22c55e 0%, #16a34a' : maintenanceStatus.color === 'orange' ? '#f59e0b 0%, #d97706' : '#ef4444 0%, #dc2626'} 100%)`,
+                        borderRadius: 50,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontWeight: 700,
+                        boxShadow: `0 2px 8px rgba(${maintenanceStatus.color === 'green' ? '34, 197, 94' : maintenanceStatus.color === 'orange' ? '245, 158, 11' : '239, 68, 68'}, 0.3)`
+                      }}>
+                        ⏱
+                      </div>
+                    ),
+                    children: (
+                      <div style={{
+                        background: maintenanceStatus.color === 'green' ? 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)' : maintenanceStatus.color === 'orange' ? 'linear-gradient(135deg, #fefce8 0%, #f9fafb 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #f9fafb 100%)',
+                        border: `2px solid ${maintenanceStatus.color === 'green' ? '#86efac' : maintenanceStatus.color === 'orange' ? '#fcd34d' : '#fca5a5'}`,
+                        borderRadius: 12,
+                        padding: 16,
+                        marginLeft: 16
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+                          <div>
+                            <p style={{ fontWeight: 700, fontSize: 16, color: '#1f2937', margin: 0, marginBottom: 4 }}>
+                              Bảo dưỡng tiếp theo
+                            </p>
+                            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Bảo dưỡng định kỳ</p>
+                          </div>
+                          <Tag style={{ borderRadius: 20, fontWeight: 600 }} color={maintenanceStatus.color}>
+                            {maintenanceStatus.text}
+                          </Tag>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>
+                          📅 {vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                        </p>
+                        {vehicle.nextServiceDate && (
+                          <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0 0', fontWeight: 600 }}>
+                            {getDaysRemaining(vehicle.nextServiceDate)}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  }
+                ]}
+              />
+            </Card>
+          </Col>
+
+          {/* Vehicle Stats & Actions */}
+          <Col xs={24} lg={8}>
+            {/* Vehicle Stats */}
+            <Card 
+              style={{
+                borderRadius: 20,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb',
+                marginBottom: 24
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
+                📊 Thống kê
+              </h3>
               
-              <Timeline.Item 
-                dot={<ClockCircleOutlined className={`text-${maintenanceStatus.color}-500`} />}
-                color={maintenanceStatus.color}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium text-gray-900">Bảo dưỡng tiếp theo</div>
-                    <div className="text-sm text-gray-600">Bảo dưỡng định kỳ</div>
-                  </div>
-                  <div className="text-right">
-                    <Tag color={maintenanceStatus.color}>
-                      {vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
-                    </Tag>
-                    <div className={`text-sm font-medium mt-1 text-${maintenanceStatus.color}-600`}>
-                      {vehicle.nextServiceDate ? getDaysRemaining(vehicle.nextServiceDate) : 'Chưa có dữ liệu'}
-                    </div>
-                  </div>
+              <div style={{
+                background: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)',
+                padding: 16,
+                borderRadius: 12,
+                marginBottom: 16,
+                border: '2px solid #7dd3fc'
+              }}>
+                <div style={{ fontSize: 12, color: '#0c4a6e', marginBottom: 4, fontWeight: 600 }}>⚡ Dung lượng pin</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#0284c7' }}>
+                  {vehicle.batteryCapacity || 'N/A'}
                 </div>
-              </Timeline.Item>
-            </Timeline>
-          </Card>
-        </Col>
-
-        {/* Vehicle Stats & Actions */}
-        <Col xs={24} lg={8}>
-          {/* Vehicle Stats */}
-          <Card 
-            className="rounded-2xl shadow-lg border border-gray-100 mb-6"
-            title={
-              <div className="flex items-center">
-                <DashboardOutlined className="text-green-500 mr-3" />
-                <span className="text-lg font-semibold">Thống kê</span>
-              </div>
-            }
-          >
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                <Statistic
-                  title={<span className="text-gray-600">Dung lượng pin</span>}
-                  value={vehicle.batteryCapacity || 'N/A'}
-                  prefix={<ThunderboltOutlined className="text-blue-500" />}
-                  valueStyle={{ color: '#1d4ed8', fontWeight: 600 }}
-                />
-              </div>
-              
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
-                <Statistic
-                  title={<span className="text-gray-600">Quãng đường</span>}
-                  value={`${(vehicle.mileage || 0).toLocaleString()} km`}
-                  prefix={<DashboardOutlined className="text-green-500" />}
-                  valueStyle={{ color: '#16a34a', fontWeight: 600 }}
-                />
               </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-amber-100 p-4 rounded-xl border border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-gray-600 mb-1">Trạng thái bảo dưỡng</div>
-                    <div className="text-lg font-bold text-orange-700">{maintenanceStatus.text}</div>
-                  </div>
-                  <CalendarOutlined className={`text-2xl text-${maintenanceStatus.color}-500`} />
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)',
+                padding: 16,
+                borderRadius: 12,
+                marginBottom: 16,
+                border: '2px solid #86efac'
+              }}>
+                <div style={{ fontSize: 12, color: '#166534', marginBottom: 4, fontWeight: 600 }}>📍 Quãng đường</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>
+                  {(vehicle.mileage || 0).toLocaleString()} km
                 </div>
               </div>
-            </div>
-          </Card>
 
-          {/* Actions */}
-          <Card 
-            className="rounded-2xl shadow-lg border border-gray-100"
-            title={
-              <div className="flex items-center">
-                <ToolOutlined className="text-blue-500 mr-3" />
-                <span className="text-lg font-semibold">Thao tác</span>
+              <div style={{
+                background: maintenanceStatus.color === 'green' ? 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)' : maintenanceStatus.color === 'orange' ? 'linear-gradient(135deg, #fefce8 0%, #f9fafb 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #f9fafb 100%)',
+                padding: 16,
+                borderRadius: 12,
+                border: `2px solid ${maintenanceStatus.color === 'green' ? '#86efac' : maintenanceStatus.color === 'orange' ? '#fcd34d' : '#fca5a5'}`
+              }}>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>🔔 Trạng thái bảo dưỡng</div>
+                <div style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: maintenanceStatus.color === 'green' ? '#16a34a' : maintenanceStatus.color === 'orange' ? '#d97706' : '#dc2626'
+                }}>
+                  {maintenanceStatus.text}
+                </div>
               </div>
-            }
-          >
-            <div className="space-y-3">
-              <Button 
-                type="primary" 
-                size="large" 
-                block
-                className="!bg-gradient-to-r !from-blue-600 !to-indigo-600 hover:!from-blue-700 hover:!to-indigo-700 !border-0 !rounded-xl !h-12 !font-medium !shadow-md hover:!shadow-lg transition-all duration-300"
-              >
-                Đặt lịch bảo dưỡng
-              </Button>
+            </Card>
+
+            {/* Actions */}
+            <Card 
+              style={{
+                borderRadius: 20,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
+                ⚙️ Thao tác
+              </h3>
               
-              <Button 
-                size="large" 
-                block
-                className="!border-gray-300 !text-gray-700 hover:!border-blue-400 hover:!text-blue-600 !rounded-xl !h-12 !font-medium !bg-white hover:!bg-blue-50 transition-all duration-300"
-              >
-                Xem lịch sử chi tiết
-              </Button>
-              
-              <Divider className="my-4" />
-              
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  size="middle"
-                  icon={<EditOutlined />}
-                  className="!border-gray-300 !text-gray-600 hover:!border-blue-400 hover:!text-blue-600 !rounded-xl !h-10 !font-medium !bg-white hover:!bg-blue-50 transition-all duration-300"
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Button 
+                  type="primary" 
+                  size="large" 
+                  style={{
+                    borderRadius: 10,
+                    background: 'linear-gradient(90deg, #60a5fa 0%, #22c55e 100%)',
+                    border: 'none',
+                    fontWeight: 700,
+                    height: 44
+                  }}
                 >
-                  Chỉnh sửa
+                  📅 Đặt lịch bảo dưỡng
                 </Button>
-                <Button
-                  size="middle"
-                  danger
-                  icon={<DeleteOutlined />}
-                  className="!border-red-300 !text-red-600 hover:!border-red-500 hover:!text-red-700 !rounded-xl !h-10 !font-medium !bg-white hover:!bg-red-50 transition-all duration-300"
+                
+                <Button 
+                  size="large"
+                  style={{
+                    borderRadius: 10,
+                    borderColor: '#d1d5db',
+                    color: '#4b5563',
+                    fontWeight: 600,
+                    height: 44,
+                    background: '#fff'
+                  }}
                 >
-                  Xóa
+                  📋 Xem lịch sử chi tiết
                 </Button>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <Button
+                    size="large"
+                    icon={<EditOutlined />}
+                    style={{
+                      borderRadius: 10,
+                      borderColor: '#d1d5db',
+                      color: '#4b5563',
+                      fontWeight: 600,
+                      height: 44,
+                      background: '#fff'
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="large"
+                    danger
+                    icon={<DeleteOutlined />}
+                    style={{
+                      borderRadius: 10,
+                      fontWeight: 600,
+                      height: 44
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

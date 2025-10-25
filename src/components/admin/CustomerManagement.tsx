@@ -1,66 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Car, Search, Filter, Plus, Eye, Edit, Trash2, Phone, Mail, Calendar, MapPin, Clock, DollarSign, Wrench } from 'lucide-react';
-import { customerManagementService, CustomerWithDetails, CustomerFullDetails } from '../../services/customerManagementService';
+import { Users, Car, Search, Filter, Plus, Eye, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
+import { getAllUsers, searchUsers, type UserListItem } from '../../api/users';
 
 // Use the API types
-type Customer = CustomerWithDetails;
+type Customer = UserListItem;
 
 const CustomerManagement: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerFullDetails | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchCustomers = async () => {
       setLoading(true);
       try {
-        const customerData = await customerManagementService.getAllCustomers();
-      setCustomers(customerData);
-      } catch (error) {
+        const data = await getAllUsers();
+        setCustomers(data);
+      } catch (error: any) {
         console.error('Error fetching customers:', error);
         setCustomers([]);
       } finally {
-      setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchCustomers();
   }, []);
   
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.email.toLowerCase().includes(searchTerm.toLowerCase());
-    // TODO: Add status filtering logic when available in data
-    return matchesSearch;
-  });
+  // Handle search with API call
+  const handleSearch = async (keyword: string) => {
+    if (!keyword.trim()) {
+      // If empty, fetch all users
+      const data = await getAllUsers();
+      setCustomers(data);
+      return;
+    }
 
-  const handleViewDetail = async (customer: Customer) => {
     try {
-      const customerDetails = await customerManagementService.getCustomerDetails(customer.userID);
-      setSelectedCustomer(customerDetails);
-      setDetailModalVisible(true);
-    } catch (error) {
-      console.error('Error fetching customer details:', error);
+      const data = await searchUsers(keyword);
+      setCustomers(data);
+    } catch (error: any) {
+      console.error('Error searching users:', error);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+  const filteredCustomers = customers.filter(customer => {
+    // Filter by role if needed (only show customers)
+    const isCustomer = customer.role === 'Customer';
+    return isCustomer;
+  });
+
+  const handleViewDetail = async (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDetailModalVisible(true);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -95,7 +92,7 @@ const CustomerManagement: React.FC = () => {
               <Car className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">{customers.reduce((sum, customer) => sum + customer.vehicleCount, 0)}</div>
+              <div className="text-2xl font-bold text-gray-900">{customers.length}</div>
               <div className="text-sm text-gray-600">Tổng xe đăng ký</div>
             </div>
           </div>
@@ -136,7 +133,10 @@ const CustomerManagement: React.FC = () => {
                 type="text"
                 placeholder="Tìm kiếm khách hàng..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  handleSearch(e.target.value);
+                }}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
               />
             </div>
@@ -166,9 +166,9 @@ const CustomerManagement: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left py-4 px-6 font-medium text-gray-600">Khách hàng</th>
-                <th className="text-left py-4 px-6 font-medium text-gray-600">Xe đăng ký</th>
-                <th className="text-left py-4 px-6 font-medium text-gray-600">Lần dịch vụ cuối</th>
-                <th className="text-left py-4 px-6 font-medium text-gray-600">Tổng chi tiêu</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-600">Liên hệ</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-600">Thông tin</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-600">Loại</th>
                 <th className="text-left py-4 px-6 font-medium text-gray-600">Trạng thái</th>
                 <th className="text-left py-4 px-6 font-medium text-gray-600">Hành động</th>
               </tr>
@@ -195,28 +195,24 @@ const CustomerManagement: React.FC = () => {
                     <td className="py-4 px-6">
                       <div className="space-y-1">
                         <div className="text-sm">
-                          <div className="font-medium text-gray-900">{customer.vehicleCount} xe đăng ký</div>
-                          <div className="text-gray-600">Click xem chi tiết để xem danh sách</div>
-                          </div>
+                          <div className="font-medium text-gray-900">{customer.phone}</div>
+                          <div className="text-gray-600">{customer.address}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      {customer.lastServiceDate ? (
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(customer.lastServiceDate).toLocaleDateString('vi-VN')}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {customer.appointmentCount} dịch vụ
-                          </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {customer.role}
                         </div>
-                      ) : (
-                        <span className="text-gray-400">Chưa có dịch vụ</span>
-                      )}
+                        <div className="text-xs text-gray-600">
+                          {customer.username}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-semibold text-gray-900">
-                        {customer.totalSpent.toLocaleString('vi-VN')} đ
+                        Khách hàng
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -303,107 +299,35 @@ const CustomerManagement: React.FC = () => {
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-green-600" />
-                    Thống kê dịch vụ
+                    <Users className="w-5 h-5 mr-2 text-blue-600" />
+                    Thông tin tài khoản
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
-                      <span className="text-gray-600">Tổng chi tiêu:</span>
-                      <span className="ml-2 font-bold text-green-600">{formatCurrency(selectedCustomer.totalSpent)}</span>
+                      <span className="text-gray-600">Username:</span>
+                      <span className="ml-2 font-medium">{selectedCustomer.username}</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="text-gray-600">Số lần dịch vụ:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.appointmentCount}</span>
+                      <span className="text-gray-600">Role:</span>
+                      <span className="ml-2 font-medium">{selectedCustomer.role}</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="text-gray-600">Lần cuối:</span>
-                      <span className="ml-2 font-medium">
-                        {selectedCustomer.lastServiceDate ? formatDate(selectedCustomer.lastServiceDate) : 'Chưa có'}
-                      </span>
+                      <span className="text-gray-600">User ID:</span>
+                      <span className="ml-2 font-medium">{selectedCustomer.userID}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Vehicles */}
+              {/* Additional Info */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <Car className="w-5 h-5 mr-2 text-blue-600" />
-                  Xe đăng ký ({selectedCustomer.vehicleCount})
+                  Thông tin bổ sung
                 </h4>
-                {selectedCustomer.vehicles.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCustomer.vehicles.map((vehicle) => (
-                      <div key={vehicle.vehicleID} className="bg-white rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-gray-900">{vehicle.model}</h5>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                            Hoạt động
-                          </span>
-                        </div>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <div>VIN: {vehicle.vin}</div>
-                          <div>Năm sản xuất: {vehicle.year || '2023'}</div>
-                          <div>Màu sắc: {vehicle.color || 'Trắng'}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-4">Chưa đăng ký xe nào</p>
-                )}
-              </div>
-
-              {/* Service History */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <Wrench className="w-5 h-5 mr-2 text-orange-600" />
-                  Lịch sử dịch vụ ({selectedCustomer.appointmentCount})
-                </h4>
-                {selectedCustomer.appointments.length > 0 ? (
-                  <div className="space-y-3">
-                    {selectedCustomer.appointments.slice(0, 5).map((appointment, index) => (
-                      <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium text-gray-900">
-                              {formatDate(appointment.requestedDate)}
-                            </span>
-                          </div>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                            {appointment.status || 'Hoàn thành'}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          <div className="mb-1">
-                            <span className="font-medium">Dịch vụ:</span> {appointment.serviceType}
-                          </div>
-                          <div className="mb-1">
-                            <span className="font-medium">Mô tả:</span> {appointment.description}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-1 text-gray-400" />
-                              <span>2 giờ</span>
-                            </div>
-                            <div className="flex items-center">
-                              <DollarSign className="w-4 h-4 mr-1 text-gray-400" />
-                              <span className="font-medium">{formatCurrency(appointment.cost || 0)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {selectedCustomer.appointments.length > 5 && (
-                      <p className="text-center text-gray-500 py-2">
-                        Và {selectedCustomer.appointments.length - 5} dịch vụ khác...
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-4">Chưa có lịch sử dịch vụ</p>
-                )}
+                <p className="text-gray-500 text-sm">
+                  Để xem thông tin chi tiết về xe và lịch sử dịch vụ, vui lòng sử dụng các chức năng quản lý xe và lịch hẹn riêng biệt.
+                </p>
               </div>
             </div>
 

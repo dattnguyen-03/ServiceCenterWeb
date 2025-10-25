@@ -10,6 +10,13 @@ import {
   PlusOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
+import { 
+  showSuccess, 
+  showError, 
+  showDeleteConfirm, 
+  showLoading, 
+  closeLoading 
+} from '../../utils/sweetAlert';
 
 interface Staff {
   id: string;
@@ -55,14 +62,106 @@ const StaffManagement: React.FC = () => {
     const fetchStaff = async () => {
       setLoading(true);
       try {
-        const { data } = await getAllUsers();
+        const data = await getAllUsers();
         setStaffMembers(mapUsers(data));
+      } catch (error) {
+        console.error('Error fetching staff:', error);
       } finally {
         setLoading(false);
       }
     };
     fetchStaff();
   }, []);
+
+  // Handle create user
+  const handleCreateUser = async (values: any) => {
+    showLoading('Đang tạo người dùng...');
+    
+    try {
+      const createData = {
+        Username: values.username,
+        Password: values.password,
+        Role: values.role,
+        Name: values.name,
+        Email: values.email,
+        Phone: values.phone,
+        Address: values.address
+      };
+      
+      const result = await createUser(createData);
+      closeLoading();
+      
+      await showSuccess('Thành công!', result.message || 'Tạo người dùng thành công!');
+      
+      // Refresh staff list
+      const data = await getAllUsers();
+      setStaffMembers(mapUsers(data));
+      
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error: any) {
+      closeLoading();
+      await showError('Lỗi!', error.message || 'Có lỗi xảy ra khi tạo người dùng');
+    }
+  };
+
+  // Handle edit user
+  const handleEditUser = async (values: any) => {
+    if (!editingStaff) return;
+    
+    showLoading('Đang cập nhật thông tin...');
+    
+    try {
+      const editData = {
+        UserID: parseInt(editingStaff.id),
+        Name: values.name,
+        Email: values.email,
+        Phone: values.phone,
+        Address: values.address
+      };
+      
+      const result = await editUser(editData);
+      closeLoading();
+      
+      await showSuccess('Thành công!', result.message || 'Cập nhật thông tin thành công!');
+      
+      // Refresh staff list
+      const data = await getAllUsers();
+      setStaffMembers(mapUsers(data));
+      
+      setIsModalVisible(false);
+      setEditingStaff(null);
+      form.resetFields();
+    } catch (error: any) {
+      closeLoading();
+      await showError('Lỗi!', error.message || 'Có lỗi xảy ra khi cập nhật thông tin');
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async (userId: number) => {
+    const result = await showDeleteConfirm('người dùng này');
+    
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    showLoading('Đang xóa người dùng...');
+    
+    try {
+      const deleteResult = await deleteUser(userId);
+      closeLoading();
+      
+      await showSuccess('Thành công!', deleteResult.message || 'Xóa người dùng thành công!');
+      
+      // Refresh staff list
+      const data = await getAllUsers();
+      setStaffMembers(mapUsers(data));
+    } catch (error: any) {
+      closeLoading();
+      await showError('Lỗi!', error.message || 'Có lỗi xảy ra khi xóa người dùng');
+    }
+  };
 
   const columns = [
     {
@@ -157,7 +256,7 @@ const StaffManagement: React.FC = () => {
           <Button
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+            onClick={() => handleDeleteUser(parseInt(record.id))}
           >
             Xóa
           </Button>
@@ -169,12 +268,11 @@ const StaffManagement: React.FC = () => {
   const handleEdit = (staff: Staff) => {
     setEditingStaff(staff);
     form.setFieldsValue({
-      ...staff,
-      certifications: staff.certifications.map(cert => ({
-        ...cert,
-        issueDate: cert.issueDate,
-        expiryDate: cert.expiryDate,
-      })),
+      name: staff.name,
+      email: staff.email,
+      phone: staff.phone,
+      address: '', // Add address field if needed
+      role: staff.role,
     });
     setIsModalVisible(true);
   };
@@ -184,42 +282,13 @@ const StaffManagement: React.FC = () => {
     console.log('Manage schedule for:', staff.name);
   };
 
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: 'Bạn có chắc chắn muốn xóa nhân viên này?',
-      async onOk() {
-        await deleteUser(Number(id));
-        const { data } = await getAllUsers();
-        setStaffMembers(mapUsers(data));
-      },
-    });
-  };
 
   const handleSubmit = async (values: any) => {
     if (editingStaff) {
-      await editUser({
-        userID: Number(editingStaff.id),
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        address: values.address,
-      });
+      await handleEditUser(values);
     } else {
-      await createUser({
-        username: values.username,
-        password: values.password,
-        role: values.role,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        address: values.address,
-      });
+      await handleCreateUser(values);
     }
-    setIsModalVisible(false);
-    form.resetFields();
-    const { data } = await getAllUsers();
-    setStaffMembers(mapUsers(data));
   };
 
   return (
@@ -246,7 +315,7 @@ const StaffManagement: React.FC = () => {
           onSearch={async (val) => {
             setLoading(true);
             try {
-              const { data } = val ? await searchUsers(val) : await getAllUsers();
+              const data = val ? await searchUsers(val) : await getAllUsers();
               setStaffMembers(mapUsers(data));
             } finally {
               setLoading(false);

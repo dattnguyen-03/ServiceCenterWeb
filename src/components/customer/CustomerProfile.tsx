@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, notification, Spin, Tabs, Space, Modal } from 'antd';
-import { UserOutlined, LockOutlined, SaveOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
-
-const { TabPane } = Tabs;
 
 interface CustomerProfileType {
   username: string;
@@ -130,179 +128,278 @@ const CustomerProfile: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-40">
-      <Card title="Thông tin tài khoản Khách hàng" className="shadow-lg">
-        <Tabs defaultActiveKey="1">
-          <TabPane
-            tab={
-              <span>
-                <UserOutlined />
-                Thông tin cá nhân
-              </span>
-            }
-            key="1"
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
+      {/* Gradient Header */}
+      <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-b-3xl shadow-lg mb-8">
+        <div className="flex items-center mb-3">
+          <UserOutlined style={{ fontSize: 32, marginRight: 12 }} />
+          <h1 className="text-4xl font-bold">Hồ sơ cá nhân</h1>
+        </div>
+        <p className="text-indigo-100 text-lg">Quản lý thông tin tài khoản và bảo mật</p>
+      </div>
+
+      <div className="px-6 pb-6 max-w-4xl mx-auto">
+        <Card 
+          style={{
+            borderRadius: 20,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}
+          bodyStyle={{ padding: 0 }}
+        >
+          <Tabs 
+            defaultActiveKey="1"
+            style={{ borderRadius: 20 }}
+            tabBarStyle={{
+              borderBottom: '2px solid #e5e7eb',
+              paddingLeft: 24,
+              paddingRight: 24
+            }}
           >
-            <Form
-              form={profileForm}
-              layout="vertical"
-              onFinish={handleUpdateProfile}
-              initialValues={profile}
+            <Tabs.TabPane
+              tab={
+                <span style={{ fontSize: 14, fontWeight: 600 }}>
+                  👤 Thông tin cá nhân
+                </span>
+              }
+              key="1"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item
-                  name="username"
-                  label="Tên đăng nhập"
+              <div style={{ padding: 24 }}>
+                <Form
+                  form={profileForm}
+                  layout="vertical"
+                  onFinish={handleUpdateProfile}
+                  initialValues={profile}
                 >
-                  <Input prefix={<UserOutlined />} disabled className="bg-gray-100" />
-                </Form.Item>
-                <Form.Item
-                  name="name"
-                  label="Họ và tên"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập họ và tên!' }
-                  ]}
-                >
-                  <Input prefix={<UserOutlined />} />
-                </Form.Item>
-                <Form.Item
-                  name="email"
-                  label="Email"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập email!' },
-                    { type: 'email', message: 'Email không hợp lệ!' }
-                  ]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  name="phone"
-                  label="Số điện thoại"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập số điện thoại!' }
-                  ]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  name="address"
-                  label="Địa chỉ"
-                  className="md:col-span-2"
-                >
-                  <Input.TextArea rows={3} />
-                </Form.Item>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                    <Form.Item
+                      name="username"
+                      label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Tên đăng nhập</span>}
+                    >
+                      <Input 
+                        prefix={<UserOutlined />} 
+                        disabled 
+                        style={{ borderRadius: 10, backgroundColor: '#f3f4f6', borderColor: '#e5e7eb' }}
+                        size="large"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="name"
+                      label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Họ và tên</span>}
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập họ và tên!' }
+                      ]}
+                    >
+                      <Input 
+                        prefix={<UserOutlined />}
+                        style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                        size="large"
+                        placeholder="Nhập họ và tên"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="email"
+                      label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Email</span>}
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập email!' },
+                        { type: 'email', message: 'Email không hợp lệ!' }
+                      ]}
+                    >
+                      <Input 
+                        prefix={<span>✉️</span>}
+                        style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                        size="large"
+                        placeholder="Nhập email"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="phone"
+                      label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Số điện thoại</span>}
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập số điện thoại!' }
+                      ]}
+                    >
+                      <Input 
+                        prefix={<span>☎️</span>}
+                        style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                        size="large"
+                        placeholder="Nhập số điện thoại"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="address"
+                      label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Địa chỉ</span>}
+                      style={{ gridColumn: '1 / -1' }}
+                    >
+                      <Input.TextArea 
+                        rows={3}
+                        style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                        placeholder="Nhập địa chỉ"
+                      />
+                    </Form.Item>
+                  </div>
+                  
+                  <Form.Item>
+                    <Space style={{ gap: 12 }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        size="large"
+                        style={{
+                          borderRadius: 10,
+                          background: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+                          border: 'none',
+                          fontWeight: 600,
+                          paddingLeft: 32,
+                          paddingRight: 32
+                        }}
+                      >
+                        💾 Cập nhật thông tin
+                      </Button>
+                      <Button 
+                        size="large"
+                        onClick={() => profileForm.setFieldsValue(profile)}
+                        style={{
+                          borderRadius: 10,
+                          fontWeight: 600
+                        }}
+                      >
+                        Hủy bỏ
+                      </Button>
+                    </Space>
+                  </Form.Item>
+                </Form>
               </div>
-              <Form.Item>
-                <Space>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    icon={<SaveOutlined />}
-                  >
-                    Cập nhật thông tin
-                  </Button>
-                  <Button onClick={() => profileForm.setFieldsValue(profile)}>
-                    Hủy bỏ
-                  </Button>
-                </Space>
-              </Form.Item>
-            </Form>
-          </TabPane>
-          <TabPane
-            tab={
-              <span>
-                <LockOutlined />
-                Đổi mật khẩu
-              </span>
-            }
-            key="2"
-          >
-            <Form
-              form={passwordForm}
-              layout="vertical"
-              onFinish={handleChangePassword}
-              className="max-w-md"
+            </Tabs.TabPane>
+
+            <Tabs.TabPane
+              tab={
+                <span style={{ fontSize: 14, fontWeight: 600 }}>
+                  🔒 Đổi mật khẩu
+                </span>
+              }
+              key="2"
             >
-              <Form.Item
-                name="oldPassword"
-                label="Mật khẩu hiện tại"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập mật khẩu hiện tại!' }
-                ]}
-              >
-                <Input.Password prefix={<LockOutlined />} />
-              </Form.Item>
-              <Form.Item
-                name="newPassword"
-                label="Mật khẩu mới"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
-                  { min: 1, message: 'Mật khẩu phải có ít nhất 8 ký tự!' },
-                  { max: 100, message: 'Mật khẩu không được quá 100 ký tự!' },
-                  {
-                    validator: (_, value) => {
-                      if (!value) return Promise.resolve();
-                      if (/\s/.test(value)) {
-                        return Promise.reject(new Error('Mật khẩu không được chứa khoảng trắng!'));
-                      }
-                      if (/(.)\1{2,}/.test(value)) {
-                        return Promise.reject(new Error('Mật khẩu không được có ký tự lặp liên tiếp quá 2 lần!'));
-                      }
-                      const weakPasswords = [
-                        '12345678', 'password', 'Password123', 'admin123',
-                        'qwerty123', '123456789', 'password123', 'Admin@123'
-                      ];
-                      if (weakPasswords.some(weak => value.toLowerCase().includes(weak.toLowerCase()))) {
-                        return Promise.reject(new Error('Mật khẩu quá yếu, vui lòng chọn mật khẩu khác!'));
-                      }
-                      return Promise.resolve();
-                    }
-                  }
-                ]}
-              >
-                <Input.Password prefix={<LockOutlined />} />
-              </Form.Item>
-              <Form.Item
-                name="confirmPassword"
-                label="Xác nhận mật khẩu mới"
-                dependencies={['newPassword']}
-                rules={[
-                  { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value) {
-                        return Promise.resolve();
-                      }
-                      const newPassword = getFieldValue('newPassword');
-                      if (newPassword === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error('Mật khẩu xác nhận không khớp với mật khẩu mới!'));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password prefix={<LockOutlined />} />
-              </Form.Item>
-              <Form.Item>
-                <Space>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    icon={<SaveOutlined />}
+              <div style={{ padding: 24 }}>
+                <Form
+                  form={passwordForm}
+                  layout="vertical"
+                  onFinish={handleChangePassword}
+                  style={{ maxWidth: 400 }}
+                >
+                  <Form.Item
+                    name="oldPassword"
+                    label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Mật khẩu hiện tại</span>}
+                    rules={[
+                      { required: true, message: 'Vui lòng nhập mật khẩu hiện tại!' }
+                    ]}
                   >
-                    Đổi mật khẩu
-                  </Button>
-                  <Button onClick={() => passwordForm.resetFields()}>
-                    Hủy bỏ
-                  </Button>
-                </Space>
-              </Form.Item>
-            </Form>
-          </TabPane>
-        </Tabs>
-      </Card>
+                    <Input.Password 
+                      prefix={<LockOutlined />}
+                      style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                      size="large"
+                      placeholder="Nhập mật khẩu hiện tại"
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="newPassword"
+                    label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Mật khẩu mới</span>}
+                    rules={[
+                      { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
+                      { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' },
+                      { max: 100, message: 'Mật khẩu không được quá 100 ký tự!' },
+                      {
+                        validator: (_, value) => {
+                          if (!value) return Promise.resolve();
+                          if (/\s/.test(value)) {
+                            return Promise.reject(new Error('Mật khẩu không được chứa khoảng trắng!'));
+                          }
+                          if (/(.)\1{2,}/.test(value)) {
+                            return Promise.reject(new Error('Mật khẩu không được có ký tự lặp liên tiếp quá 2 lần!'));
+                          }
+                          const weakPasswords = [
+                            '12345678', 'password', 'Password123', 'admin123',
+                            'qwerty123', '123456789', 'password123', 'Admin@123'
+                          ];
+                          if (weakPasswords.some(weak => value.toLowerCase().includes(weak.toLowerCase()))) {
+                            return Promise.reject(new Error('Mật khẩu quá yếu, vui lòng chọn mật khẩu khác!'));
+                          }
+                          return Promise.resolve();
+                        }
+                      }
+                    ]}
+                  >
+                    <Input.Password 
+                      prefix={<LockOutlined />}
+                      style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                      size="large"
+                      placeholder="Nhập mật khẩu mới"
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    name="confirmPassword"
+                    label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Xác nhận mật khẩu mới</span>}
+                    dependencies={['newPassword']}
+                    rules={[
+                      { required: true, message: 'Vui lòng xác nhận mật khẩu mới!' },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value) {
+                            return Promise.resolve();
+                          }
+                          const newPassword = getFieldValue('newPassword');
+                          if (newPassword === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Mật khẩu xác nhận không khớp với mật khẩu mới!'));
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password 
+                      prefix={<LockOutlined />}
+                      style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+                      size="large"
+                      placeholder="Xác nhận mật khẩu mới"
+                    />
+                  </Form.Item>
+                  <Form.Item>
+                    <Space style={{ gap: 12 }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        size="large"
+                        style={{
+                          borderRadius: 10,
+                          background: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+                          border: 'none',
+                          fontWeight: 600,
+                          paddingLeft: 32,
+                          paddingRight: 32
+                        }}
+                      >
+                        🔐 Đổi mật khẩu
+                      </Button>
+                      <Button 
+                        size="large"
+                        onClick={() => passwordForm.resetFields()}
+                        style={{
+                          borderRadius: 10,
+                          fontWeight: 600
+                        }}
+                      >
+                        Hủy bỏ
+                      </Button>
+                    </Space>
+                  </Form.Item>
+                </Form>
+              </div>
+            </Tabs.TabPane>
+          </Tabs>
+        </Card>
+      </div>
     </div>
   );
 };

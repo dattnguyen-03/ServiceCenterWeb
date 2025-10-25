@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Table, Button, Modal, Form, Input, DatePicker, Select, Tag, Space } from "antd";
+import { Table, Button, Modal, Form, Input, DatePicker, Select, Tag, Space, Card } from "antd";
+import { PlusOutlined, CalendarOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
 const { Option } = Select;
@@ -39,11 +40,18 @@ const AppointmentPage: React.FC = () => {
     completed: "green",
   };
 
+  const statusEmoji: Record<Appointment["status"], string> = {
+    pending: "⏳ Chờ xử lý",
+    in_progress: "⚙️ Đang thực hiện",
+    completed: "✅ Hoàn tất",
+  };
+
   const columns: ColumnsType<Appointment> = [
     {
       title: "Xe",
       dataIndex: "car",
       key: "car",
+      render: (text) => <span style={{ fontWeight: 600, color: '#1f2937' }}>{text}</span>
     },
     {
       title: "Dịch vụ",
@@ -54,19 +62,43 @@ const AppointmentPage: React.FC = () => {
       title: "Ngày hẹn",
       dataIndex: "date",
       key: "date",
+      render: (text) => <span>📅 {text}</span>
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status: Appointment["status"]) => (
-        <Tag color={statusColors[status]} style={{ textTransform: "capitalize" }}>
-          {status === "pending"
-            ? "Chờ xử lý"
-            : status === "in_progress"
-            ? "Đang thực hiện"
-            : "Hoàn tất"}
+        <Tag 
+          color={statusColors[status]} 
+          style={{ borderRadius: 20, fontWeight: 600 }}
+        >
+          {statusEmoji[status]}
         </Tag>
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      render: () => (
+        <Space size="small">
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            size="small"
+            style={{ color: '#2563eb' }}
+          >
+            Sửa
+          </Button>
+          <Button 
+            type="text" 
+            icon={<DeleteOutlined />} 
+            size="small" 
+            danger
+          >
+            Xóa
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -92,66 +124,127 @@ const AppointmentPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-10 px-2 md:px-0 flex justify-center items-start">
-      <div className="w-full max-w-3xl">
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-extrabold text-blue-700 mb-2 drop-shadow">Quản lý lịch hẹn</h2>
-          <p className="text-gray-500 text-lg">Xem, tạo và quản lý các lịch hẹn dịch vụ của bạn</p>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
+      {/* Gradient Header */}
+      <div className="p-6 bg-gradient-to-r from-cyan-600 to-teal-500 text-white rounded-b-3xl shadow-lg mb-8">
+        <div className="flex items-center mb-3">
+          <CalendarOutlined style={{ fontSize: 32, marginRight: 12 }} />
+          <h1 className="text-4xl font-bold">Quản lý lịch hẹn</h1>
         </div>
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-100 overflow-hidden p-8">
-          <div className="flex items-center justify-between mb-6">
-            <Button type="primary" size="large" className="rounded-xl px-6 py-2 text-base font-semibold shadow" onClick={() => setIsModalVisible(true)}>
-              + Đặt lịch mới
+        <p className="text-cyan-100 text-lg">Xem, tạo và quản lý các lịch hẹn dịch vụ của bạn</p>
+      </div>
+
+      <div className="px-6 pb-6 max-w-6xl mx-auto">
+        <Card
+          style={{
+            borderRadius: 20,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}
+          bodyStyle={{ padding: 24 }}
+        >
+          <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', margin: 0 }}>
+              📋 Danh sách lịch hẹn
+            </h2>
+            <Button 
+              type="primary" 
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setIsModalVisible(true)}
+              style={{
+                borderRadius: 10,
+                background: 'linear-gradient(90deg, #06b6d4 0%, #14b8a6 100%)',
+                border: 'none',
+                fontWeight: 600,
+                paddingLeft: 24,
+                paddingRight: 24
+              }}
+            >
+              Đặt lịch mới
             </Button>
           </div>
+
           <Table
             dataSource={appointments}
             columns={columns}
             rowKey="id"
-            pagination={{ pageSize: 5 }}
-            className="rounded-xl shadow border border-gray-100"
+            pagination={{ pageSize: 5, position: ['bottomCenter'] }}
+            style={{ borderRadius: 12 }}
           />
-        </div>
-        <Modal
-          title={<span className="text-xl font-bold text-blue-700">Đặt lịch dịch vụ</span>}
-          open={isModalVisible}
-          onOk={handleAddAppointment}
-          onCancel={() => setIsModalVisible(false)}
-          okText={<span className="px-6 py-2 text-base font-semibold">Xác nhận</span>}
-          cancelText={<span className="px-6 py-2 text-base font-semibold">Hủy</span>}
-          centered
-          bodyStyle={{ padding: 24, borderRadius: 16, background: "#f8fafc" }}
-          className="rounded-2xl"
-        >
-          <Form form={form} layout="vertical">
-            <Form.Item
-              label={<span className="font-semibold text-blue-700">Xe</span>}
-              name="car"
-              rules={[{ required: true, message: "Vui lòng nhập tên xe" }]}
-            >
-              <Input placeholder="Ví dụ: VinFast VF8" className="rounded-xl px-4 py-2" />
-            </Form.Item>
-            <Form.Item
-              label={<span className="font-semibold text-blue-700">Dịch vụ</span>}
-              name="service"
-              rules={[{ required: true, message: "Vui lòng chọn dịch vụ" }]}
-            >
-              <Select placeholder="Chọn dịch vụ" className="rounded-xl">
-                <Option value="Bảo dưỡng định kỳ">Bảo dưỡng định kỳ</Option>
-                <Option value="Sửa chữa">Sửa chữa</Option>
-                <Option value="Kiểm tra pin">Kiểm tra pin</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item
-              label={<span className="font-semibold text-blue-700">Ngày giờ</span>}
-              name="date"
-              rules={[{ required: true, message: "Vui lòng chọn ngày giờ" }]}
-            >
-              <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} className="rounded-xl px-4 py-2" />
-            </Form.Item>
-          </Form>
-        </Modal>
+        </Card>
       </div>
+
+      {/* Add Appointment Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
+            📅 Đặt lịch dịch vụ
+          </div>
+        }
+        open={isModalVisible}
+        onOk={handleAddAppointment}
+        onCancel={() => setIsModalVisible(false)}
+        centered
+        bodyStyle={{ borderRadius: 16 }}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        okButtonProps={{
+          style: {
+            borderRadius: 10,
+            background: 'linear-gradient(90deg, #06b6d4 0%, #14b8a6 100%)',
+            border: 'none',
+            fontWeight: 600
+          }
+        }}
+        cancelButtonProps={{
+          style: {
+            borderRadius: 10,
+            fontWeight: 600
+          }
+        }}
+      >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Xe 🚗</span>}
+            name="car"
+            rules={[{ required: true, message: "Vui lòng nhập tên xe" }]}
+          >
+            <Input 
+              placeholder="Ví dụ: VinFast VF8" 
+              size="large"
+              style={{ borderRadius: 10, borderColor: '#e5e7eb' }}
+            />
+          </Form.Item>
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Dịch vụ 🔧</span>}
+            name="service"
+            rules={[{ required: true, message: "Vui lòng chọn dịch vụ" }]}
+          >
+            <Select 
+              placeholder="Chọn dịch vụ"
+              size="large"
+              style={{ borderRadius: 10 }}
+            >
+              <Option value="Bảo dưỡng định kỳ">Bảo dưỡng định kỳ</Option>
+              <Option value="Sửa chữa">Sửa chữa</Option>
+              <Option value="Kiểm tra pin">Kiểm tra pin</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Ngày giờ 📅</span>}
+            name="date"
+            rules={[{ required: true, message: "Vui lòng chọn ngày giờ" }]}
+          >
+            <DatePicker 
+              showTime 
+              format="YYYY-MM-DD HH:mm" 
+              style={{ width: "100%", borderRadius: 10, borderColor: '#e5e7eb' }}
+              size="large"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

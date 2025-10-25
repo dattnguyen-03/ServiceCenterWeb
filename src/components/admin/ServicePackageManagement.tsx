@@ -7,13 +7,13 @@ import {
   PlusOutlined,
   DeleteOutlined,
   DollarOutlined,
-  ClockCircleOutlined,
   CheckCircleOutlined,
   StarOutlined,
   SaveOutlined
 } from '@ant-design/icons';
 import { ServicePackage } from '../../types/api';
 import { servicePackageService } from '../../services/servicePackageService';
+import servicePackageManagementService from '../../services/servicePackageManagementService';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -56,12 +56,12 @@ const AdminServicePackageManagement: React.FC = () => {
       name: pkg.name,
       description: pkg.description,
       price: pkg.price,
-      durationMonths: pkg.durationMonths,
     });
     setEditModalVisible(true);
   };
 
   const handleAddPackage = () => {
+    setSelectedPackage(null);
     form.resetFields();
     setAddModalVisible(true);
   };
@@ -73,31 +73,72 @@ const AdminServicePackageManagement: React.FC = () => {
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      onOk: () => {
-        // TODO: Implement delete functionality
-        message.success(`Đã xóa gói: ${pkg.name}`);
-        loadServicePackages();
+      onOk: async () => {
+        try {
+          const result = await servicePackageManagementService.deleteServicePackage(pkg.packageID);
+          message.success(result.message || `Đã xóa gói: ${pkg.name}`);
+          await loadServicePackages();
+        } catch (error: any) {
+          console.error('Error deleting service package:', error);
+          message.error(error.message || 'Có lỗi xảy ra khi xóa gói dịch vụ');
+        }
       },
     });
   };
 
-  const handleSavePackage = async () => {
+  const handleSavePackage = async (values: any) => {
     try {
+      console.log('Form values:', values);
+      
       if (selectedPackage) {
         // Edit existing package
-        // TODO: Implement edit API call
-        message.success('Cập nhật gói dịch vụ thành công!');
+        const editData = {
+          PackageID: selectedPackage.packageID,
+          Name: values.name,
+          Description: values.description,
+          Price: Number(values.price),
+        };
+        console.log('Selected package:', selectedPackage);
+        console.log('Edit data:', editData);
+        console.log('Form values:', values);
+        const result = await servicePackageManagementService.editServicePackage(editData);
+        console.log('Edit result:', result);
+        message.success(result.message || 'Cập nhật gói dịch vụ thành công!');
         setEditModalVisible(false);
+        await loadServicePackages();
       } else {
         // Add new package
-        // TODO: Implement add API call
-        message.success('Thêm gói dịch vụ thành công!');
+        const createData = {
+          Name: values.name,
+          Description: values.description,
+          Price: values.price,
+        };
+        console.log('Create data:', createData);
+        const result = await servicePackageManagementService.createServicePackage(createData);
+        message.success(result.message || 'Thêm gói dịch vụ thành công!');
         setAddModalVisible(false);
+        await loadServicePackages();
       }
       form.resetFields();
-      loadServicePackages();
+      setSelectedPackage(null);
+      await loadServicePackages();
     } catch (error: any) {
-      message.error(error.message || 'Có lỗi xảy ra khi lưu gói dịch vụ');
+      console.error('Error saving service package:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data
+      });
+      
+      let errorMessage = 'Có lỗi xảy ra khi lưu gói dịch vụ';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      message.error(errorMessage);
     }
   };
 
@@ -148,17 +189,7 @@ const AdminServicePackageManagement: React.FC = () => {
         </Text>
       ),
     },
-    {
-      title: 'Thời hạn',
-      dataIndex: 'durationMonths',
-      key: 'durationMonths',
-      width: 100,
-      render: (months: number) => (
-        <Tag color="blue" icon={<ClockCircleOutlined />}>
-          {servicePackageService.formatDuration(months)}
-        </Tag>
-      ),
-    },
+
     {
       title: 'Trạng thái',
       key: 'status',
@@ -257,8 +288,8 @@ const AdminServicePackageManagement: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <Statistic
-              title="Gói cơ bản"
-              value={packages.filter(pkg => pkg.packageID === 1).length}
+              title="Gói hoạt động"
+              value={packages.length}
               prefix={<CheckCircleOutlined className="text-green-500" />}
               valueStyle={{ color: '#10b981' }}
             />
@@ -267,8 +298,8 @@ const AdminServicePackageManagement: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <Statistic
-              title="Gói nâng cao"
-              value={packages.filter(pkg => pkg.packageID === 2).length}
+              title="Gói cao cấp"
+              value={packages.filter(pkg => pkg.price > 1000000).length}
               prefix={<StarOutlined className="text-yellow-500" />}
               valueStyle={{ color: '#f59e0b' }}
             />
@@ -354,11 +385,7 @@ const AdminServicePackageManagement: React.FC = () => {
                   {servicePackageService.formatPrice(selectedPackage.price)}
                 </Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Thời hạn">
-                <Tag color="blue" icon={<ClockCircleOutlined />}>
-                  {servicePackageService.formatDuration(selectedPackage.durationMonths)}
-                </Tag>
-              </Descriptions.Item>
+
             </Descriptions>
           </div>
         )}
@@ -406,7 +433,14 @@ const AdminServicePackageManagement: React.FC = () => {
           <Form.Item
             label="Tên gói"
             name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập tên gói' }]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập tên gói' },
+              { max: 100, message: 'Tên gói không được quá 100 ký tự' },
+              { 
+                pattern: /^[a-zA-Z0-9\s\u00C0-\u1EF9]+$/, 
+                message: 'Tên gói chỉ được chứa chữ cái, số và khoảng trắng' 
+              }
+            ]}
           >
             <Input placeholder="Nhập tên gói dịch vụ" />
           </Form.Item>
@@ -414,41 +448,30 @@ const AdminServicePackageManagement: React.FC = () => {
           <Form.Item
             label="Mô tả"
             name="description"
-            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập mô tả' },
+              { max: 500, message: 'Mô tả không được quá 500 ký tự' }
+            ]}
           >
             <TextArea rows={3} placeholder="Nhập mô tả chi tiết gói dịch vụ" />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Giá (VNĐ)"
-                name="price"
-                rules={[{ required: true, message: 'Vui lòng nhập giá' }]}
-              >
-                <InputNumber
-                  placeholder="Nhập giá"
-                  className="w-full"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Thời hạn (tháng)"
-                name="durationMonths"
-                rules={[{ required: true, message: 'Vui lòng nhập thời hạn' }]}
-              >
-                <InputNumber
-                  placeholder="Nhập số tháng"
-                  className="w-full"
-                  min={1}
-                  max={60}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            label="Giá (VNĐ)"
+            name="price"
+            rules={[
+              { required: true, message: 'Vui lòng nhập giá' },
+              { type: 'number', min: 0, message: 'Giá không được âm' }
+            ]}
+          >
+            <InputNumber
+              placeholder="Nhập giá"
+              className="w-full"
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => Number(value!.replace(/\$\s?|(,*)/g, '')) as any}
+              min={0}
+            />
+          </Form.Item>
         </Form>
       </Modal>
     </div>

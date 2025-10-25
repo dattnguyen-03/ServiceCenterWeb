@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Statistic, Typography, Tabs, List, Spin, Space } from 'antd';
+import { Card, Row, Col, Button, Typography, Tabs, List, Spin } from 'antd';
 import {
   CarOutlined,
-  ThunderboltOutlined,
-  DashboardOutlined,
   CalendarOutlined,
   PlusOutlined,
-  RightOutlined,
-  ToolOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   SettingOutlined
@@ -94,163 +90,255 @@ const CustomerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
       {/* Welcome Header */}
-      <div className="mb-8">
-        <Title level={2} className="!mb-1 !text-gray-800">
+      <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-b-3xl shadow-lg mb-8">
+        <Title level={2} className="!mb-1 !text-white">
           Chào mừng trở lại, Nguyễn Văn A! 👋
         </Title>
-        <Text className="text-gray-500 text-lg">{formattedDate}</Text>
+        <Text className="text-blue-100 text-lg">{formattedDate}</Text>
       </div>
 
-      {/* Stats Overview */}
-      <Row gutter={[24, 24]} className="mb-8">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
-            <Statistic
-              title={<span className="text-gray-600 font-medium">Tổng số xe</span>}
-              value={vehicles.length}
-              prefix={<CarOutlined className="text-blue-500" />}
-              valueStyle={{ color: '#1d4ed8', fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
-            <Statistic
-              title={<span className="text-gray-600 font-medium">Bảo dưỡng tiếp theo</span>}
-              value="14"
-              suffix="ngày"
-              prefix={<CalendarOutlined className="text-green-500" />}
-              valueStyle={{ color: '#16a34a', fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
-            <Statistic
-              title={<span className="text-gray-600 font-medium">Hiệu suất năng lượng</span>}
-              value="87"
-              suffix="%"
-              prefix={<ThunderboltOutlined className="text-amber-500" />}
-              valueStyle={{ color: '#d97706', fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
-            <Statistic
-              title={<span className="text-gray-600 font-medium">Tiết kiệm chi phí</span>}
-              value="2.8"
-              suffix="tr VNĐ"
-              prefix={<DashboardOutlined className="text-purple-500" />}
-              valueStyle={{ color: '#7c3aed', fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="px-6 pb-6">
+        {/* Stats Overview */}
+        <Row gutter={[24, 24]} className="mb-8">
+          <Col xs={24} sm={12} lg={6}>
+            <Card 
+              className="shadow-sm hover:shadow-lg transition-all duration-300"
+              style={{ borderRadius: 20, border: 'none' }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🚗</div>
+                <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Tổng số xe</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: '#1d4ed8' }}>
+                  {vehicles.length}
+                </div>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card 
+              className="shadow-sm hover:shadow-lg transition-all duration-300"
+              style={{ borderRadius: 20, border: 'none', background: 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)' }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📅</div>
+                <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Bảo dưỡng tiếp theo</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: '#16a34a' }}>
+                  14 <span style={{ fontSize: 18 }}>ngày</span>
+                </div>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card 
+              className="shadow-sm hover:shadow-lg transition-all duration-300"
+              style={{ borderRadius: 20, border: 'none', background: 'linear-gradient(135deg, #fef3c7 0%, #f9fafb 100%)' }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>⚡</div>
+                <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Hiệu suất năng lượng</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706' }}>
+                  87<span style={{ fontSize: 18 }}>%</span>
+                </div>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card 
+              className="shadow-sm hover:shadow-lg transition-all duration-300"
+              style={{ borderRadius: 20, border: 'none', background: 'linear-gradient(135deg, #faf5ff 0%, #f9fafb 100%)' }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>💰</div>
+                <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Tiết kiệm chi phí</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: '#7c3aed' }}>
+                  2.8<span style={{ fontSize: 18 }}>tr</span>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        </Row>
 
-      {/* Main Content with Tabs */}
-      <Card className="shadow-sm">
-        <Tabs 
-          defaultActiveKey="1" 
-          tabBarExtraContent={
-            <Link to="/vehicles/add">
-              <Button type="primary" icon={<PlusOutlined />}>
-                Thêm xe mới
-              </Button>
-            </Link>
-          }
+        {/* Main Content with Tabs */}
+        <Card 
+          className="shadow-md"
+          style={{ borderRadius: 20, border: '1px solid #e5e7eb' }}
+          bodyStyle={{ padding: 0 }}
         >
-          <TabPane 
-            tab={
-              <span className="flex items-center">
-                <CarOutlined className="mr-2" />
-                Xe của tôi
-              </span>
-            } 
-            key="1"
+          <Tabs 
+            defaultActiveKey="1" 
+            tabBarExtraContent={
+              <Link to="/vehicles/add">
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  style={{
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    background: 'linear-gradient(90deg, #60a5fa 0%, #22c55e 100%)',
+                    border: 'none'
+                  }}
+                >
+                  Thêm xe mới
+                </Button>
+              </Link>
+            }
+            style={{ padding: '24px' }}
+            tabBarStyle={{
+              borderBottom: '2px solid #e5e7eb',
+              marginBottom: 24
+            }}
           >
-            <List
-              itemLayout="vertical"
-              dataSource={vehicles}
-              renderItem={(vehicle) => {
-                const serviceInfo = vehicle.nextServiceDate 
-                  ? getDaysRemaining(vehicle.nextServiceDate) 
-                  : { text: 'Chưa có', color: 'gray' };
-                
-                return (
-                  <List.Item
-                    key={vehicle.vehicleID}
-                    className="!p-4 hover:bg-gray-50 rounded-lg transition-colors"
-                    actions={[
-                      <Link to={`/customer/booking/${vehicle.vehicleID}`}>
-                        <Button type="primary" icon={<CalendarOutlined />}>Đặt lịch</Button>
-                      </Link>,
-                      <Link to={`/customer/vehicles/${vehicle.vehicleID}`}>
-                        <Button icon={<ToolOutlined />}>Chi tiết</Button>
-                      </Link>,
-                    ]}
+            <TabPane 
+              tab={
+                <span className="flex items-center font-semibold">
+                  <CarOutlined className="mr-2 text-blue-600" style={{ fontSize: 18 }} />
+                  Xe của tôi
+                </span>
+              } 
+              key="1"
+            >
+              <List
+                itemLayout="vertical"
+                dataSource={vehicles}
+                renderItem={(vehicle) => {
+                  const serviceInfo = vehicle.nextServiceDate 
+                    ? getDaysRemaining(vehicle.nextServiceDate) 
+                    : { text: 'Chưa có', color: 'gray' };
+                  
+                  return (
+                    <List.Item
+                      key={vehicle.vehicleID}
+                      className="transition-all duration-300"
+                      style={{
+                        padding: 16,
+                        marginBottom: 16,
+                        borderRadius: 16,
+                        border: '1px solid #e5e7eb',
+                        background: '#fff',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                      }}
+                      actions={[
+                        <Link key="booking" to={`/customer/booking/${vehicle.vehicleID}`}>
+                          <Button 
+                            type="primary"
+                            style={{
+                              borderRadius: 10,
+                              background: 'linear-gradient(90deg, #60a5fa 0%, #22c55e 100%)',
+                              border: 'none',
+                              fontWeight: 600
+                            }}
+                          >
+                            📅 Đặt lịch
+                          </Button>
+                        </Link>,
+                        <Link key="details" to={`/customer/vehicles/${vehicle.vehicleID}`}>
+                          <Button 
+                            style={{
+                              borderRadius: 10,
+                              borderColor: '#60a5fa',
+                              color: '#60a5fa',
+                              fontWeight: 600
+                            }}
+                          >
+                            🔧 Chi tiết
+                          </Button>
+                        </Link>,
+                      ]}
+                    >
+                      <Row align="middle" gutter={[24, 16]}>
+                        <Col xs={24} md={8}>
+                          <List.Item.Meta
+                            title={<Link to={`/customer/vehicles/${vehicle.vehicleID}`} className="text-xl font-bold text-blue-700">{vehicle.model}</Link>}
+                            description={`📍 Biển số: ${vehicle.licensePlate}`}
+                          />
+                        </Col>
+                        <Col xs={24} md={16}>
+                          <Row gutter={[16, 16]}>
+                            <Col xs={12} sm={8}>
+                              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Quãng đường</div>
+                              <div style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
+                                {(vehicle.mileage || 0).toLocaleString()} km
+                              </div>
+                            </Col>
+                            <Col xs={12} sm={8}>
+                              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Dung lượng pin</div>
+                              <div style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
+                                {vehicle.batteryCapacity || 'N/A'} kWh
+                              </div>
+                            </Col>
+                            <Col xs={24} sm={8}>
+                              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Bảo dưỡng kế tiếp</div>
+                              <div style={{ fontSize: 18, fontWeight: 700, color: serviceInfo.color }}>
+                                {serviceInfo.text}
+                              </div>
+                            </Col>
+                          </Row>
+                        </Col>
+                      </Row>
+                    </List.Item>
+                  )
+                }}
+              />
+            </TabPane>
+            <TabPane 
+              tab={
+                <span className="flex items-center font-semibold">
+                  <ClockCircleOutlined className="mr-2 text-green-600" style={{ fontSize: 18 }} />
+                  Hoạt động gần đây
+                </span>
+              } 
+              key="2"
+            >
+              <List
+                dataSource={notifications}
+                renderItem={(item) => (
+                  <List.Item 
+                    className="transition-all duration-300"
+                    style={{
+                      padding: 16,
+                      marginBottom: 12,
+                      borderRadius: 16,
+                      border: '1px solid #e5e7eb',
+                      background: '#fff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                    }}
                   >
-                    <Row align="middle" gutter={[24, 16]}>
-                      <Col xs={24} md={8}>
-                        <List.Item.Meta
-                          title={<Link to={`/customer/vehicles/${vehicle.vehicleID}`} className="text-lg font-bold text-blue-700">{vehicle.model}</Link>}
-                          description={`Biển số: ${vehicle.licensePlate}`}
-                        />
-                      </Col>
-                      <Col xs={24} md={16}>
-                        <Row gutter={[16, 16]}>
-                          <Col xs={12} sm={8}>
-                             <Statistic title="Quãng đường" value={`${(vehicle.mileage || 0).toLocaleString()} km`} />
-                          </Col>
-                           <Col xs={12} sm={8}>
-                             <Statistic title="Dung lượng pin" value={`${vehicle.batteryCapacity || 'N/A'} kWh`} />
-                          </Col>
-                           <Col xs={24} sm={8}>
-                             <Statistic 
-                                title="Bảo dưỡng kế tiếp" 
-                                value={serviceInfo.text} 
-                                valueStyle={{ color: serviceInfo.color, fontSize: '16px' }}
-                              />
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
+                    <List.Item.Meta
+                      avatar={
+                        <div style={{
+                          fontSize: 32,
+                          background: 'linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%)',
+                          borderRadius: 12,
+                          width: 56,
+                          height: 56,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {item.icon}
+                        </div>
+                      }
+                      title={<span className="font-bold text-gray-900">{item.title}</span>}
+                      description={
+                        <div>
+                          <p className="text-gray-600 mb-2">{item.message}</p>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>⏰ {item.time}</span>
+                        </div>
+                      }
+                    />
                   </List.Item>
-                )
-              }}
-            />
-          </TabPane>
-          <TabPane 
-            tab={
-              <span className="flex items-center">
-                <ClockCircleOutlined className="mr-2" />
-                Hoạt động gần đây
-              </span>
-            } 
-            key="2"
-          >
-            <List
-              dataSource={notifications}
-              renderItem={(item) => (
-                <List.Item className="hover:bg-gray-50 rounded-lg p-3 transition-colors">
-                  <List.Item.Meta
-                    avatar={<span className="text-2xl">{item.icon}</span>}
-                    title={<span className="font-medium">{item.title}</span>}
-                    description={
-                      <div>
-                        <p className="text-gray-600 mb-1">{item.message}</p>
-                        <span className="text-xs text-gray-400">{item.time}</span>
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          </TabPane>
-        </Tabs>
-      </Card>
+                )}
+              />
+            </TabPane>
+          </Tabs>
+        </Card>
+      </div>
     </div>
   );
 };

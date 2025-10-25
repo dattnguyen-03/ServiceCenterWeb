@@ -50,7 +50,12 @@ class ServicePackageService {
   /**
    * Format price for display
    */
-  formatPrice(price: number): string {
+  formatPrice(price: number | null | undefined): string {
+    // Handle invalid or missing price
+    if (price === null || price === undefined || isNaN(price) || price <= 0) {
+      return 'Liên hệ';
+    }
+    
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
@@ -60,14 +65,22 @@ class ServicePackageService {
   /**
    * Format duration for display
    */
-  formatDuration(months: number): string {
-    if (months < 12) {
-      return `${months} tháng`;
-    } else if (months === 12) {
+  formatDuration(months: number | null | undefined): string {
+    // Handle invalid or missing duration
+    if (months === null || months === undefined || isNaN(months) || months <= 0) {
+      return 'Theo gói dịch vụ';
+    }
+    
+    // Convert to integer to avoid decimal issues
+    const totalMonths = Math.floor(months);
+    
+    if (totalMonths < 12) {
+      return `${totalMonths} tháng`;
+    } else if (totalMonths === 12) {
       return '1 năm';
     } else {
-      const years = Math.floor(months / 12);
-      const remainingMonths = months % 12;
+      const years = Math.floor(totalMonths / 12);
+      const remainingMonths = totalMonths % 12;
       if (remainingMonths === 0) {
         return `${years} năm`;
       } else {

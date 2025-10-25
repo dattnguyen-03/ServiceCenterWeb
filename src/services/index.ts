@@ -2,6 +2,8 @@
 export { authService } from './authService';
 export { adminService } from './adminService';
 export { customerService } from './customerService';
+export { customerManagementService } from './customerManagementService';
+export { userManagementService } from './userManagementService';
 export { staffService } from './staffService';
 export { technicianService } from './technicianService';
 export { vehicleService } from './vehicleService';

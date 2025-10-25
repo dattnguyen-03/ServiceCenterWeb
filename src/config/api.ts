@@ -30,6 +30,13 @@ export const API_CONFIG = {
       GET_ALL_CUSTOMERS: '/GetAllCustomersAPI',
       GET_CUSTOMER_DETAILS: '/GetCustomerDetailsAPI',
     },
+    USER_MANAGEMENT: {
+      GET_ALL_USERS: '/GetAllUserAPI',
+      SEARCH_USERS: '/SearchUserAPI',
+      CREATE_USER: '/CreateUserAPI',
+      EDIT_USER: '/EditUserAPI',
+      DELETE_USER: '/DeleteUserAPI',
+    },
     STAFF: {
       DASHBOARD: '/staff/dashboard',
       STATS: '/staff/dashboard/stats',

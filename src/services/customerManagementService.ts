@@ -1,5 +1,6 @@
 import { httpClient } from './httpClient';
 import { API_CONFIG } from '../config/api';
+import { userManagementService } from './userManagementService';
 
 export interface CustomerWithDetails {
   userID: number;
@@ -54,26 +55,23 @@ class CustomerManagementService {
   async getAllCustomers(): Promise<CustomerWithDetails[]> {
     try {
       console.log('Fetching all customers...');
-      const response = await httpClient.get<any>(API_CONFIG.ENDPOINTS.ADMIN.GET_ALL_CUSTOMERS);
-
-      console.log('Customers response:', response);
-
-      if (Array.isArray(response)) {
-        return response;
-      }
+      // Use the new userManagementService to get customers
+      const customers = await userManagementService.getCustomers();
       
-      if (response && typeof response === 'object') {
-        const anyRes: any = response as any;
-        if (anyRes.success && Array.isArray(anyRes.data)) {
-          return anyRes.data as CustomerWithDetails[];
-        }
-        if (Array.isArray(anyRes.data)) {
-          return anyRes.data as CustomerWithDetails[];
-        }
-      }
-      
-      // If no data, return empty array
-      return [];
+      // Transform UserListItem to CustomerWithDetails
+      return customers.map(customer => ({
+        userID: customer.userID,
+        username: customer.username,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        createDate: new Date().toISOString(), // Default value
+        vehicleCount: 0, // Will be updated when vehicle data is available
+        appointmentCount: 0, // Will be updated when appointment data is available
+        totalSpent: 0, // Will be updated when service data is available
+        lastServiceDate: undefined
+      }));
     } catch (error: any) {
       console.error('Error getting all customers:', error);
       // Return mock data for now since backend might not be ready

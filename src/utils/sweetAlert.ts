@@ -1,278 +1,172 @@
 import Swal from 'sweetalert2';
 
-// SweetAlert2 theme configuration
-const swalTheme = {
-  confirmButton: '!bg-gradient-to-r !from-blue-600 !to-indigo-600 hover:!from-blue-700 hover:!to-indigo-700 !border-0 !rounded-xl !px-6 !py-3 !text-white !font-medium !shadow-lg hover:!shadow-xl transition-all duration-300',
-  cancelButton: '!bg-gray-100 hover:!bg-gray-200 !border-gray-300 !text-gray-700 !rounded-xl !px-6 !py-3 !font-medium transition-all duration-300',
-  denyButton: '!bg-gradient-to-r !from-red-500 !to-red-600 hover:!from-red-600 hover:!to-red-700 !border-0 !rounded-xl !px-6 !py-3 !text-white !font-medium !shadow-lg hover:!shadow-xl transition-all duration-300'
+// Success notifications
+export const showSuccess = (title: string, text?: string) => {
+  return Swal.fire({
+    icon: 'success',
+    title: title,
+    text: text,
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#10b981',
+    timer: 3000,
+    timerProgressBar: true,
+  });
 };
 
+// Error notifications
+export const showError = (title: string, text?: string) => {
+  return Swal.fire({
+    icon: 'error',
+    title: title,
+    text: text,
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#ef4444',
+  });
+};
+
+// Warning notifications
+export const showWarning = (title: string, text?: string) => {
+  return Swal.fire({
+    icon: 'warning',
+    title: title,
+    text: text,
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#f59e0b',
+  });
+};
+
+// Info notifications
+export const showInfo = (title: string, text?: string) => {
+  return Swal.fire({
+    icon: 'info',
+    title: title,
+    text: text,
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#3b82f6',
+  });
+};
+
+// Confirmation dialogs
+export const showConfirm = (
+  title: string,
+  text: string,
+  confirmText: string = 'Xác nhận',
+  cancelText: string = 'Hủy'
+) => {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+    confirmButtonColor: '#10b981',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  });
+};
+
+// Delete confirmation
+export const showDeleteConfirm = (itemName: string = 'mục này') => {
+  return Swal.fire({
+    title: 'Xác nhận xóa',
+    text: `Bạn có chắc chắn muốn xóa ${itemName}?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  });
+};
+
+// Loading spinner
+export const showLoading = (title: string = 'Đang xử lý...') => {
+  return Swal.fire({
+    title: title,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+};
+
+// Close loading
+export const closeLoading = () => {
+  Swal.close();
+};
+
+// Custom toast notifications
+export const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    },
+  });
+
+  return Toast.fire({
+    icon: type,
+    title: message,
+  });
+};
+
+// Form validation error
+export const showValidationError = (errors: string[]) => {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Dữ liệu không hợp lệ',
+    html: errors.map(error => `<div>• ${error}</div>`).join(''),
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#ef4444',
+  });
+};
+
+// Network error
+export const showNetworkError = () => {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Lỗi kết nối',
+    text: 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#ef4444',
+  });
+};
+
+// Authentication error
+export const showAuthError = () => {
+  return Swal.fire({
+    icon: 'warning',
+    title: 'Phiên đăng nhập hết hạn',
+    text: 'Vui lòng đăng nhập lại để tiếp tục.',
+    confirmButtonText: 'Đăng nhập',
+    confirmButtonColor: '#3b82f6',
+  }).then(() => {
+    // Redirect to login
+    window.location.href = '/login';
+  });
+};
+
+// Export sweetAlert object for backward compatibility
 export const sweetAlert = {
-  /**
-   * Hiển thị thông báo thành công
-   */
-  success: (title: string, text?: string) => {
-    return Swal.fire({
-      icon: 'success',
-      title,
-      text,
-      confirmButtonText: 'Đóng',
-      customClass: {
-        confirmButton: swalTheme.confirmButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      timer: 3000,
-      timerProgressBar: true,
-      showClass: {
-        popup: 'animate__animated animate__fadeInUp animate__faster'
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutDown animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị thông báo lỗi
-   */
-  error: (title: string, text?: string) => {
-    return Swal.fire({
-      icon: 'error',
-      title,
-      text,
-      confirmButtonText: 'Đóng',
-      customClass: {
-        confirmButton: swalTheme.confirmButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      showClass: {
-        popup: 'animate__animated animate__shakeX animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị thông báo cảnh báo
-   */
-  warning: (title: string, text?: string) => {
-    return Swal.fire({
-      icon: 'warning',
-      title,
-      text,
-      confirmButtonText: 'Đóng',
-      customClass: {
-        confirmButton: swalTheme.confirmButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      showClass: {
-        popup: 'animate__animated animate__pulse animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị thông báo thông tin
-   */
-  info: (title: string, text?: string) => {
-    return Swal.fire({
-      icon: 'info',
-      title,
-      text,
-      confirmButtonText: 'Đóng',
-      customClass: {
-        confirmButton: swalTheme.confirmButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      showClass: {
-        popup: 'animate__animated animate__bounceIn animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị modal xác nhận với Yes/No
-   */
-  confirm: (title: string, text?: string, confirmText = 'Xác nhận', cancelText = 'Hủy') => {
-    return Swal.fire({
-      icon: 'question',
-      title,
-      text,
-      showCancelButton: true,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText,
-      customClass: {
-        confirmButton: swalTheme.confirmButton,
-        cancelButton: swalTheme.cancelButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      reverseButtons: true,
-      showClass: {
-        popup: 'animate__animated animate__zoomIn animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị modal xác nhận xóa (danger)
-   */
-  confirmDelete: (title: string, text?: string, confirmText = 'Xóa', cancelText = 'Hủy') => {
-    return Swal.fire({
-      icon: 'warning',
-      title,
-      text,
-      showCancelButton: true,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText,
-      customClass: {
-        confirmButton: swalTheme.denyButton,
-        cancelButton: swalTheme.cancelButton,
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      buttonsStyling: false,
-      reverseButtons: true,
-      showClass: {
-        popup: 'animate__animated animate__shakeX animate__faster'
-      }
-    });
-  },
-
-  /**
-   * Hiển thị loading spinner
-   */
-  loading: (title: string, text?: string) => {
-    return Swal.fire({
-      title,
-      text,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      customClass: {
-        popup: '!rounded-2xl !shadow-2xl',
-        title: '!text-gray-800 !font-bold',
-        htmlContainer: '!text-gray-600'
-      },
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-  },
-
-  /**
-   * Đóng modal hiện tại
-   */
-  close: () => {
-    Swal.close();
-  },
-
-  /**
-   * Toast notification nhỏ gọn
-   */
-  toast: {
-    success: (title: string) => {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        customClass: {
-          popup: '!rounded-xl !shadow-lg !bg-white !border-l-4 !border-green-500'
-        },
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-      });
-
-      return Toast.fire({
-        icon: 'success',
-        title
-      });
-    },
-
-    error: (title: string) => {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        customClass: {
-          popup: '!rounded-xl !shadow-lg !bg-white !border-l-4 !border-red-500'
-        },
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-      });
-
-      return Toast.fire({
-        icon: 'error',
-        title
-      });
-    },
-
-    info: (title: string) => {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        customClass: {
-          popup: '!rounded-xl !shadow-lg !bg-white !border-l-4 !border-blue-500'
-        },
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-      });
-
-      return Toast.fire({
-        icon: 'info',
-        title
-      });
-    },
-
-    warning: (title: string) => {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        customClass: {
-          popup: '!rounded-xl !shadow-lg !bg-white !border-l-4 !border-orange-500'
-        },
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer);
-          toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-      });
-
-      return Toast.fire({
-        icon: 'warning',
-        title
-      });
-    }
-  }
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+  showConfirm,
+  showDeleteConfirm,
+  showLoading,
+  closeLoading,
+  showToast,
+  showValidationError,
+  showNetworkError,
+  showAuthError
 };
-
-export default sweetAlert;

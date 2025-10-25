@@ -3,7 +3,7 @@ import { Form, Input, InputNumber, Button, Card, DatePicker } from 'antd';
 import { CarOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { vehicleService } from '../../services/vehicleService';
 import { CreateVehicleRequest, EditVehicleRequest, VehicleResponse } from '../../types/api';
-import { sweetAlert } from '../../utils/sweetAlert';
+import { showSuccess, showError, showLoading, closeLoading } from '../../utils/sweetAlert';
 import dayjs from 'dayjs';
 
 interface AddVehicleFormProps {
@@ -38,7 +38,7 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
       // Validate data
       const errors = vehicleService.validateVehicleData(values);
       if (errors.length > 0) {
-        sweetAlert.error('Dữ liệu không hợp lệ', errors.join(', '));
+        showError('Dữ liệu không hợp lệ', errors.join(', '));
         return;
       }
 
@@ -58,10 +58,10 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         const response = await vehicleService.editVehicle(editData);
         
         if (response.success) {
-          sweetAlert.toast.success('Cập nhật xe thành công!');
+          showSuccess('Cập nhật xe thành công!');
           onSuccess?.();
         } else {
-          sweetAlert.error('Lỗi cập nhật xe', response.message || 'Có lỗi xảy ra khi cập nhật xe');
+          showError('Lỗi cập nhật xe', response.message || 'Có lỗi xảy ra khi cập nhật xe');
         }
       } else {
         // Create new vehicle
@@ -78,16 +78,16 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         const response = await vehicleService.createVehicle(createData);
         
         if (response.success) {
-          sweetAlert.toast.success('Thêm xe thành công!');
+          showSuccess('Thêm xe thành công!');
           form.resetFields();
           onSuccess?.(); // This will close the modal
         } else {
-          sweetAlert.error('Lỗi thêm xe', response.message || 'Có lỗi xảy ra khi thêm xe');
+          showError('Lỗi thêm xe', response.message || 'Có lỗi xảy ra khi thêm xe');
         }
       }
     } catch (error: any) {
       console.error(`Error ${isEditing ? 'editing' : 'creating'} vehicle:`, error);
-      sweetAlert.error(
+      showError(
         `Lỗi ${isEditing ? 'cập nhật' : 'thêm'} xe`, 
         error.message || `Có lỗi xảy ra khi ${isEditing ? 'cập nhật' : 'thêm'} xe`
       );

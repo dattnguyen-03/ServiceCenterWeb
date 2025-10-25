@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Button, Modal, Spin } from 'antd';
-import { CarOutlined, ThunderboltOutlined, DashboardOutlined, CalendarOutlined, PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { CarOutlined, PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { VehicleResponse } from '../../types/api';
 import { vehicleService } from '../../services/vehicleService';
 import AddVehicleForm from './AddVehicleForm';
 import { useNavigate } from 'react-router-dom';
-import { sweetAlert } from '../../utils/sweetAlert';
+import { showError, showDeleteConfirm, showLoading, closeLoading, showSuccess } from '../../utils/sweetAlert';
 
 const VehicleManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const VehicleManagement: React.FC = () => {
       setVehicles(vehicles);
     } catch (error: any) {
       console.error('Error loading vehicles:', error);
-      sweetAlert.error('Lỗi tải dữ liệu', error.message || 'Không thể tải danh sách xe');
+      showError('Lỗi tải dữ liệu', error.message || 'Không thể tải danh sách xe');
       setVehicles([]);
     } finally {
       setLoading(false);
@@ -51,39 +51,25 @@ const VehicleManagement: React.FC = () => {
   };
 
   const handleDeleteVehicle = async (vehicleId: number) => {
-    const result = await sweetAlert.confirmDelete(
-      'Xác nhận xóa xe',
-      'Bạn có chắc chắn muốn xóa xe này? Hành động này không thể hoàn tác.',
-      'Xóa',
-      'Hủy'
-    );
+    const result = await showDeleteConfirm('xe này');
 
     if (result.isConfirmed) {
       try {
-        sweetAlert.loading('Đang xóa xe...', 'Vui lòng đợi trong giây lát');
+        showLoading('Đang xóa xe...');
         const response = await vehicleService.deleteVehicle(vehicleId);
-        sweetAlert.close();
+        closeLoading();
         
         if (response.success) {
-          sweetAlert.toast.success('Xóa xe thành công!');
+          showSuccess('Thành công', 'Xóa xe thành công!');
           loadVehicles();
         } else {
-          sweetAlert.error('Không thể xóa xe', response.message || 'Có lỗi xảy ra khi xóa xe');
+          showError('Không thể xóa xe', response.message || 'Có lỗi xảy ra khi xóa xe');
         }
       } catch (error: any) {
-        sweetAlert.close();
-        sweetAlert.error('Lỗi xóa xe', error.message || 'Không thể xóa xe');
+        closeLoading();
+        showError('Lỗi xóa xe', error.message || 'Không thể xóa xe');
       }
     }
-  };
-
-  const getDaysRemaining = (dueDate: string) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return `${Math.abs(diffDays)} ngày trước`;
-    return `Còn ${diffDays} ngày`;
   };
 
   if (loading) {
@@ -97,33 +83,28 @@ const VehicleManagement: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="mb-10">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
-          <div>
-            <div className="flex items-center mb-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                <CarOutlined className="text-white text-lg" />
-              </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                Xe của tôi
-              </h1>
-            </div>
-            <p className="text-gray-600 text-base leading-relaxed max-w-2xl">
-              Quản lý thông tin và lịch sử bảo dưỡng các xe điện của bạn một cách dễ dàng và hiệu quả
-            </p>
-          </div>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
+      {/* Gradient Header */}
+      <div className="p-8 bg-gradient-to-r from-blue-600 to-indigo-500 text-white rounded-b-3xl shadow-lg mb-8">
+        <div className="flex items-center mb-3">
+          <CarOutlined style={{ fontSize: 32, marginRight: 12 }} />
+          <h1 className="text-4xl font-bold">Xe của tôi</h1>
+        </div>
+        <p className="text-blue-100 text-lg">Quản lý thông tin và lịch sử bảo dưỡng các xe điện của bạn một cách dễ dàng</p>
+      </div>
+
+      <div className="px-6 pb-6">
+        <div className="mb-8 flex justify-end">
           <Button
             type="primary"
             size="large"
             icon={<PlusOutlined />}
             onClick={handleAddVehicle}
-            className="!bg-gradient-to-r !from-blue-600 !to-indigo-600 hover:!from-blue-700 hover:!to-indigo-700 !border-0 !h-12 !px-6 !text-base !font-medium !rounded-xl !shadow-lg hover:!shadow-xl transition-all duration-300 !min-w-[160px]"
+            className="!bg-gradient-to-r !from-blue-600 !to-indigo-600 hover:!from-blue-700 hover:!to-indigo-700 !border-0 !h-12 !px-8 !text-base !font-bold !rounded-xl !shadow-lg hover:!shadow-xl transition-all duration-300"
           >
             Thêm xe mới
           </Button>
         </div>
-      </div>
 
       <Row gutter={[24, 24]}>
         {vehicles.length === 0 ? (
@@ -300,6 +281,7 @@ const VehicleManagement: React.FC = () => {
           />
         )}
       </Modal>
+      </div>
     </div>
   );
 };
