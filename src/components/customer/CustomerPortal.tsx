@@ -83,11 +83,12 @@ const CustomerPortal: React.FC = () => {
               items={[
                 { key: '/customer/dashboard', label: <Link to="/customer/dashboard">Trang chủ</Link> },
                 { key: '/customer/vehicles', label: <Link to="/customer/vehicles">Xe của tôi</Link> },
-                { key: '/customer/service-packages', label: <Link to="/customer/service-packages">Đặt lịch dịch vụ</Link> },
-                { key: '/customer/booking', label: <Link to="/customer/booking">Dịch vụ của tôi</Link> },
-                { key: '/customer/history', label: <Link to="/customer/history">Lịch sử</Link> },
-                { key: '/customer/payment', label: <Link to="/customer/payment">Thanh Toán</Link> },
                 { key: '/customer/my-services', label: <Link to="/customer/my-services">Dịch Vụ</Link> },
+                { key: '/customer/service-packages', label: <Link to="/customer/service-packages">Đặt lịch dịch vụ</Link> },
+                { key: '/customer/booking', label: <Link to="/customer/booking">Dịch vụ của tôi</Link> },                
+                { key: '/customer/payment', label: <Link to="/customer/payment">Thanh Toán</Link> },
+                { key: '/customer/history', label: <Link to="/customer/history">Lịch sử</Link> },
+                
               ]}
             />
           )}
