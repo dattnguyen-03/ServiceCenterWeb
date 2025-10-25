@@ -298,7 +298,7 @@ const AdminAppointmentConfirmation: React.FC = () => {
                         className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0"
                         size="small"
                       >
-                        Xác nhận & Gán kỹ thuật viên
+                        Xác nhận 
                       </Button>
                     )}
                     {appointment.status.toLowerCase() === 'confirmed' && (

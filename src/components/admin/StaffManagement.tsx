@@ -15,7 +15,8 @@ import {
   ClockCircleOutlined,
   ExclamationCircleOutlined,
   TeamOutlined,
-  SettingOutlined
+  SettingOutlined,
+  EnvironmentOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -34,6 +35,7 @@ interface Staff {
   specialization: string[];
   phone: string;
   email: string;
+  address: string;
   status: 'active' | 'off-duty' | 'on-leave';
   certifications: {
     name: string;
@@ -54,6 +56,8 @@ const StaffManagement: React.FC = () => {
   const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [form] = Form.useForm();
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
   const mapUsers = (data: UserListItem[]): Staff[] =>
     data.map((u) => ({
       id: String(u.userID),
@@ -62,6 +66,7 @@ const StaffManagement: React.FC = () => {
       specialization: [],
       phone: u.phone,
       email: u.email,
+      address: u.address,
       status: 'active',
       certifications: [],
       schedule: [],
@@ -277,15 +282,15 @@ const StaffManagement: React.FC = () => {
       width: 250,
       render: (_: any, record: Staff) => (
         <Space size="small">
-          <Tooltip title="Lịch làm việc">
-            {/* <Button
-              icon={<CalendarOutlined />}
-              onClick={() => handleSchedule(record)}
+          <Tooltip title="Xem chi tiết">
+            <Button
+              icon={<UserOutlined />}
+              onClick={() => handleViewDetail(record)}
               className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
               size="small"
             >
-              Lịch
-            </Button> */}
+              
+            </Button>
           </Tooltip>
           <Tooltip title="Chỉnh sửa">
             <Button
@@ -294,7 +299,7 @@ const StaffManagement: React.FC = () => {
               className="text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-all duration-200"
               size="small"
             >
-              Sửa
+              
             </Button>
           </Tooltip>
           <Tooltip title="Xóa nhân viên">
@@ -305,7 +310,7 @@ const StaffManagement: React.FC = () => {
               className="rounded-lg transition-all duration-200"
               size="small"
             >
-              Xóa
+
             </Button>
           </Tooltip>
         </Space>
@@ -319,7 +324,7 @@ const StaffManagement: React.FC = () => {
       name: staff.name,
       email: staff.email,
       phone: staff.phone,
-      address: '', // Add address field if needed
+      address: staff.address || '',
       role: staff.role,
     });
     setIsModalVisible(true);
@@ -328,6 +333,11 @@ const StaffManagement: React.FC = () => {
   const handleSchedule = (staff: Staff) => {
     // Implement schedule management
     console.log('Manage schedule for:', staff.name);
+  };
+
+  const handleViewDetail = (staff: Staff) => {
+    setSelectedStaff(staff);
+    setDetailModalVisible(true);
   };
 
 
@@ -354,7 +364,7 @@ const StaffManagement: React.FC = () => {
                   Quản Lý Nhân Sự
                 </Title>
                 <Text type="secondary" className="text-base">
-                  Quản lý thông tin nhân viên và kỹ thuật viên
+                  Quản lý thông tin nhân viên , khách hàng và kỹ thuật viên
                 </Text>
                 <div className="flex items-center space-x-4 mt-2">
                   <div className="flex items-center space-x-1 text-sm text-gray-500">
@@ -642,8 +652,158 @@ const StaffManagement: React.FC = () => {
                 />
               </Form.Item>
             </div>
+            <Form.Item
+              name="address"
+              label={
+                <span className="text-gray-700 font-medium">
+                  <EnvironmentOutlined className="mr-2 text-purple-500" />
+                  Địa chỉ
+                </span>
+              }
+              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+            >
+              <Input 
+                prefix={<EnvironmentOutlined />} 
+                placeholder="Nhập địa chỉ"
+                size="large"
+                className="rounded-lg"
+              />
+            </Form.Item>
           </Form>
         </div>
+      </Modal>
+
+      {/* Staff Detail Modal */}
+      <Modal
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+              <TeamOutlined className="text-white text-lg" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">Chi tiết nhân viên</div>
+              <div className="text-sm text-gray-500">Thông tin chi tiết về nhân viên</div>
+            </div>
+          </div>
+        }
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailModalVisible(false)} className="px-6">
+            Đóng
+          </Button>,
+          <Button
+            key="edit"
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setDetailModalVisible(false);
+              handleEdit(selectedStaff!);
+            }}
+            className="!bg-gradient-to-r !from-purple-500 !to-pink-600 hover:!from-purple-600 hover:!to-pink-700 !border-0 px-6"
+          >
+            Chỉnh sửa
+          </Button>,
+        ]}
+        width={800}
+        className="rounded-lg"
+      >
+        {selectedStaff && (
+          <div className="py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <UserOutlined className="text-purple-500" />
+                    <Text strong className="text-gray-700">Thông tin cá nhân</Text>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">Họ tên:</Text>
+                      <Text className="font-medium">{selectedStaff.name}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <MailOutlined className="text-blue-500" />
+                      <Text type="secondary">Email:</Text>
+                      <Text className="font-medium">{selectedStaff.email}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <PhoneOutlined className="text-green-500" />
+                      <Text type="secondary">Điện thoại:</Text>
+                      <Text className="font-medium">{selectedStaff.phone}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <EnvironmentOutlined className="text-purple-500" />
+                      <Text type="secondary">Địa chỉ:</Text>
+                      <Text className="font-medium">{selectedStaff.address}</Text>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <SettingOutlined className="text-blue-500" />
+                    <Text strong className="text-gray-700">Thông tin tài khoản</Text>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">ID:</Text>
+                      <Text className="font-medium">{selectedStaff.id}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">Vai trò:</Text>
+                      <Tag color="blue" className="border-0">{selectedStaff.role}</Tag>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">Trạng thái:</Text>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <Tag color="green" className="border-0">Hoạt động</Tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-3">
+                <TeamOutlined className="text-purple-500" />
+                <Text strong className="text-gray-700">Thông tin bổ sung</Text>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Text type="secondary">Chuyên môn:</Text>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedStaff.specialization.length > 0 ? (
+                      selectedStaff.specialization.map(spec => (
+                        <Tag key={spec} color="purple" className="text-xs">
+                          {spec}
+                        </Tag>
+                      ))
+                    ) : (
+                      <Text type="secondary" className="text-xs">Chưa có</Text>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Text type="secondary">Chứng chỉ:</Text>
+                  <Text className="text-xs text-gray-500">
+                    {selectedStaff.certifications.length} chứng chỉ
+                  </Text>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Text type="secondary">Lịch làm việc:</Text>
+                  <Text className="text-xs text-gray-500">
+                    {selectedStaff.schedule.length} ca làm việc
+                  </Text>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
