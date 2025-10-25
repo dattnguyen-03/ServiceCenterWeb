@@ -14,6 +14,7 @@ import {
   GiftOutlined,
   LogoutOutlined,
   DownOutlined,
+  BankOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -63,6 +64,11 @@ const AdminLayout: React.FC = () => {
       key: '/admin/service-packages',
       icon: <GiftOutlined />,
       label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
+    },
+    {
+      key: '/admin/service-centers',
+      icon: <BankOutlined />,
+      label: <Link to="/admin/service-centers">Trung tâm dịch vụ</Link>,
     },
     {
       key: '/admin/staff',

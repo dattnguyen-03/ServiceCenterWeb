@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Space, Tag, Modal, Form, Input, Select, Spin } from 'antd';
+import { Table, Card, Button, Space, Tag, Modal, Form, Input, Select, Spin, Typography, Tooltip } from 'antd';
 import {
   UserOutlined,
-  ToolOutlined,
   PhoneOutlined,
   MailOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   CalendarOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  TeamOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 import { 
   showSuccess, 
   showError, 
@@ -168,56 +177,74 @@ const StaffManagement: React.FC = () => {
       title: 'Nhân viên',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => (
-        <Space>
-          <UserOutlined />
-          {text}
-        </Space>
+      width: 200,
+      render: (text: string, record: Staff) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+            <UserOutlined className="text-white text-sm" />
+          </div>
+          <div>
+            <Text strong className="text-gray-900">{text}</Text>
+            <div className="text-xs text-gray-500">ID: {record.id}</div>
+          </div>
+        </div>
       ),
     },
     {
       title: 'Vị trí',
       dataIndex: 'role',
       key: 'role',
+      width: 120,
       render: (text: string) => (
-        <Space>
-          <ToolOutlined />
-          {text}
-        </Space>
+        <div className="flex items-center space-x-2">
+          <SettingOutlined className="text-blue-500 text-sm" />
+          <Tag color="blue" className="border-0">
+            {text}
+          </Tag>
+        </div>
       ),
     },
     {
       title: 'Chuyên môn',
       dataIndex: 'specialization',
       key: 'specialization',
+      width: 200,
       render: (specializations: string[]) => (
-        <Space>
-          {specializations.map(spec => (
-            <Tag key={spec} color="blue">{spec}</Tag>
-          ))}
-        </Space>
+        <div className="flex flex-wrap gap-1">
+          {specializations.length > 0 ? (
+            specializations.map(spec => (
+              <Tag key={spec} color="purple" className="text-xs">
+                {spec}
+              </Tag>
+            ))
+          ) : (
+            <Text type="secondary" className="text-xs">Chưa có</Text>
+          )}
+        </div>
       ),
     },
     {
       title: 'Liên hệ',
       key: 'contact',
+      width: 200,
       render: (_: any, record: Staff) => (
-        <Space direction="vertical" size="small">
-          <Space>
-            <PhoneOutlined />
-            {record.phone}
-          </Space>
-          <Space>
-            <MailOutlined />
-            {record.email}
-          </Space>
-        </Space>
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2 text-sm">
+            <PhoneOutlined className="text-green-500" />
+            <Text className="text-gray-900">{record.phone}</Text>
+          </div>
+          <div className="flex items-center space-x-2 text-sm">
+            <MailOutlined className="text-blue-500" />
+            <Text className="text-gray-600 truncate">{record.email}</Text>
+          </div>
+        </div>
       ),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
+      width: 120,
       render: (status: string) => {
         const colors = {
           active: 'success',
@@ -229,37 +256,58 @@ const StaffManagement: React.FC = () => {
           'off-duty': 'Ngoài ca',
           'on-leave': 'Nghỉ phép',
         };
+        const icons = {
+          active: <CheckCircleOutlined className="text-green-500" />,
+          'off-duty': <ClockCircleOutlined className="text-gray-500" />,
+          'on-leave': <ExclamationCircleOutlined className="text-orange-500" />,
+        };
         return (
-          <Tag color={colors[status as keyof typeof colors]}>
-            {texts[status as keyof typeof texts]}
-          </Tag>
+          <div className="flex items-center space-x-2">
+            {icons[status as keyof typeof icons]}
+            <Tag color={colors[status as keyof typeof colors]} className="border-0">
+              {texts[status as keyof typeof texts]}
+            </Tag>
+          </div>
         );
       },
     },
     {
       title: 'Thao tác',
       key: 'action',
+      width: 250,
       render: (_: any, record: Staff) => (
-        <Space>
-          <Button
-            icon={<CalendarOutlined />}
-            onClick={() => handleSchedule(record)}
-          >
-            Lịch làm việc
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Sửa
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteUser(parseInt(record.id))}
-          >
-            Xóa
-          </Button>
+        <Space size="small">
+          <Tooltip title="Lịch làm việc">
+            {/* <Button
+              icon={<CalendarOutlined />}
+              onClick={() => handleSchedule(record)}
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              size="small"
+            >
+              Lịch
+            </Button> */}
+          </Tooltip>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              className="text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-all duration-200"
+              size="small"
+            >
+              Sửa
+            </Button>
+          </Tooltip>
+          <Tooltip title="Xóa nhân viên">
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteUser(parseInt(record.id))}
+              className="rounded-lg transition-all duration-200"
+              size="small"
+            >
+              Xóa
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
@@ -292,125 +340,310 @@ const StaffManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <Card
-        title="Quản lý nhân sự"
-        extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditingStaff(null);
-              form.resetFields();
-              setIsModalVisible(true);
-            }}
-          >
-            Thêm nhân viên
-          </Button>
-        }
-      >
-        <Input.Search
-          allowClear
-          placeholder="Tìm theo Username/Name/Email"
-          onSearch={async (val) => {
-            setLoading(true);
-            try {
-              const data = val ? await searchUsers(val) : await getAllUsers();
-              setStaffMembers(mapUsers(data));
-            } finally {
-              setLoading(false);
-            }
-          }}
-          style={{ width: 360, marginBottom: 16 }}
-        />
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <TeamOutlined className="text-white text-2xl" />
+              </div>
+              <div>
+                <Title level={2} className="!mb-1 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Quản Lý Nhân Sự
+                </Title>
+                <Text type="secondary" className="text-base">
+                  Quản lý thông tin nhân viên và kỹ thuật viên
+                </Text>
+                <div className="flex items-center space-x-4 mt-2">
+                  <div className="flex items-center space-x-1 text-sm text-gray-500">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Hệ thống hoạt động bình thường</span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Tổng cộng: {staffMembers.length} nhân viên
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => {
+                  const fetchStaff = async () => {
+                    setLoading(true);
+                    try {
+                      const data = await getAllUsers();
+                      setStaffMembers(mapUsers(data));
+                    } catch (error) {
+                      console.error('Error fetching staff:', error);
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  fetchStaff();
+                }}
+                className="border-gray-200 hover:border-blue-500 hover:text-blue-500"
+                size="large"
+              >
+                Làm mới
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setEditingStaff(null);
+                  form.resetFields();
+                  setIsModalVisible(true);
+                }}
+                size="large"
+                className="!bg-gradient-to-r !from-purple-500 !to-pink-600 hover:!from-purple-600 hover:!to-pink-700 !border-0 shadow-lg"
+              >
+                Thêm nhân viên
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <Card className="mb-6 border-0 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <SearchOutlined className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input.Search
+                allowClear
+                placeholder="Tìm theo Username/Name/Email"
+                onSearch={async (val) => {
+                  setLoading(true);
+                  try {
+                    const data = val ? await searchUsers(val) : await getAllUsers();
+                    setStaffMembers(mapUsers(data));
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="pl-10 rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                size="large"
+              />
+            </div>
+            <Button
+              icon={<FilterOutlined />}
+              className="border-gray-200 hover:border-blue-500 hover:text-blue-500"
+            >
+              Bộ lọc
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="text-sm text-gray-500">
+              Hiển thị {staffMembers.length} nhân viên
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Staff Table */}
+      <Card className="border-0 shadow-sm">
+        <div className="mb-4">
+          <Title level={4} className="!mb-0 text-gray-700">
+            <TeamOutlined className="mr-2 text-purple-500" />
+            Danh sách nhân viên
+          </Title>
+          <Text type="secondary" className="text-sm">
+            Quản lý và theo dõi thông tin nhân viên
+          </Text>
+        </div>
         <Spin spinning={loading}>
           <Table
             columns={columns}
             dataSource={staffMembers}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+            }}
+            className="rounded-lg"
+            rowClassName="hover:bg-gray-50 transition-colors duration-200"
+            size="middle"
           />
         </Spin>
       </Card>
 
       <Modal
-        title={editingStaff ? 'Sửa thông tin nhân viên' : 'Thêm nhân viên mới'}
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+              <TeamOutlined className="text-white text-lg" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">
+                {editingStaff ? 'Sửa thông tin nhân viên' : 'Thêm nhân viên mới'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {editingStaff ? 'Cập nhật thông tin nhân viên' : 'Thêm nhân viên mới vào hệ thống'}
+              </div>
+            </div>
+          </div>
+        }
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
         }}
-        onOk={form.submit}
-        width={800}
+        footer={[
+          <Button key="cancel" onClick={() => {
+            setIsModalVisible(false);
+            form.resetFields();
+          }} className="px-6">
+            Hủy
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={() => form.submit()}
+            className="!bg-gradient-to-r !from-purple-500 !to-pink-600 hover:!from-purple-600 hover:!to-pink-700 !border-0 px-6"
+          >
+            {editingStaff ? 'Cập nhật' : 'Thêm mới'}
+          </Button>,
+        ]}
+        width={700}
+        className="rounded-lg"
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
-          {!editingStaff && (
-            <>
+        <div className="py-4">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            className="space-y-6"
+          >
+            {!editingStaff && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Form.Item
+                  name="username"
+                  label={
+                    <span className="text-gray-700 font-medium">
+                      <UserOutlined className="mr-2 text-blue-500" />
+                      Username
+                    </span>
+                  }
+                  rules={[{ required: true, message: 'Vui lòng nhập username' }]}
+                >
+                  <Input 
+                    placeholder="Nhập username" 
+                    size="large"
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="password"
+                  label={
+                    <span className="text-gray-700 font-medium">
+                      <span className="mr-2">🔒</span>
+                      Mật khẩu
+                    </span>
+                  }
+                  rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+                >
+                  <Input.Password 
+                    placeholder="Nhập mật khẩu" 
+                    size="large"
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item
-                name="username"
-                label="Username"
-                rules={[{ required: true, message: 'Vui lòng nhập username' }]}
+                name="name"
+                label={
+                  <span className="text-gray-700 font-medium">
+                    <UserOutlined className="mr-2 text-green-500" />
+                    Tên nhân viên
+                  </span>
+                }
+                rules={[{ required: true, message: 'Vui lòng nhập tên nhân viên' }]}
               >
-                <Input />
+                <Input 
+                  prefix={<UserOutlined />} 
+                  placeholder="Nhập tên nhân viên"
+                  size="large"
+                  className="rounded-lg"
+                />
               </Form.Item>
               <Form.Item
-                name="password"
-                label="Mật khẩu"
-                rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+                name="role"
+                label={
+                  <span className="text-gray-700 font-medium">
+                    <SettingOutlined className="mr-2 text-purple-500" />
+                    Vai trò
+                  </span>
+                }
+                rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
               >
-                <Input.Password />
+                <Select 
+                  disabled={!!editingStaff}
+                  placeholder="Chọn vai trò"
+                  size="large"
+                  className="rounded-lg"
+                >
+                  <Select.Option value="Customer">Khách hàng</Select.Option>
+                  <Select.Option value="Staff">Nhân viên</Select.Option>
+                  <Select.Option value="Technician">Kỹ thuật viên</Select.Option>
+                  <Select.Option value="Admin">Quản trị</Select.Option>
+                </Select>
               </Form.Item>
-            </>
-          )}
-          <Form.Item
-            name="name"
-            label="Tên nhân viên"
-            rules={[{ required: true, message: 'Vui lòng nhập tên nhân viên' }]}
-          >
-            <Input prefix={<UserOutlined />} />
-          </Form.Item>
-          <Form.Item
-            name="role"
-            label="Vai trò"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
-          >
-            <Select disabled={!!editingStaff}>
-              <Select.Option value="Customer">Khách hàng</Select.Option>
-              <Select.Option value="Staff">Nhân viên</Select.Option>
-              <Select.Option value="Technician">Kỹ thuật viên</Select.Option>
-              <Select.Option value="Admin">Quản trị</Select.Option>
-            </Select>
-          </Form.Item>
-          {/* specialization and schedule are not used by backend */}
+            </div>
 
-          <Form.Item
-            name="phone"
-            label="Số điện thoại"
-            rules={[
-              { required: true, message: 'Vui lòng nhập số điện thoại' },
-              { pattern: /^[0-9]{10}$/, message: 'Số điện thoại không hợp lệ' },
-            ]}
-          >
-            <Input prefix={<PhoneOutlined />} />
-          </Form.Item>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Form.Item
+                name="phone"
+                label={
+                  <span className="text-gray-700 font-medium">
+                    <PhoneOutlined className="mr-2 text-green-500" />
+                    Số điện thoại
+                  </span>
+                }
+                rules={[
+                  { required: true, message: 'Vui lòng nhập số điện thoại' },
+                  { pattern: /^[0-9]{10}$/, message: 'Số điện thoại không hợp lệ' },
+                ]}
+              >
+                <Input 
+                  prefix={<PhoneOutlined />} 
+                  placeholder="Nhập số điện thoại"
+                  size="large"
+                  className="rounded-lg"
+                />
+              </Form.Item>
 
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Vui lòng nhập email' },
-              { type: 'email', message: 'Email không hợp lệ' },
-            ]}
-          >
-            <Input prefix={<MailOutlined />} />
-          </Form.Item>
-
-          {/* status is UI-only; not persisted */}
-        </Form>
+              <Form.Item
+                name="email"
+                label={
+                  <span className="text-gray-700 font-medium">
+                    <MailOutlined className="mr-2 text-blue-500" />
+                    Email
+                  </span>
+                }
+                rules={[
+                  { required: true, message: 'Vui lòng nhập email' },
+                  { type: 'email', message: 'Email không hợp lệ' },
+                ]}
+              >
+                <Input 
+                  prefix={<MailOutlined />} 
+                  placeholder="Nhập email"
+                  size="large"
+                  className="rounded-lg"
+                />
+              </Form.Item>
+            </div>
+          </Form>
+        </div>
       </Modal>
     </div>
   );

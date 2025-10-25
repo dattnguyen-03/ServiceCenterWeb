@@ -53,6 +53,7 @@ import ServiceOrderProgress from './components/technician/ServiceOrderProgress';
 import AdminAppointmentConfirmation from './components/admin/AdminAppointmentConfirmation';
 import AdminServiceProgress from './components/admin/AdminServiceProgress';
 import AdminAppointmentManagement from './components/admin/AdminAppointmentManagement';
+import ServiceCenterManagement from './components/admin/ServiceCenterManagement';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -128,6 +129,7 @@ const AppContent: React.FC = () => {
         <Route path="service-progress" element={<AdminServiceProgress />} />
         <Route path="parts" element={<PartsManagement />} />
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
+        <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
       </Route>

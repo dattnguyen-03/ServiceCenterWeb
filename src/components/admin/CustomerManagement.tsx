@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Car, Search, Filter, Plus, Eye, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
+import { Users, Car, UserCheck, Calendar } from 'lucide-react';
 import { getAllUsers, searchUsers, type UserListItem } from '../../api/users';
+import { Card, Button, Modal, Typography, Space, Tag, Badge, Tooltip, Divider, Spin } from 'antd';
+import { ReloadOutlined, SearchOutlined, FilterOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, UserOutlined, PhoneOutlined, MailOutlined, EnvironmentOutlined, SettingOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 // Use the API types
 type Customer = UserListItem;
@@ -60,75 +64,150 @@ const CustomerManagement: React.FC = () => {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quản lý khách hàng</h2>
-          <p className="text-gray-600">Quản lý thông tin khách hàng và lịch sử dịch vụ</p>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <Users className="text-white text-2xl" />
+              </div>
+              <div>
+                <Title level={2} className="!mb-1 bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                  Quản Lý Khách Hàng
+                </Title>
+                <Text type="secondary" className="text-base">
+                  Quản lý thông tin khách hàng và lịch sử dịch vụ
+                </Text>
+                <div className="flex items-center space-x-4 mt-2">
+                  <div className="flex items-center space-x-1 text-sm text-gray-500">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Hệ thống hoạt động bình thường</span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Tổng cộng: {customers.length} khách hàng
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => {
+                  const fetchCustomers = async () => {
+                    setLoading(true);
+                    try {
+                      const data = await getAllUsers();
+                      setCustomers(data);
+                    } catch (error: any) {
+                      console.error('Error fetching customers:', error);
+                      setCustomers([]);
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  fetchCustomers();
+                }}
+                className="border-gray-200 hover:border-blue-500 hover:text-blue-500"
+                size="large"
+              >
+                Làm mới
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                className="!bg-gradient-to-r !from-indigo-500 !to-blue-600 hover:!from-indigo-600 hover:!to-blue-700 !border-0 shadow-lg"
+              >
+                Thêm khách hàng
+              </Button>
+            </div>
+          </div>
         </div>
-        <button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
-          <span>Thêm khách hàng</span>
-        </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{customers.length}</div>
-              <div className="text-sm text-gray-600">Tổng khách hàng</div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card 
+          className="text-center hover:shadow-lg transition-all duration-300 border-0"
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white'
+          }}
+        >
+          <div className="flex items-center justify-center mb-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Users className="text-2xl" />
             </div>
           </div>
-        </div>
+          <Title level={3} style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
+            {customers.length}
+          </Title>
+          <Text style={{ color: 'white', opacity: 0.9 }}>Tổng khách hàng</Text>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{customers.length}</div>
-              <div className="text-sm text-gray-600">Tổng xe đăng ký</div>
+        <Card 
+          className="text-center hover:shadow-lg transition-all duration-300 border-0"
+          style={{ 
+            background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+            color: 'white'
+          }}
+        >
+          <div className="flex items-center justify-center mb-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Car className="text-2xl" />
             </div>
           </div>
-        </div>
+          <Title level={3} style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
+            {customers.length}
+          </Title>
+          <Text style={{ color: 'white', opacity: 0.9 }}>Tổng xe đăng ký</Text>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">15</div>
-              <div className="text-sm text-gray-600">Khách hàng mới tháng này</div>
+        <Card 
+          className="text-center hover:shadow-lg transition-all duration-300 border-0"
+          style={{ 
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: 'white'
+          }}
+        >
+          <div className="flex items-center justify-center mb-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <UserCheck className="text-2xl" />
             </div>
           </div>
-        </div>
+          <Title level={3} style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
+            15
+          </Title>
+          <Text style={{ color: 'white', opacity: 0.9 }}>Khách hàng mới tháng này</Text>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">92%</div>
-              <div className="text-sm text-gray-600">Tỷ lệ hài lòng</div>
+        <Card 
+          className="text-center hover:shadow-lg transition-all duration-300 border-0"
+          style={{ 
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white'
+          }}
+        >
+          <div className="flex items-center justify-center mb-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Calendar className="text-2xl" />
             </div>
           </div>
-        </div>
+          <Title level={3} style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', margin: 0 }}>
+            92%
+          </Title>
+          <Text style={{ color: 'white', opacity: 0.9 }}>Tỷ lệ hài lòng</Text>
+        </Card>
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      <Card className="mb-6 border-0 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <SearchOutlined className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Tìm kiếm khách hàng..."
@@ -137,7 +216,7 @@ const CustomerManagement: React.FC = () => {
                   setSearchTerm(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
               />
             </div>
             <select
@@ -151,16 +230,31 @@ const CustomerManagement: React.FC = () => {
             </select>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-              <Filter className="w-4 h-4" />
-              <span>Bộ lọc</span>
-            </button>
+            <Button
+              icon={<FilterOutlined />}
+              className="border-gray-200 hover:border-blue-500 hover:text-blue-500"
+            >
+              Bộ lọc
+            </Button>
+            <div className="text-sm text-gray-500">
+              Hiển thị {filteredCustomers.length} khách hàng
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Customer Table */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+      <Card className="border-0 shadow-sm">
+        <div className="mb-4">
+          <Title level={4} className="!mb-0 text-gray-700">
+            <Users className="mr-2 text-indigo-500" />
+            Danh sách khách hàng
+          </Title>
+          <Text type="secondary" className="text-sm">
+            Quản lý và theo dõi thông tin khách hàng
+          </Text>
+        </div>
+        
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -176,65 +270,92 @@ const CustomerManagement: React.FC = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10">Đang tải dữ liệu...</td>
+                  <td colSpan={6} className="text-center py-10">
+                    <Spin size="large" />
+                    <div className="mt-4 text-gray-500">Đang tải dữ liệu...</div>
+                  </td>
                 </tr>
               ) : (
                 filteredCustomers.map((customer) => (
-                  <tr key={customer.userID} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={customer.userID} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200">
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <UserOutlined className="text-white text-lg" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{customer.name}</div>
-                          <div className="text-sm text-gray-600">{customer.email}</div>
+                          <Text strong className="text-gray-900 text-base">{customer.name}</Text>
+                          <div className="text-sm text-gray-500">{customer.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="space-y-1">
-                        <div className="text-sm">
-                          <div className="font-medium text-gray-900">{customer.phone}</div>
-                          <div className="text-gray-600">{customer.address}</div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <PhoneOutlined className="text-green-500" />
+                          <Text className="text-gray-900">{customer.phone}</Text>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <EnvironmentOutlined className="text-blue-500" />
+                          <Text className="text-gray-600 truncate">{customer.address}</Text>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {customer.role}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <SettingOutlined className="text-purple-500 text-sm" />
+                          <Tag color="blue" className="border-0">{customer.role}</Tag>
                         </div>
-                        <div className="text-xs text-gray-600">
-                          {customer.username}
+                        <div className="text-xs text-gray-500">
+                          @{customer.username}
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-gray-900">
-                        Khách hàng
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Hoạt động
-                      </span>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-2">
-                        <button 
-                          onClick={() => handleViewDetail(customer)}
-                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200">
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <Users className="text-indigo-500 text-sm" />
+                        <Text strong className="text-gray-900">Khách hàng</Text>
                       </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <Tag color="green" className="border-0">Hoạt động</Tag>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <Space size="small">
+                        <Tooltip title="Xem chi tiết">
+                          <Button
+                            icon={<EyeOutlined />}
+                            onClick={() => handleViewDetail(customer)}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            size="small"
+                          >
+                            Xem
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Chỉnh sửa">
+                          <Button
+                            icon={<EditOutlined />}
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-all duration-200"
+                            size="small"
+                          >
+                            Sửa
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Xóa khách hàng">
+                          <Button
+                            danger
+                            icon={<DeleteOutlined />}
+                            className="rounded-lg transition-all duration-200"
+                            size="small"
+                          >
+                            Xóa
+                          </Button>
+                        </Tooltip>
+                      </Space>
                     </td>
                   </tr>
                 ))
@@ -242,110 +363,106 @@ const CustomerManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Customer Details Modal */}
-      {detailModalVisible && selectedCustomer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">{selectedCustomer.name}</h3>
-                  <p className="text-gray-600">{selectedCustomer.email}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setDetailModalVisible(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+      <Modal
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+              <Users className="text-white text-lg" />
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-6">
-              {/* Customer Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-blue-600" />
-                    Thông tin cá nhân
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-gray-600">Email:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.email}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-gray-600">Điện thoại:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.phone}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-gray-600">Địa chỉ:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.address}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-blue-600" />
-                    Thông tin tài khoản
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="text-gray-600">Username:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.username}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="text-gray-600">Role:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.role}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="text-gray-600">User ID:</span>
-                      <span className="ml-2 font-medium">{selectedCustomer.userID}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <Car className="w-5 h-5 mr-2 text-blue-600" />
-                  Thông tin bổ sung
-                </h4>
-                <p className="text-gray-500 text-sm">
-                  Để xem thông tin chi tiết về xe và lịch sử dịch vụ, vui lòng sử dụng các chức năng quản lý xe và lịch hẹn riêng biệt.
-                </p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-              <button
-                onClick={() => setDetailModalVisible(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-              >
-                Đóng
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Chỉnh sửa
-              </button>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">Chi tiết khách hàng</div>
+              <div className="text-sm text-gray-500">Thông tin chi tiết về khách hàng</div>
             </div>
           </div>
-        </div>
-      )}
+        }
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailModalVisible(false)} className="px-6">
+            Đóng
+          </Button>,
+          <Button
+            key="edit"
+            type="primary"
+            icon={<EditOutlined />}
+            className="!bg-gradient-to-r !from-indigo-500 !to-blue-600 hover:!from-indigo-600 hover:!to-blue-700 !border-0 px-6"
+          >
+            Chỉnh sửa
+          </Button>,
+        ]}
+        width={800}
+        className="rounded-lg"
+      >
+        {selectedCustomer && (
+          <div className="py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <UserOutlined className="text-indigo-500" />
+                    <Text strong className="text-gray-700">Thông tin cá nhân</Text>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <MailOutlined className="text-blue-500" />
+                      <Text type="secondary">Email:</Text>
+                      <Text className="font-medium">{selectedCustomer.email}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <PhoneOutlined className="text-green-500" />
+                      <Text type="secondary">Điện thoại:</Text>
+                      <Text className="font-medium">{selectedCustomer.phone}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <EnvironmentOutlined className="text-purple-500" />
+                      <Text type="secondary">Địa chỉ:</Text>
+                      <Text className="font-medium">{selectedCustomer.address}</Text>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <SettingOutlined className="text-blue-500" />
+                    <Text strong className="text-gray-700">Thông tin tài khoản</Text>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">Username:</Text>
+                      <Text className="font-medium">@{selectedCustomer.username}</Text>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">Role:</Text>
+                      <Tag color="blue" className="border-0">{selectedCustomer.role}</Tag>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Text type="secondary">User ID:</Text>
+                      <Badge count={selectedCustomer.userID} style={{ backgroundColor: '#1890ff' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <Divider />
+            
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-3">
+                <Car className="text-indigo-500" />
+                <Text strong className="text-gray-700">Thông tin bổ sung</Text>
+              </div>
+              <Text className="text-gray-500 text-sm leading-relaxed">
+                Để xem thông tin chi tiết về xe và lịch sử dịch vụ, vui lòng sử dụng các chức năng quản lý xe và lịch hẹn riêng biệt.
+              </Text>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
