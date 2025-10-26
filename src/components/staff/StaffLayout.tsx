@@ -5,7 +5,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import {
   DashboardOutlined,
   UserOutlined,
-  CalendarOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
   DollarOutlined,
@@ -53,6 +52,11 @@ const StaffLayout: React.FC = () => {
       key: '/staff/service-orders',
       icon: <ShoppingCartOutlined />,
       label: <Link to="/staff/service-orders">Xem Đơn Hàng Dịch Vụ</Link>,
+    },
+    {
+      key: '/staff/service-checklists',
+      icon: <FileTextOutlined />,
+      label: <Link to="/staff/service-checklists">Service Checklist</Link>,
     },
     {
       key: '/staff/service-packages',

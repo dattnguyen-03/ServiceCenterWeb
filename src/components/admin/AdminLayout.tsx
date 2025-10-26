@@ -7,7 +7,6 @@ import {
   UserOutlined,
   CalendarOutlined,
   FileTextOutlined,
-  ClockCircleOutlined,
   ToolOutlined,
   TeamOutlined,
   DollarOutlined,
@@ -55,6 +54,11 @@ const AdminLayout: React.FC = () => {
       key: '/admin/service-orders',
       icon: <ShoppingCartOutlined />,
       label: <Link to="/admin/service-orders">Quản Lý Đơn Hàng Dịch Vụ</Link>,
+    },
+    {
+      key: '/admin/service-checklists',
+      icon: <FileTextOutlined />,
+      label: <Link to="/admin/service-checklists">Service Checklist</Link>,
     },
     {
       key: '/admin/service-centers',

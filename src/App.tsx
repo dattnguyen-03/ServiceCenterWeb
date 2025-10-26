@@ -51,6 +51,8 @@ import ServiceCenterManagement from './components/admin/ServiceCenterManagement'
 import StaffServiceCenterManagement from './components/staff/ServiceCenterManagement';
 import ServiceOrderManagement from './components/admin/ServiceOrderManagement';
 import StaffServiceOrderManagement from './components/staff/ServiceOrderManagement';
+import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
+import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -125,6 +127,7 @@ const AppContent: React.FC = () => {
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
+        <Route path="service-checklists" element={<ServiceChecklistManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
       </Route>
@@ -144,6 +147,7 @@ const AppContent: React.FC = () => {
         <Route path="service-centers" element={<StaffServiceCenterManagement />} />
         <Route path="service-orders" element={<StaffServiceOrderManagement />} />
         <Route path="appointment-confirmation" element={<AppointmentConfirmation />} />
+        <Route path="service-checklists" element={<ServiceChecklistManagement />} />
         <Route path="service-packages" element={<StaffServicePackageManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
@@ -161,6 +165,7 @@ const AppContent: React.FC = () => {
         <Route path="dashboard" element={<TechnicianDashboard />} />
         <Route path="work-orders" element={<WorkOrders />} />
         <Route path="service-order-progress" element={<ServiceOrderProgress />} />
+        <Route path="checklists" element={<TechnicianChecklistView />} />
         <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />
