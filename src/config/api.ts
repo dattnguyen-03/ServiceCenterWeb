@@ -92,6 +92,7 @@ export const API_CONFIG = {
       BOOK: '/BookAppointmentAPI',
       VIEW: '/ViewAppointmentAPI',
       GET_ALL: '/GetAppointmentAPI', // For Staff/Admin to view all appointments
+      CANCEL: '/CancelAppointmentAPI',
     },
 
    

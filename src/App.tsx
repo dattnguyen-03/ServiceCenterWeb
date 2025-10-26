@@ -53,6 +53,7 @@ import ServiceOrderManagement from './components/admin/ServiceOrderManagement';
 import StaffServiceOrderManagement from './components/staff/ServiceOrderManagement';
 import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
 import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
+import StaffChecklistView from './components/staff/StaffChecklistView';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -147,7 +148,7 @@ const AppContent: React.FC = () => {
         <Route path="service-centers" element={<StaffServiceCenterManagement />} />
         <Route path="service-orders" element={<StaffServiceOrderManagement />} />
         <Route path="appointment-confirmation" element={<AppointmentConfirmation />} />
-        <Route path="service-checklists" element={<ServiceChecklistManagement />} />
+        <Route path="service-checklists" element={<StaffChecklistView />} />
         <Route path="service-packages" element={<StaffServicePackageManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />

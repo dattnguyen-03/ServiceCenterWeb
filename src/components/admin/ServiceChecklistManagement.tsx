@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Table, Card, Input, Tag, Modal, Descriptions, Statistic } from "antd";
-import { FileTextOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
+import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select } from "antd";
+import { FileTextOutlined, SearchOutlined, EyeOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { serviceChecklistService, ServiceChecklist } from "../../services/serviceChecklistService";
+import { serviceChecklistService, ServiceChecklist, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
 import { message } from "antd";
+import { showDeleteConfirm, showSuccess, showError } from "../../utils/sweetAlert";
 
 const ServiceChecklistManagement: React.FC = () => {
   const [checklists, setChecklists] = useState<ServiceChecklist[]>([]);
@@ -11,6 +12,9 @@ const ServiceChecklistManagement: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingChecklist, setEditingChecklist] = useState<ServiceChecklist | null>(null);
+  const [editForm] = Form.useForm();
 
   useEffect(() => {
     fetchChecklists();
@@ -34,14 +38,59 @@ const ServiceChecklistManagement: React.FC = () => {
     setIsDetailModalVisible(true);
   };
 
+  const handleDeleteChecklist = async (checklistId: number) => {
+    const result = await showDeleteConfirm('checklist này');
+    
+    if (result.isConfirmed) {
+      setLoading(true);
+      try {
+        await serviceChecklistService.deleteChecklist(checklistId);
+        showSuccess('Xóa checklist thành công!');
+        await fetchChecklists();
+      } catch (error: any) {
+        showError('Lỗi', error.message || 'Không thể xóa checklist');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleEditChecklist = async (values: EditServiceChecklistRequest) => {
+    if (!editingChecklist) return;
+
+    setLoading(true);
+    try {
+      await serviceChecklistService.editChecklist(editingChecklist.checklistID, values);
+      showSuccess('Cập nhật checklist thành công!');
+      setIsEditModalVisible(false);
+      editForm.resetFields();
+      await fetchChecklists();
+    } catch (error: any) {
+      showError('Lỗi', error.message || 'Không thể cập nhật checklist');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditModal = (checklist: ServiceChecklist) => {
+    setEditingChecklist(checklist);
+    editForm.setFieldsValue({
+      itemName: checklist.itemName,
+      status: checklist.status,
+      notes: checklist.notes
+    });
+    setIsEditModalVisible(true);
+  };
+
   const filteredChecklists = checklists.filter((checklist) => {
+    if (!checklist) return false;
     const search = searchText.toLowerCase();
     return (
-      checklist.customerName.toLowerCase().includes(search) ||
-      checklist.vehicleModel.toLowerCase().includes(search) ||
-      checklist.centerName.toLowerCase().includes(search) ||
-      checklist.itemName.toLowerCase().includes(search) ||
-      checklist.status.toLowerCase().includes(search)
+      (checklist.customerName || '').toLowerCase().includes(search) ||
+      (checklist.vehicleModel || '').toLowerCase().includes(search) ||
+      (checklist.centerName || '').toLowerCase().includes(search) ||
+      (checklist.itemName || '').toLowerCase().includes(search) ||
+      (checklist.status || '').toLowerCase().includes(search)
     );
   });
 
@@ -90,21 +139,17 @@ const ServiceChecklistManagement: React.FC = () => {
       width: 120,
       render: (status: string) => {
         const statusColors: Record<string, string> = {
-          'ok': 'green',
-          'good': 'green',
-          'needs_attention': 'orange',
-          'needs_replacement': 'red',
-          'completed': 'blue'
+          'OK': 'green',
+          'NotOK': 'red',
+          'NeedReplace': 'orange'
         };
         const statusTexts: Record<string, string> = {
-          'ok': '✓ Ổn định',
-          'good': '✓ Tốt',
-          'needs_attention': '⚠ Cần chú ý',
-          'needs_replacement': '❌ Cần thay',
-          'completed': '✓ Hoàn tất'
+          'OK': '✓ OK',
+          'NotOK': '❌ Not OK',
+          'NeedReplace': '⚠ Cần thay thế'
         };
-        const color = statusColors[status.toLowerCase()] || 'default';
-        const text = statusTexts[status.toLowerCase()] || status;
+        const color = statusColors[status] || 'default';
+        const text = statusTexts[status] || status;
         
         return (
           <Tag color={color} style={{ borderRadius: 12, fontWeight: 600 }}>
@@ -123,18 +168,29 @@ const ServiceChecklistManagement: React.FC = () => {
     {
       title: "Thao tác",
       key: "action",
-      width: 100,
+      width: 180,
       render: (_: any, record: ServiceChecklist) => (
-        <span
-          onClick={() => handleViewDetail(record)}
-          style={{ 
-            cursor: 'pointer', 
-            color: '#2563eb',
-            fontSize: 18 
-          }}
-        >
-          <EyeOutlined />
-        </span>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+            style={{ color: '#2563eb' }}
+          />
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(record)}
+            style={{ color: '#10b981' }}
+          />
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteChecklist(record.checklistID)}
+            danger
+            style={{ color: '#dc2626' }}
+          />
+        </div>
       ),
     },
   ];
@@ -183,7 +239,7 @@ const ServiceChecklistManagement: React.FC = () => {
         }}>
           <Statistic
             title={<span style={{ color: '#6b7280' }}>Đã hoàn tất</span>}
-            value={checklists.filter(c => c.status.toLowerCase() === 'ok' || c.status.toLowerCase() === 'good').length}
+            value={checklists.filter(c => c.status === 'OK' || c.status === 'good').length}
             prefix={<FileTextOutlined style={{ color: '#10b981' }} />}
             valueStyle={{ color: '#10b981', fontWeight: 700 }}
           />
@@ -195,7 +251,7 @@ const ServiceChecklistManagement: React.FC = () => {
         }}>
           <Statistic
             title={<span style={{ color: '#6b7280' }}>Cần chú ý</span>}
-            value={checklists.filter(c => c.status.toLowerCase().includes('needs')).length}
+            value={checklists.filter(c => c.status === 'NeedReplace').length}
             prefix={<FileTextOutlined style={{ color: '#f59e0b' }} />}
             valueStyle={{ color: '#f59e0b', fontWeight: 700 }}
           />
@@ -278,15 +334,18 @@ const ServiceChecklistManagement: React.FC = () => {
             <Descriptions.Item label="Trạng thái" labelStyle={{ fontWeight: 600 }}>
               <Tag 
                 color={
-                  selectedChecklist.status.toLowerCase() === 'ok' || selectedChecklist.status.toLowerCase() === 'good'
+                  selectedChecklist.status === 'OK'
                     ? 'green'
-                    : selectedChecklist.status.toLowerCase().includes('needs')
+                    : selectedChecklist.status === 'NotOK'
                     ? 'red'
-                    : 'blue'
+                    : 'orange'
                 }
                 style={{ borderRadius: 12, fontWeight: 600 }}
               >
-                {selectedChecklist.status}
+                {selectedChecklist.status === 'OK' ? '✓ OK' : 
+                 selectedChecklist.status === 'NotOK' ? '❌ Not OK' : 
+                 selectedChecklist.status === 'NeedReplace' ? '⚠ Cần thay thế' : 
+                 selectedChecklist.status}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Ghi chú" labelStyle={{ fontWeight: 600 }}>
@@ -297,6 +356,71 @@ const ServiceChecklistManagement: React.FC = () => {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937' }}>
+            ✏️ Chỉnh sửa Checklist
+          </div>
+        }
+        open={isEditModalVisible}
+        onCancel={() => {
+          setIsEditModalVisible(false);
+          editForm.resetFields();
+        }}
+        footer={null}
+        centered
+        width={500}
+        styles={{ body: { borderRadius: '16px' } }}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleEditChecklist}
+        >
+          <Form.Item
+            label="Hạng mục"
+            name="itemName"
+            rules={[{ required: true, message: 'Vui lòng nhập hạng mục!' }]}
+          >
+            <Input placeholder="Nhập hạng mục" />
+          </Form.Item>
+
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+          >
+            <Select placeholder="Chọn trạng thái">
+              <Select.Option value="OK">OK</Select.Option>
+              <Select.Option value="NotOK">Không OK</Select.Option>
+              <Select.Option value="NeedReplace">Cần thay thế</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Ghi chú"
+            name="notes"
+          >
+            <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
+          </Form.Item>
+
+          <Form.Item>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <Button onClick={() => {
+                setIsEditModalVisible(false);
+                editForm.resetFields();
+              }}>
+                Hủy
+              </Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Cập nhật
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

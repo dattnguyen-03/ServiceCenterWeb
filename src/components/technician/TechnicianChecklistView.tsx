@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Table, Card, Input, Tag, Modal, Descriptions, Statistic } from "antd";
-import { FileTextOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
+import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select } from "antd";
+import { FileTextOutlined, SearchOutlined, EyeOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { serviceChecklistService, ServiceChecklist } from "../../services/serviceChecklistService";
+import { serviceChecklistService, ServiceChecklist, CreateServiceChecklistRequest, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
 import { message } from "antd";
 
 const TechnicianChecklistView: React.FC = () => {
@@ -11,6 +11,11 @@ const TechnicianChecklistView: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingChecklist, setEditingChecklist] = useState<ServiceChecklist | null>(null);
+  const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
 
   useEffect(() => {
     fetchChecklists();
@@ -34,14 +39,64 @@ const TechnicianChecklistView: React.FC = () => {
     setIsDetailModalVisible(true);
   };
 
+  const handleCreateChecklist = async (values: CreateServiceChecklistRequest) => {
+    setLoading(true);
+    try {
+      await serviceChecklistService.createChecklist(values);
+      message.success('Tạo checklist thành công!');
+      setIsCreateModalVisible(false);
+      form.resetFields();
+      await fetchChecklists();
+    } catch (error: any) {
+      message.error(error.message || 'Lỗi tạo checklist');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditChecklist = async (values: EditServiceChecklistRequest) => {
+    if (!editingChecklist) return;
+    
+    setLoading(true);
+    try {
+      await serviceChecklistService.editChecklist(editingChecklist.checklistID, values);
+      message.success('Cập nhật checklist thành công!');
+      setIsEditModalVisible(false);
+      setEditingChecklist(null);
+      editForm.resetFields();
+      await fetchChecklists();
+    } catch (error: any) {
+      message.error(error.message || 'Lỗi cập nhật checklist');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const openEditModal = (checklist: ServiceChecklist) => {
+    setEditingChecklist(checklist);
+    setIsEditModalVisible(true);
+    editForm.setFieldsValue({
+      orderID: checklist.orderID,
+      itemName: checklist.itemName,
+      status: checklist.status,
+      notes: checklist.notes
+    });
+  };
+
   const filteredChecklists = checklists.filter((checklist) => {
+    if (!checklist) return false;
     const search = searchText.toLowerCase();
+    const statusText = checklist.status === 'OK' ? 'ok' : 
+                       checklist.status === 'NotOK' ? 'not ok' : 
+                       checklist.status === 'NeedReplace' ? 'cần thay thế' : 
+                       checklist.status?.toLowerCase() || '';
     return (
-      checklist.customerName.toLowerCase().includes(search) ||
-      checklist.vehicleModel.toLowerCase().includes(search) ||
-      checklist.centerName.toLowerCase().includes(search) ||
-      checklist.itemName.toLowerCase().includes(search) ||
-      checklist.status.toLowerCase().includes(search)
+      (checklist.customerName || '').toLowerCase().includes(search) ||
+      (checklist.vehicleModel || '').toLowerCase().includes(search) ||
+      (checklist.centerName || '').toLowerCase().includes(search) ||
+      (checklist.itemName || '').toLowerCase().includes(search) ||
+      statusText.includes(search)
     );
   });
 
@@ -90,21 +145,17 @@ const TechnicianChecklistView: React.FC = () => {
       width: 120,
       render: (status: string) => {
         const statusColors: Record<string, string> = {
-          'ok': 'green',
-          'good': 'green',
-          'needs_attention': 'orange',
-          'needs_replacement': 'red',
-          'completed': 'blue'
+          'OK': 'green',
+          'NotOK': 'red',
+          'NeedReplace': 'orange'
         };
         const statusTexts: Record<string, string> = {
-          'ok': '✓ Ổn định',
-          'good': '✓ Tốt',
-          'needs_attention': '⚠ Cần chú ý',
-          'needs_replacement': '❌ Cần thay',
-          'completed': '✓ Hoàn tất'
+          'OK': '✓ OK',
+          'NotOK': '❌ Not OK',
+          'NeedReplace': '⚠ Cần thay thế'
         };
-        const color = statusColors[status.toLowerCase()] || 'default';
-        const text = statusTexts[status.toLowerCase()] || status;
+        const color = statusColors[status] || 'default';
+        const text = statusTexts[status] || status;
         
         return (
           <Tag color={color} style={{ borderRadius: 12, fontWeight: 600 }}>
@@ -123,18 +174,22 @@ const TechnicianChecklistView: React.FC = () => {
     {
       title: "Thao tác",
       key: "action",
-      width: 100,
+      width: 180,
       render: (_: any, record: ServiceChecklist) => (
-        <span
-          onClick={() => handleViewDetail(record)}
-          style={{ 
-            cursor: 'pointer', 
-            color: '#2563eb',
-            fontSize: 18 
-          }}
-        >
-          <EyeOutlined />
-        </span>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+            style={{ color: '#2563eb' }}
+          />
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(record)}
+            style={{ color: '#06b6d4' }}
+          />
+        </div>
       ),
     },
   ];
@@ -155,9 +210,27 @@ const TechnicianChecklistView: React.FC = () => {
             Service Checklist Của Tôi
           </h1>
         </div>
-        <p style={{ color: '#e0f2fe', fontSize: '16px', margin: 0 }}>
-          Xem và quản lý danh sách Service Checklist mà bạn đã tạo
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <p style={{ color: '#e0f2fe', fontSize: '16px', margin: 0 }}>
+            Xem và quản lý danh sách Service Checklist mà bạn đã tạo
+          </p>
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => setIsCreateModalVisible(true)}
+            style={{
+              borderRadius: 10,
+              background: 'linear-gradient(90deg, #ffffff 0%, #f0f9ff 100%)',
+              border: '2px solid #fff',
+              color: '#0284c7',
+              fontWeight: 700,
+              height: 45
+            }}
+          >
+            Thêm Checklist
+          </Button>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -182,8 +255,8 @@ const TechnicianChecklistView: React.FC = () => {
           border: '1px solid #e5e7eb'
         }}>
           <Statistic
-            title={<span style={{ color: '#6b7280' }}>Đã hoàn tất</span>}
-            value={checklists.filter(c => c.status.toLowerCase() === 'ok' || c.status.toLowerCase() === 'good').length}
+            title={<span style={{ color: '#6b7280' }}>Trạng thái OK</span>}
+            value={checklists.filter(c => c.status === 'OK').length}
             prefix={<FileTextOutlined style={{ color: '#10b981' }} />}
             valueStyle={{ color: '#10b981', fontWeight: 700 }}
           />
@@ -194,8 +267,8 @@ const TechnicianChecklistView: React.FC = () => {
           border: '1px solid #e5e7eb'
         }}>
           <Statistic
-            title={<span style={{ color: '#6b7280' }}>Cần chú ý</span>}
-            value={checklists.filter(c => c.status.toLowerCase().includes('needs')).length}
+            title={<span style={{ color: '#6b7280' }}>Cần thay thế</span>}
+            value={checklists.filter(c => c.status === 'NeedReplace').length}
             prefix={<FileTextOutlined style={{ color: '#f59e0b' }} />}
             valueStyle={{ color: '#f59e0b', fontWeight: 700 }}
           />
@@ -278,15 +351,18 @@ const TechnicianChecklistView: React.FC = () => {
             <Descriptions.Item label="Trạng thái" labelStyle={{ fontWeight: 600 }}>
               <Tag 
                 color={
-                  selectedChecklist.status.toLowerCase() === 'ok' || selectedChecklist.status.toLowerCase() === 'good'
+                  selectedChecklist.status === 'OK'
                     ? 'green'
-                    : selectedChecklist.status.toLowerCase().includes('needs')
+                    : selectedChecklist.status === 'NotOK'
                     ? 'red'
-                    : 'blue'
+                    : 'orange'
                 }
                 style={{ borderRadius: 12, fontWeight: 600 }}
               >
-                {selectedChecklist.status}
+                {selectedChecklist.status === 'OK' ? '✓ OK' : 
+                 selectedChecklist.status === 'NotOK' ? '❌ Not OK' : 
+                 selectedChecklist.status === 'NeedReplace' ? '⚠ Cần thay thế' : 
+                 selectedChecklist.status}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Ghi chú" labelStyle={{ fontWeight: 600 }}>
@@ -297,6 +373,195 @@ const TechnicianChecklistView: React.FC = () => {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+
+      {/* Create Checklist Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937' }}>
+            ➕ Tạo Service Checklist Mới
+          </div>
+        }
+        open={isCreateModalVisible}
+        onCancel={() => {
+          setIsCreateModalVisible(false);
+          form.resetFields();
+        }}
+        onOk={() => form.submit()}
+        okText="Tạo Checklist"
+        cancelText="Hủy"
+        okButtonProps={{
+          style: {
+            borderRadius: 8,
+            background: 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)',
+            border: 'none',
+            fontWeight: 600,
+            height: 40
+          }
+        }}
+        cancelButtonProps={{
+          style: {
+            borderRadius: 8,
+            fontWeight: 600,
+            height: 40
+          }
+        }}
+        width={600}
+        styles={{ body: { borderRadius: '16px' } }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreateChecklist}
+          style={{ marginTop: '16px' }}
+        >
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Order ID</span>}
+            name="orderID"
+            rules={[{ required: true, message: "Vui lòng nhập Order ID" }]}
+          >
+            <Input
+              type="number"
+              placeholder="Nhập Order ID"
+              size="large"
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Tên hạng mục</span>}
+            name="itemName"
+            rules={[{ required: true, message: "Vui lòng nhập tên hạng mục" }]}
+          >
+            <Input
+              placeholder="Ví dụ: Kiểm tra pin, Kiểm tra hệ thống điện..."
+              size="large"
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Trạng thái</span>}
+            name="status"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+          >
+            <Select
+              placeholder="Chọn trạng thái"
+              size="large"
+              style={{ borderRadius: 10 }}
+            >
+              <Select.Option value="OK">✓ OK</Select.Option>
+              <Select.Option value="NotOK">❌ Not OK</Select.Option>
+              <Select.Option value="NeedReplace">⚠ Cần thay thế</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Ghi chú</span>}
+            name="notes"
+          >
+            <Input.TextArea
+              placeholder="Nhập ghi chú (nếu có)"
+              rows={4}
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Edit Checklist Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937' }}>
+            ✏️ Chỉnh sửa Service Checklist
+          </div>
+        }
+        open={isEditModalVisible}
+        onCancel={() => {
+          setIsEditModalVisible(false);
+          setEditingChecklist(null);
+          editForm.resetFields();
+        }}
+        onOk={() => editForm.submit()}
+        okText="Cập nhật"
+        cancelText="Hủy"
+        okButtonProps={{
+          style: {
+            borderRadius: 8,
+            background: 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)',
+            border: 'none',
+            fontWeight: 600,
+            height: 40
+          }
+        }}
+        cancelButtonProps={{
+          style: {
+            borderRadius: 8,
+            fontWeight: 600,
+            height: 40
+          }
+        }}
+        width={600}
+        styles={{ body: { borderRadius: '16px' } }}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleEditChecklist}
+          style={{ marginTop: '16px' }}
+        >
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Order ID</span>}
+            name="orderID"
+            rules={[{ required: true, message: "Vui lòng nhập Order ID" }]}
+          >
+            <Input
+              type="number"
+              placeholder="Nhập Order ID"
+              size="large"
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Tên hạng mục</span>}
+            name="itemName"
+            rules={[{ required: true, message: "Vui lòng nhập tên hạng mục" }]}
+          >
+            <Input
+              placeholder="Ví dụ: Kiểm tra pin, Kiểm tra hệ thống điện..."
+              size="large"
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Trạng thái</span>}
+            name="status"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+          >
+            <Select
+              placeholder="Chọn trạng thái"
+              size="large"
+              style={{ borderRadius: 10 }}
+            >
+              <Select.Option value="OK">✓ OK</Select.Option>
+              <Select.Option value="NotOK">❌ Not OK</Select.Option>
+              <Select.Option value="NeedReplace">⚠ Cần thay thế</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Ghi chú</span>}
+            name="notes"
+          >
+            <Input.TextArea
+              placeholder="Nhập ghi chú (nếu có)"
+              rows={4}
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

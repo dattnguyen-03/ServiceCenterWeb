@@ -4,6 +4,7 @@ import { CalendarOutlined, EnvironmentOutlined, CarOutlined, HourglassOutlined, 
 import dayjs from 'dayjs';
 import { appointmentService } from '../../services/appointmentService';
 import { AppointmentSummary } from '../../types/api';
+import { showDeleteConfirm, showSuccess, showError } from '../../utils/sweetAlert';
 
 const { Title, Text } = Typography;
 
@@ -31,6 +32,7 @@ const AppointmentBooking: React.FC = () => {
       console.error(e);
     }
   };
+
 
   useEffect(() => {
     (async () => {
@@ -275,18 +277,34 @@ const AppointmentBooking: React.FC = () => {
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
                         <button 
-                          onClick={() => {
-                            setSelectedAppointment(ap);
-                            setDetailModalVisible(true);
-                          }}
-                          className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-300 hover:border-blue-400">
-                          Chi Tiết
-                        </button>
-                        {ap.status === 'Pending' && (
-                          <button className="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-all duration-200 border border-red-300 hover:border-red-400">
-                            Hủy
-                          </button>
-                        )}
+                    onClick={() => {
+                      setSelectedAppointment(ap);
+                      setDetailModalVisible(true);
+                    }}
+                    className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-300 hover:border-blue-400">
+                      Chi Tiết
+                    </button>
+                    {ap.status === 'Pending' && (
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const result = await showDeleteConfirm('lịch hẹn này');
+                          
+                          if (result.isConfirmed) {
+                            try {
+                              await appointmentService.cancelAppointment(ap.appointmentID);
+                              showSuccess('Hủy lịch hẹn thành công!');
+                              await fetchData();
+                            } catch (error: any) {
+                              showError('Lỗi', error.message || 'Không thể hủy lịch hẹn');
+                            }
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-all duration-200 border border-red-300 hover:border-red-400"
+                      >
+                        Hủy
+                      </button>
+                    )}
                       </div>
                     </div>
                   </Card>
@@ -421,6 +439,20 @@ const AppointmentBooking: React.FC = () => {
                 <Button 
                   danger 
                   size="large"
+                  onClick={async () => {
+                    setDetailModalVisible(false);
+                    const result = await showDeleteConfirm('lịch hẹn này');
+                    
+                    if (result.isConfirmed) {
+                      try {
+                        await appointmentService.cancelAppointment(selectedAppointment.appointmentID);
+                        showSuccess('Hủy lịch hẹn thành công!');
+                        await fetchData();
+                      } catch (error: any) {
+                        showError('Lỗi', error.message || 'Không thể hủy lịch hẹn');
+                      }
+                    }
+                  }}
                   style={{
                     flex: 1,
                     borderRadius: 8,

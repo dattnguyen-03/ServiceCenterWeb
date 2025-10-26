@@ -168,6 +168,23 @@ class AppointmentService {
       throw new Error(error.message || 'Lỗi xóa lịch hẹn');
     }
   }
+
+  // Cancel appointment (Customer)
+  async cancelAppointment(appointmentID: number): Promise<string> {
+    try {
+      console.log('Canceling appointment:', appointmentID);
+      const response = await httpClient.post<{ message?: string }>(
+        API_CONFIG.ENDPOINTS.APPOINTMENT.CANCEL,
+        { appointmentID }
+      );
+
+      console.log('Cancel response:', response);
+      return response.message || 'Hủy lịch hẹn thành công';
+    } catch (error: any) {
+      console.error('Error canceling appointment:', error);
+      throw new Error(error.message || 'Lỗi hủy lịch hẹn');
+    }
+  }
 }
 
 export const appointmentService = new AppointmentService();

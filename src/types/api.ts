@@ -165,6 +165,7 @@ export interface CreateAppointmentRequest {
 
 // Lightweight view model returned by ViewAppointmentAPI (BE contract)
 export interface AppointmentSummary {
+  appointmentID: number;
   vehicleModel: string;
   serviceType: string;
   centerName: string;
