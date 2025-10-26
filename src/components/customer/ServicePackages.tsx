@@ -175,9 +175,11 @@ const ServicePackages: React.FC = () => {
                     boxShadow: isSelected ? '0 8px 24px rgba(96,165,250,0.15)' : '0 2px 12px rgba(0,0,0,0.05)',
                     transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
                     position: 'relative',
-                    background: isSelected ? '#f0f9ff' : '#fff'
+                    background: isSelected ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' : '#fff',
+                    cursor: 'pointer',
+                    height: '100%'
                   }}
-                  bodyStyle={{ padding: 24 }}
+                  bodyStyle={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}
                 >
                   {isSelected && (
                     <div style={{
@@ -200,21 +202,53 @@ const ServicePackages: React.FC = () => {
                       <CheckCircleOutlined />
                     </div>
                   )}
-                  <Title level={4} style={{ marginBottom: 16, fontWeight: 800, color: '#1f2937' }}>
-                    📍 {center.name}
-                  </Title>
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', fontSize: 14 }}>
-                      <EnvironmentOutlined style={{ color: '#2563eb', marginRight: 10, marginTop: 2, minWidth: 20 }} />
-                      <Text type="secondary">{center.address}</Text>
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    marginBottom: 16,
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(59,130,246,0.2)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800 }}>
+                        {center.name}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', fontSize: 14 }}>
-                      <PhoneOutlined style={{ color: '#2563eb', marginRight: 10, minWidth: 20 }} />
-                      <Text type="secondary">{center.phone}</Text>
+                  </div>
+                  <Space direction="vertical" size="middle" style={{ width: '100%', flex: 1 }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start', 
+                      fontSize: 14,
+                      padding: '12px',
+                      background: '#f8fafc',
+                      borderRadius: 8
+                    }}>
+                      <EnvironmentOutlined style={{ color: '#2563eb', marginRight: 12, marginTop: 2, minWidth: 20, fontSize: 18 }} />
+                      <Text style={{ color: '#374151', fontWeight: 500 }}>{center.address}</Text>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', fontSize: 14 }}>
-                      <UserOutlined style={{ color: '#2563eb', marginRight: 10, minWidth: 20 }} />
-                      <Text type="secondary">{center.managerName}</Text>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      fontSize: 14,
+                      padding: '12px',
+                      background: '#f8fafc',
+                      borderRadius: 8
+                    }}>
+                      <PhoneOutlined style={{ color: '#2563eb', marginRight: 12, minWidth: 20, fontSize: 18 }} />
+                      <Text style={{ color: '#374151', fontWeight: 500 }}>{center.phone}</Text>
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      fontSize: 14,
+                      padding: '12px',
+                      background: '#f8fafc',
+                      borderRadius: 8
+                    }}>
+                      <UserOutlined style={{ color: '#2563eb', marginRight: 12, minWidth: 20, fontSize: 18 }} />
+                      <Text style={{ color: '#374151', fontWeight: 500 }}>{center.managerName}</Text>
                     </div>
                   </Space>
                 </Card>

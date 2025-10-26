@@ -15,6 +15,7 @@ import {
   LogoutOutlined,
   DownOutlined,
   BankOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -46,29 +47,24 @@ const AdminLayout: React.FC = () => {
       label: <Link to="/admin/appointments">Xác nhận lịch hẹn</Link>,
     },
     {
-      key: '/admin/service-tickets',
-      icon: <FileTextOutlined />,
-      label: <Link to="/admin/service-tickets">Phiếu dịch vụ</Link>,
-    },
-    {
-      key: '/admin/service-progress',
-      icon: <ClockCircleOutlined />,
-      label: <Link to="/admin/service-progress">Tiến độ dịch vụ</Link>,
-    },
-    {
-      key: '/admin/parts',
-      icon: <ToolOutlined />,
-      label: <Link to="/admin/parts">Phụ tùng</Link>,
-    },
-    {
       key: '/admin/service-packages',
       icon: <GiftOutlined />,
       label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
     },
     {
+      key: '/admin/service-orders',
+      icon: <ShoppingCartOutlined />,
+      label: <Link to="/admin/service-orders">Quản Lý Đơn Hàng Dịch Vụ</Link>,
+    },
+    {
       key: '/admin/service-centers',
       icon: <BankOutlined />,
       label: <Link to="/admin/service-centers">Trung tâm dịch vụ</Link>,
+    },
+    {
+      key: '/admin/parts',
+      icon: <ToolOutlined />,
+      label: <Link to="/admin/parts">Phụ tùng</Link>,
     },
     {
       key: '/admin/staff',

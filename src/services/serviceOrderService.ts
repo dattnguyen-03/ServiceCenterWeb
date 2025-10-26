@@ -88,6 +88,37 @@ class ServiceOrderService {
     }
   }
 
+  // Get all service orders (Admin/Staff)
+  async getAllServiceOrders(): Promise<ServiceOrder[]> {
+    try {
+      console.log('Fetching all service orders...');
+      const response = await httpClient.get<ServiceOrder[]>(
+        `/GetServiceOrderAPI`
+      );
+
+      console.log('All service orders response:', response);
+
+      if (Array.isArray(response)) return response;
+      if (response && typeof response === 'object') {
+        const anyRes: any = response as any;
+        if (anyRes.success && Array.isArray(anyRes.data)) {
+          return anyRes.data as ServiceOrder[];
+        }
+        if (Array.isArray(anyRes.data)) {
+          return anyRes.data as ServiceOrder[];
+        }
+      }
+      throw new Error('Không thể tải danh sách Service Order');
+    } catch (error: any) {
+      console.error('Error getting all service orders:', error);
+      // If error message indicates no service orders, return empty array
+      if (error.message && error.message.includes('Không có Service Order nào')) {
+        return [];
+      }
+      throw new Error(error.message || 'Lỗi tải Service Order');
+    }
+  }
+
   // Update service order status (Technician)
   async updateServiceOrderStatus(data: UpdateServiceOrderRequest): Promise<string> {
     try {
@@ -107,6 +138,23 @@ class ServiceOrderService {
     } catch (error: any) {
       console.error('Error updating service order:', error);
       throw new Error(error.message || 'Lỗi cập nhật Service Order');
+    }
+  }
+
+  // Delete service order (Admin only)
+  async deleteServiceOrder(orderID: number): Promise<string> {
+    try {
+      console.log('Deleting service order:', orderID);
+      const response = await httpClient.delete<{ message?: string }>(
+        `/DeleteServiceOrderAPI`,
+        { orderId: orderID }
+      );
+
+      console.log('Delete response:', response);
+      return response.message || 'Xóa Service Order thành công';
+    } catch (error: any) {
+      console.error('Error deleting service order:', error);
+      throw new Error(error.message || 'Lỗi xóa Service Order');
     }
   }
 }

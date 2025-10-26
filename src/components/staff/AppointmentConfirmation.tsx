@@ -3,7 +3,11 @@ import { appointmentService, Appointment } from '../../services/appointmentServi
 import { technicianListService, Technician } from '../../services/technicianListService';
 import { serviceOrderService, CreateServiceOrderRequest } from '../../services/serviceOrderService';
 import { useAuth } from '../../contexts/AuthContext';
-import { User, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
+import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 const AppointmentConfirmation: React.FC = () => {
   const { user } = useAuth();
@@ -120,177 +124,309 @@ const AppointmentConfirmation: React.FC = () => {
 
   if (loading && appointments.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Đang tải danh sách lịch hẹn...</div>
+      <div className="p-0">
+        <div className="flex flex-col items-center justify-center min-h-96 space-y-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <CheckCircleOutlined className="text-white text-2xl" />
+          </div>
+          <div className="text-center">
+            <Title level={3} className="text-gray-700 mb-2">Đang tải danh sách lịch hẹn...</Title>
+            <Text type="secondary">Vui lòng chờ trong giây lát</Text>
+          </div>
+          <Spin size="large" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Xác nhận dịch vụ</h2>
-        <button
-          onClick={fetchAppointments}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? 'Đang tải...' : 'Làm mới'}
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {/* Appointments Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Khách hàng
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Xe
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Dịch vụ
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Trung tâm
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Ngày hẹn
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {appointments.map((appointment) => (
-              <tr key={appointment.appointmentID} className="hover:bg-gray-50">
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  #{appointment.appointmentID}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {appointment.userName}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {appointment.vehicleModel}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {appointment.serviceType}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {appointment.centerName}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(appointment.requestedDate).toLocaleDateString('vi-VN')}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    {getStatusIcon(appointment.status)}
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                      {appointment.status}
-                    </span>
+    <div className="p-0">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <CheckCircleOutlined className="text-white text-2xl" />
+              </div>
+              <div>
+                <Title level={2} className="!mb-1 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Xác Nhận Dịch Vụ
+                </Title>
+                <Text type="secondary" className="text-base">
+                  Xác nhận và gán kỹ thuật viên cho các lịch hẹn
+                </Text>
+                <div className="flex items-center space-x-4 mt-2">
+                  <div className="flex items-center space-x-1 text-sm text-gray-500">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Hệ thống hoạt động bình thường</span>
                   </div>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                  {appointment.status.toLowerCase() === 'pending' && (
-                    <button
-                      onClick={() => openAssignModal(appointment)}
-                      className="text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md transition-colors"
-                    >
-                      Xác nhận & Gán kỹ thuật viên
-                    </button>
-                  )}
-                  {appointment.status.toLowerCase() === 'confirmed' && (
-                    <span className="text-green-600">Đã xác nhận</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {appointments.length === 0 && !loading && (
-        <div className="text-center py-8">
-          <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có lịch hẹn nào</h3>
-          <p className="text-gray-600">Hiện tại không có lịch hẹn nào cần xác nhận</p>
-        </div>
-      )}
-
-      {/* Assign Technician Modal */}
-      {showAssignModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Xác nhận dịch vụ và gán kỹ thuật viên
-              </h3>
-              
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Thông tin lịch hẹn:</h4>
-                <p><strong>Khách hàng:</strong> {selectedAppointment.userName}</p>
-                <p><strong>Xe:</strong> {selectedAppointment.vehicleModel}</p>
-                <p><strong>Dịch vụ:</strong> {selectedAppointment.serviceType}</p>
-                <p><strong>Trung tâm:</strong> {selectedAppointment.centerName}</p>
-                <p><strong>Ngày hẹn:</strong> {new Date(selectedAppointment.requestedDate).toLocaleDateString('vi-VN')}</p>
+                  <div className="text-sm text-gray-500">
+                    Tổng cộng: {appointments.length} lịch hẹn
+                  </div>
+                </div>
               </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Chọn kỹ thuật viên:
-                </label>
-                <select
-                  value={selectedTechnician || ''}
-                  onChange={(e) => setSelectedTechnician(Number(e.target.value))}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">-- Chọn kỹ thuật viên --</option>
-                  {technicians.map((tech) => (
-                    <option key={tech.userID} value={tech.userID}>
-                      {tech.name} - {tech.phone}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowAssignModal(false);
-                    setSelectedAppointment(null);
-                    setSelectedTechnician(null);
-                  }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleCreateServiceOrder}
-                  disabled={!selectedTechnician}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                >
-                  Xác nhận & Tạo Service Order
-                </button>
-              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={fetchAppointments}
+                disabled={loading}
+                className="border-gray-200 hover:border-green-500 hover:text-green-500"
+                size="large"
+              >
+                {loading ? 'Đang tải...' : 'Làm mới'}
+              </Button>
             </div>
           </div>
         </div>
+      </div>
+
+      {error && (
+        <Card className="mb-6 border-red-200 bg-red-50">
+          <div className="flex items-center space-x-2 text-red-700">
+            <ExclamationCircleOutlined className="text-red-500" />
+            <Text className="text-red-700">{error}</Text>
+          </div>
+        </Card>
       )}
+
+      {/* Appointments Table */}
+      <Card className="border-0 shadow-sm">
+        <div className="mb-4">
+          <Title level={4} className="!mb-0 text-gray-700">
+            <CheckCircleOutlined className="mr-2 text-green-500" />
+            Danh sách lịch hẹn cần xác nhận
+          </Title>
+          <Text type="secondary" className="text-sm">
+            Quản lý và xác nhận các lịch hẹn dịch vụ
+          </Text>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Khách hàng
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Xe
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Dịch vụ
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Trung tâm
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Ngày hẹn
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {appointments.map((appointment) => (
+                <tr key={appointment.appointmentID} className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <UserOutlined className="text-blue-500 text-sm" />
+                      <Text strong className="text-gray-900">{appointment.userName}</Text>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <CarOutlined className="text-green-500 text-sm" />
+                      <Text className="text-gray-900">{appointment.vehicleModel}</Text>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <ToolOutlined className="text-orange-500 text-sm" />
+                      <Text className="text-gray-900">{appointment.serviceType}</Text>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <EnvironmentOutlined className="text-purple-500 text-sm" />
+                      <Text className="text-gray-900">{appointment.centerName}</Text>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <CalendarOutlined className="text-indigo-500 text-sm" />
+                      <Text className="text-gray-900">
+                        {new Date(appointment.requestedDate).toLocaleDateString('vi-VN')}
+                      </Text>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(appointment.status)}
+                      <Tag 
+                        color={
+                          appointment.status.toLowerCase() === 'confirmed' ? 'green' :
+                          appointment.status.toLowerCase() === 'pending' ? 'orange' : 'red'
+                        }
+                        className="border-0"
+                      >
+                        {appointment.status}
+                      </Tag>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {appointment.status.toLowerCase() === 'pending' && (
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => openAssignModal(appointment)}
+                        className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0"
+                        size="small"
+                      >
+                        Xác nhận 
+                      </Button>
+                    )}
+                    {appointment.status.toLowerCase() === 'confirmed' && (
+                      <div className="flex items-center space-x-1 text-green-600">
+                        <CheckCircleOutlined />
+                        <Text className="text-green-600 font-medium">Đã xác nhận</Text>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {appointments.length === 0 && !loading && (
+        <Card className="text-center py-12">
+          <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-10 h-10 text-gray-400" />
+          </div>
+          <Title level={3} className="text-gray-700 mb-2">Không có lịch hẹn nào</Title>
+          <Text type="secondary" className="text-base">Hiện tại không có lịch hẹn nào cần xác nhận</Text>
+        </Card>
+      )}
+
+      {/* Assign Technician Modal */}
+      <Modal
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3">
+              <CheckCircleOutlined className="text-white text-lg" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">Xác nhận dịch vụ và gán kỹ thuật viên</div>
+              <div className="text-sm text-gray-500">Gán kỹ thuật viên phù hợp cho lịch hẹn</div>
+            </div>
+          </div>
+        }
+        open={showAssignModal}
+        onCancel={() => {
+          setShowAssignModal(false);
+          setSelectedAppointment(null);
+          setSelectedTechnician(null);
+        }}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => {
+              setShowAssignModal(false);
+              setSelectedAppointment(null);
+              setSelectedTechnician(null);
+            }}
+            className="px-6"
+          >
+            Hủy
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={handleCreateServiceOrder}
+            disabled={!selectedTechnician}
+            className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0 px-6"
+          >
+            Xác nhận & Tạo Service Order
+          </Button>,
+        ]}
+        width={600}
+        className="rounded-lg"
+      >
+        {selectedAppointment && (
+          <div className="py-4">
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Title level={5} className="text-gray-700 mb-4 flex items-center">
+                <CalendarOutlined className="mr-2 text-blue-500" />
+                Thông tin lịch hẹn
+              </Title>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <UserOutlined className="text-blue-500" />
+                    <Text strong>Khách hàng:</Text>
+                    <Text>{selectedAppointment.userName}</Text>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CarOutlined className="text-green-500" />
+                    <Text strong>Xe:</Text>
+                    <Text>{selectedAppointment.vehicleModel}</Text>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <ToolOutlined className="text-orange-500" />
+                    <Text strong>Dịch vụ:</Text>
+                    <Text>{selectedAppointment.serviceType}</Text>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <EnvironmentOutlined className="text-purple-500" />
+                    <Text strong>Trung tâm:</Text>
+                    <Text>{selectedAppointment.centerName}</Text>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CalendarOutlined className="text-indigo-500" />
+                    <Text strong>Ngày hẹn:</Text>
+                    <Text>{new Date(selectedAppointment.requestedDate).toLocaleDateString('vi-VN')}</Text>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <Text strong className="text-gray-700 mb-2 block">
+                Chọn kỹ thuật viên:
+              </Text>
+              <Select
+                value={selectedTechnician}
+                onChange={setSelectedTechnician}
+                placeholder="-- Chọn kỹ thuật viên --"
+                className="w-full"
+                size="large"
+                showSearch
+                optionFilterProp="children"
+              >
+                {technicians.map((tech) => (
+                  <Select.Option key={tech.userID} value={tech.userID}>
+                    <div className="flex items-center space-x-2">
+                      <UserOutlined className="text-blue-500" />
+                      <span>{tech.name}</span>
+                      <span className="text-gray-500">- {tech.phone}</span>
+                    </div>
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

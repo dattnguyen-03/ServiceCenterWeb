@@ -8,11 +8,12 @@ import {
   CalendarOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
-  TeamOutlined,
   DollarOutlined,
   GiftOutlined,
   LogoutOutlined,
   DownOutlined,
+  BankOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -36,22 +37,22 @@ const StaffLayout: React.FC = () => {
     {
       key: '/staff/customers',
       icon: <UserOutlined />,
-      label: <Link to="/staff/customers">Khách hàng & Xe</Link>,
-    },
-    {
-      key: '/staff/appointments',
-      icon: <CalendarOutlined />,
-      label: <Link to="/staff/appointments">Lịch hẹn</Link>,
+      label: <Link to="/staff/customers">Quản Lý KH & NVKT</Link>,
     },
     {
       key: '/staff/appointment-confirmation',
       icon: <ClockCircleOutlined />,
-      label: <Link to="/staff/appointment-confirmation">Xác nhận dịch vụ</Link>,
+      label: <Link to="/staff/appointment-confirmation">Lịch Hẹn</Link>,
     },
     {
-      key: '/staff/service-tickets',
-      icon: <FileTextOutlined />,
-      label: <Link to="/staff/service-tickets">Phiếu dịch vụ</Link>,
+      key: '/staff/service-centers',
+      icon: <BankOutlined />,
+      label: <Link to="/staff/service-centers">Danh sách trung tâm</Link>,
+    },
+    {
+      key: '/staff/service-orders',
+      icon: <ShoppingCartOutlined />,
+      label: <Link to="/staff/service-orders">Xem Đơn Hàng Dịch Vụ</Link>,
     },
     {
       key: '/staff/service-packages',

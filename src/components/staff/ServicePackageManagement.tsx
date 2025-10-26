@@ -7,9 +7,7 @@ import {
   ClockCircleOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  CalendarOutlined
+  UserOutlined
 } from '@ant-design/icons';
 import { ServicePackage } from '../../types/api';
 import { servicePackageService } from '../../services/servicePackageService';
@@ -45,15 +43,6 @@ const ServicePackageManagement: React.FC = () => {
     setDetailModalVisible(true);
   };
 
-  const handleCustomerInquiry = (pkg: ServicePackage) => {
-    // TODO: Navigate to customer inquiry form or create appointment
-    message.info(`Tiếp nhận yêu cầu gói: ${pkg.name} - Chuyển đến form đặt lịch`);
-  };
-
-  const handleCustomerSupport = (pkg: ServicePackage) => {
-    // TODO: Open customer support chat or call
-    message.info(`Hỗ trợ khách hàng về gói: ${pkg.name}`);
-  };
 
 
   const columns = [
@@ -72,6 +61,7 @@ const ServicePackageManagement: React.FC = () => {
       title: 'Tên gói',
       dataIndex: 'name',
       key: 'name',
+      width: 200,
       render: (name: string, record: ServicePackage) => (
         <div>
           <Text strong className="text-base">{name}</Text>
@@ -85,9 +75,12 @@ const ServicePackageManagement: React.FC = () => {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
-      ellipsis: true,
+      width: 300,
+      ellipsis: {
+        showTitle: false,
+      },
       render: (description: string) => (
-        <Text type="secondary" className="text-sm">
+        <Text type="secondary" className="text-sm" title={description}>
           {description}
         </Text>
       ),
@@ -96,7 +89,7 @@ const ServicePackageManagement: React.FC = () => {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
-      width: 120,
+      width: 140,
       render: (price: number) => (
         <Text strong className="text-green-600">
           {servicePackageService.formatPrice(price)}
@@ -107,7 +100,7 @@ const ServicePackageManagement: React.FC = () => {
       title: 'Thời hạn',
       dataIndex: 'durationMonths',
       key: 'durationMonths',
-      width: 100,
+      width: 150,
       render: (months: number) => (
         <Tag color="blue" icon={<ClockCircleOutlined />}>
           {servicePackageService.formatDuration(months)}
@@ -128,22 +121,7 @@ const ServicePackageManagement: React.FC = () => {
           >
             Xem
           </Button>
-          <Button
-            type="text"
-            icon={<CalendarOutlined />}
-            onClick={() => handleCustomerInquiry(record)}
-            className="text-green-600 hover:text-green-800"
-          >
-            Đặt lịch
-          </Button>
-          <Button
-            type="text"
-            icon={<UserOutlined />}
-            onClick={() => handleCustomerSupport(record)}
-            className="text-orange-600 hover:text-orange-800"
-          >
-            Hỗ trợ
-          </Button>
+          
         </Space>
       ),
     },
@@ -161,16 +139,16 @@ const ServicePackageManagement: React.FC = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
-              <GiftOutlined className="text-white text-xl" />
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+              <GiftOutlined className="text-white text-2xl" />
             </div>
             <div>
-              <Title level={2} className="!mb-0 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <Title level={2} className="!mb-0 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Gói Dịch Vụ
               </Title>
-              <Text type="secondary" className="text-lg">
+              <Text type="secondary" className="text-base">
                 Xem gói dịch vụ và tiếp nhận yêu cầu từ khách hàng
               </Text>
             </div>
@@ -181,74 +159,70 @@ const ServicePackageManagement: React.FC = () => {
       {/* Statistics */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={6}>
-          <Card className="text-center">
+          <Card className="text-center rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <GiftOutlined className="text-2xl text-blue-500" />
+              </div>
+            </div>
             <Statistic
               title="Tổng số gói"
               value={packages.length}
-              prefix={<GiftOutlined className="text-blue-500" />}
-              valueStyle={{ color: '#3b82f6' }}
+              valueStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="text-center">
+          <Card className="text-center rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <DollarOutlined className="text-2xl text-green-500" />
+              </div>
+            </div>
             <Statistic
               title="Giá trung bình"
               value={packages.length > 0 ? packages.reduce((sum, pkg) => sum + pkg.price, 0) / packages.length : 0}
               formatter={(value) => servicePackageService.formatPrice(Number(value))}
-              prefix={<DollarOutlined className="text-green-500" />}
-              valueStyle={{ color: '#10b981' }}
+              valueStyle={{ color: '#10b981', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="text-center">
+          <Card className="text-center rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <ClockCircleOutlined className="text-2xl text-orange-500" />
+              </div>
+            </div>
             <Statistic
               title="Thời hạn trung bình"
               value={packages.length > 0 ? Math.round(packages.reduce((sum, pkg) => sum + pkg.durationMonths, 0) / packages.length) : 0}
               formatter={(value) => servicePackageService.formatDuration(Number(value))}
-              prefix={<ClockCircleOutlined className="text-orange-500" />}
-              valueStyle={{ color: '#f59e0b' }}
+              valueStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card className="text-center">
+          <Card className="text-center rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <UserOutlined className="text-2xl text-purple-500" />
+              </div>
+            </div>
             <Statistic
               title="Yêu cầu hôm nay"
               value={0}
-              prefix={<UserOutlined className="text-purple-500" />}
-              valueStyle={{ color: '#8b5cf6' }}
+              valueStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Customer Requests Section */}
-      <Card className="mb-6" title={
-        <div className="flex items-center">
-          <UserOutlined className="mr-2 text-blue-500" />
-          <span>Yêu cầu từ khách hàng</span>
-        </div>
-      }>
-        <div className="text-center py-8">
-          <UserOutlined className="text-4xl text-gray-400 mb-4" />
-          <Text type="secondary" className="text-lg">
-            Chưa có yêu cầu nào từ khách hàng
-          </Text>
-          <div className="mt-4">
-            <Text type="secondary">
-              Khi khách hàng chọn gói dịch vụ, yêu cầu sẽ hiển thị ở đây
-            </Text>
-          </div>
-        </div>
-      </Card>
-
       {/* Packages Table */}
-      <Card title={
+      <Card className="rounded-2xl shadow-sm border border-gray-100" title={
         <div className="flex items-center">
-          <GiftOutlined className="mr-2 text-blue-500" />
-          <span>Danh sách gói dịch vụ</span>
+          <GiftOutlined className="mr-2 text-blue-500 text-lg" />
+          <span className="text-lg font-semibold">Danh sách gói dịch vụ</span>
         </div>
       }>
         <Table
@@ -312,11 +286,7 @@ const ServicePackageManagement: React.FC = () => {
             </Descriptions>
 
             <div className="mt-4">
-              <Title level={5} className="flex items-center">
-                <InfoCircleOutlined className="mr-2 text-blue-500" />
-                Dịch vụ bao gồm:
-              </Title>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 {selectedPackage.packageID === 1 ? (
                   <>
                     <div className="flex items-center text-sm">
@@ -352,7 +322,7 @@ const ServicePackageManagement: React.FC = () => {
                     </div>
                   </>
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
         )}

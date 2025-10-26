@@ -13,15 +13,19 @@ export interface UserListItem {
 // Lấy danh sách tất cả users
 export const getAllUsers = async (): Promise<UserListItem[]> => {
   try {
+    console.log('Calling getAllUsers API...');
     const response = await httpClient.get('/GetAllUserAPI');
-    console.log('Users API Response:', response);
+    console.log('getAllUsers API Response:', response);
     
     // Xử lý cả hai trường hợp: response.data hoặc response trực tiếp
     if (response.data && Array.isArray(response.data)) {
+      console.log('Returning response.data:', response.data);
       return response.data;
     } else if (Array.isArray(response)) {
+      console.log('Returning response directly:', response);
       return response;
     } else {
+      console.log('No valid data found, returning empty array');
       return [];
     }
   } catch (error) {

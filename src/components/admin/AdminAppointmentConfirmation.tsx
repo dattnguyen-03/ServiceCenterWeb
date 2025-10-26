@@ -4,8 +4,9 @@ import { technicianListService, Technician } from '../../services/technicianList
 import { serviceOrderService, CreateServiceOrderRequest } from '../../services/serviceOrderService';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
-import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import Swal from 'sweetalert2';
 
 const { Title, Text } = Typography;
 
@@ -15,9 +16,13 @@ const AdminAppointmentConfirmation: React.FC = () => {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedTechnician, setSelectedTechnician] = useState<number | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [form] = Form.useForm();
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -51,13 +56,25 @@ const AdminAppointmentConfirmation: React.FC = () => {
   // Create service order
   const handleCreateServiceOrder = async () => {
     if (!selectedAppointment || !selectedTechnician) {
-      alert('Vui lòng chọn lịch hẹn và kỹ thuật viên');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng chọn lịch hẹn và kỹ thuật viên',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Đã hiểu'
+      });
       return;
     }
 
     // Check user role
     if (!user || (user.role !== 'staff' && user.role !== 'admin')) {
-      alert('Bạn không có quyền tạo Service Order. Chỉ Staff và Admin mới có thể thực hiện thao tác này.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không có quyền',
+        text: 'Bạn không có quyền tạo Service Order. Chỉ Staff và Admin mới có thể thực hiện thao tác này.',
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Đã hiểu'
+      });
       return;
     }
 
@@ -74,14 +91,26 @@ const AdminAppointmentConfirmation: React.FC = () => {
       
       const result = await serviceOrderService.createServiceOrder(request);
       console.log('Service order created:', result);
-      alert('Tạo Service Order thành công!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Thành công!',
+        text: 'Tạo Service Order thành công!',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'OK'
+      });
       setShowAssignModal(false);
       setSelectedAppointment(null);
       setSelectedTechnician(null);
       fetchAppointments(); // Refresh the list
     } catch (err: any) {
       console.error('Error creating service order:', err);
-      alert(err.message || 'Không thể tạo Service Order');
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi',
+        text: err.message || 'Không thể tạo Service Order',
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Đã hiểu'
+      });
     }
   };
 
@@ -89,6 +118,144 @@ const AdminAppointmentConfirmation: React.FC = () => {
   const openAssignModal = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setShowAssignModal(true);
+  };
+
+  // Search appointments
+  const handleSearch = async (keyword: string) => {
+    if (!keyword.trim()) {
+      fetchAppointments();
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('Searching appointments with keyword:', keyword);
+      const data = await appointmentService.searchAppointments(keyword);
+      console.log('Search results:', data);
+      setAppointments(data);
+    } catch (err: any) {
+      console.error('Error searching appointments:', err);
+      setError(err.message || 'Không thể tìm kiếm lịch hẹn');
+      message.error(err.message || 'Không thể tìm kiếm lịch hẹn');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Edit appointment
+  const handleEdit = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setShowEditModal(true);
+    form.setFieldsValue({
+      serviceType: appointment.serviceType,
+      requestedDate: appointment.requestedDate,
+      status: appointment.status,
+    });
+  };
+
+  const handleUpdateAppointment = async (values: any) => {
+    if (!editingAppointment) return;
+
+    try {
+      // If changing status to confirmed, require technician assignment
+      if (values.status === 'confirmed' && editingAppointment.status !== 'confirmed') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Không thể thay đổi trạng thái',
+          text: 'Không thể thay đổi trạng thái thành "Confirmed" trực tiếp. Vui lòng sử dụng nút "Xác nhận" để phân công kỹ thuật viên.',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'Đã hiểu'
+        });
+        return;
+      }
+
+      const result = await appointmentService.editAppointment({
+        appointmentID: editingAppointment.appointmentID,
+        serviceType: values.serviceType,
+        vehicleID: editingAppointment.vehicleID || 1,
+        serviceCenterID: editingAppointment.serviceCenterID || 1,
+        requestedDate: values.requestedDate,
+        status: values.status,
+      });
+      
+      message.success(result);
+      setShowEditModal(false);
+      setEditingAppointment(null);
+      form.resetFields();
+      fetchAppointments();
+    } catch (err: any) {
+      console.error('Error updating appointment:', err);
+      message.error(err.message || 'Không thể cập nhật lịch hẹn');
+    }
+  };
+
+  // Delete appointment
+  const handleDelete = async (appointmentID: number, appointment: Appointment) => {
+    // Check if appointment can be deleted
+    const canDelete = appointment.status.toLowerCase() === 'completed' || 
+                      appointment.status.toLowerCase() === 'cancelled';
+    
+    if (!canDelete) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Không thể xóa',
+        text: `Lịch hẹn có trạng thái "${appointment.status}" không thể xóa. Chỉ có thể xóa khi lịch hẹn đã hoàn thành hoặc đã bị hủy.`,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Đã hiểu'
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa',
+      html: `Bạn có chắc chắn muốn xóa lịch hẹn này?<br><br><small>Nếu có Service Orders liên quan, chúng sẽ được xóa tự động.</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // First, try to delete associated service orders
+        try {
+          const allServiceOrders = await serviceOrderService.getMyServiceOrders();
+          const relatedOrders = allServiceOrders.filter(so => so.appointmentID === appointmentID);
+          
+          if (relatedOrders.length > 0) {
+            for (const order of relatedOrders) {
+              await serviceOrderService.deleteServiceOrder(order.OrderID || order.orderID || 0);
+            }
+          }
+        } catch (serviceOrderError) {
+          console.error('Error deleting service orders:', serviceOrderError);
+          // Continue with appointment deletion even if service order deletion fails
+        }
+
+        const deleteResult = await appointmentService.deleteAppointment(appointmentID);
+        Swal.fire({
+          icon: 'success',
+          title: 'Đã xóa!',
+          text: deleteResult,
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        });
+        fetchAppointments();
+      } catch (err: any) {
+        console.error('Error deleting appointment:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Không thể xóa lịch hẹn',
+          text: err.message || 'Không thể xóa lịch hẹn. Vui lòng thử lại sau.',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Đã hiểu'
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -193,14 +360,27 @@ const AdminAppointmentConfirmation: React.FC = () => {
 
       {/* Appointments Table */}
       <Card className="border-0 shadow-sm">
-        <div className="mb-4">
-          <Title level={4} className="!mb-0 text-gray-700">
-            <CheckCircleOutlined className="mr-2 text-green-500" />
-            Danh sách lịch hẹn cần xác nhận
-          </Title>
-          <Text type="secondary" className="text-sm">
-            Quản lý và xác nhận các lịch hẹn dịch vụ
-          </Text>
+        <div className="mb-4 flex justify-between items-center">
+          <div>
+            <Title level={4} className="!mb-0 text-gray-700">
+              <CheckCircleOutlined className="mr-2 text-green-500" />
+              Danh sách lịch hẹn cần xác nhận
+            </Title>
+            <Text type="secondary" className="text-sm">
+              Quản lý và xác nhận các lịch hẹn dịch vụ
+            </Text>
+          </div>
+          <div className="w-64">
+            <Input.Search
+              placeholder="Tìm kiếm theo tên khách hàng hoặc model xe..."
+              size="large"
+              allowClear
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onSearch={handleSearch}
+              enterButton={<SearchOutlined />}
+            />
+          </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -290,23 +470,47 @@ const AdminAppointmentConfirmation: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {appointment.status.toLowerCase() === 'pending' && (
+                    <Space>
+                      {appointment.status.toLowerCase() === 'pending' && (
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleOutlined />}
+                          onClick={() => openAssignModal(appointment)}
+                          className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0"
+                          size="small"
+                        >
+                          Xác nhận
+                        </Button>
+                      )}
+                      {appointment.status.toLowerCase() === 'confirmed' && (
+                        <div className="flex items-center space-x-1 text-green-600">
+                          <CheckCircleOutlined />
+                          <Text className="text-green-600 font-medium">Đã xác nhận</Text>
+                        </div>
+                      )}
                       <Button
-                        type="primary"
-                        icon={<CheckCircleOutlined />}
-                        onClick={() => openAssignModal(appointment)}
-                        className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0"
+                        type="default"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEdit(appointment)}
                         size="small"
                       >
-                        Xác nhận 
+                        Sửa
                       </Button>
-                    )}
-                    {appointment.status.toLowerCase() === 'confirmed' && (
-                      <div className="flex items-center space-x-1 text-green-600">
-                        <CheckCircleOutlined />
-                        <Text className="text-green-600 font-medium">Đã xác nhận</Text>
-                      </div>
-                    )}
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        onClick={() => handleDelete(appointment.appointmentID, appointment)}
+                        disabled={appointment.status.toLowerCase() !== 'cancelled' && appointment.status.toLowerCase() !== 'completed'}
+                        title={
+                          appointment.status.toLowerCase() !== 'cancelled' && appointment.status.toLowerCase() !== 'completed'
+                            ? 'Chỉ có thể xóa lịch hẹn đã hủy hoặc hoàn thành'
+                            : 'Xóa lịch hẹn'
+                        }
+                      >
+                        Xóa
+                      </Button>
+                    </Space>
                   </td>
                 </tr>
               ))}
@@ -436,6 +640,90 @@ const AdminAppointmentConfirmation: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Edit Appointment Modal */}
+      <Modal
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+              <EditOutlined className="text-white text-lg" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">Chỉnh sửa lịch hẹn</div>
+              <div className="text-sm text-gray-500">Cập nhật thông tin lịch hẹn</div>
+            </div>
+          </div>
+        }
+        open={showEditModal}
+        onCancel={() => {
+          setShowEditModal(false);
+          setEditingAppointment(null);
+          form.resetFields();
+        }}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => {
+              setShowEditModal(false);
+              setEditingAppointment(null);
+              form.resetFields();
+            }}
+            className="px-6"
+          >
+            Hủy
+          </Button>,
+          <Button
+            key="update"
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={() => form.submit()}
+            className="!bg-gradient-to-r !from-blue-500 !to-purple-600 hover:!from-blue-600 hover:!to-purple-700 !border-0 px-6"
+          >
+            Cập nhật
+          </Button>,
+        ]}
+        width={600}
+        className="rounded-lg"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleUpdateAppointment}
+        >
+          <Form.Item
+            name="serviceType"
+            label={<span className="text-gray-700 font-medium">Loại dịch vụ</span>}
+            rules={[{ required: true, message: 'Vui lòng nhập loại dịch vụ' }]}
+          >
+            <Input placeholder="Loại dịch vụ" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            name="requestedDate"
+            label={<span className="text-gray-700 font-medium">Ngày hẹn</span>}
+            rules={[{ required: true, message: 'Vui lòng chọn ngày hẹn' }]}
+          >
+            <Input placeholder="Ngày hẹn" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            name="status"
+            label={<span className="text-gray-700 font-medium">Trạng thái</span>}
+            rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+          >
+            <Select placeholder="Chọn trạng thái" size="large">
+              <Select.Option value="pending">Pending</Select.Option>
+              <Select.Option 
+                value="confirmed" 
+                disabled={editingAppointment?.status !== 'confirmed'}
+              >
+                Confirmed {editingAppointment?.status !== 'confirmed' && '(Sử dụng nút Xác nhận)'}
+              </Select.Option>
+              <Select.Option value="cancelled">Cancelled</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

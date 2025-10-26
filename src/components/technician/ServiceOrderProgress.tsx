@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { serviceOrderService, ServiceOrder, UpdateServiceOrderRequest } from '../../services/serviceOrderService';
 import { useAuth } from '../../contexts/AuthContext';
 import { Wrench, Clock, CheckCircle, AlertTriangle, Car, User, Calendar } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const ServiceOrderProgress: React.FC = () => {
   const { user } = useAuth();
@@ -29,13 +30,25 @@ const ServiceOrderProgress: React.FC = () => {
   // Update service order status
   const handleUpdateStatus = async () => {
     if (!selectedOrder || !newStatus) {
-      alert('Vui lòng chọn trạng thái mới');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin',
+        text: 'Vui lòng chọn trạng thái mới',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Đã hiểu'
+      });
       return;
     }
 
     // Check user role
     if (!user || user.role !== 'technician') {
-      alert('Bạn không có quyền cập nhật Service Order. Chỉ Technician mới có thể thực hiện thao tác này.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không có quyền',
+        text: 'Bạn không có quyền cập nhật Service Order. Chỉ Technician mới có thể thực hiện thao tác này.',
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Đã hiểu'
+      });
       return;
     }
 
@@ -44,7 +57,13 @@ const ServiceOrderProgress: React.FC = () => {
       const orderId = selectedOrder.OrderID || selectedOrder.orderID;
       
       if (!orderId) {
-        alert('Không tìm thấy Order ID. Vui lòng thử lại.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Không tìm thấy Order ID. Vui lòng thử lại.',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Đã hiểu'
+        });
         return;
       }
 
@@ -53,7 +72,7 @@ const ServiceOrderProgress: React.FC = () => {
         'Pending': 'Pending',
         'InProgress': 'InProgress', 
         'Completed': 'Done',  // Frontend "Completed" -> Backend "Done"
-        'Cancelled': 'Cancelled'
+        'Cancelled': 'Closed'  // Frontend "Cancelled" -> Backend "Closed"
       };
       
       const backendStatus = statusMap[newStatus] || newStatus;
@@ -72,21 +91,36 @@ const ServiceOrderProgress: React.FC = () => {
       console.log('Selected order:', selectedOrder);
       console.log('Current user:', user);
       console.log('Current user role:', user?.role);
+      console.log('Technician ID from order:', selectedOrder.technicianID);
+      console.log('Technician ID from user:', user?.id || 'Not available');
       console.log('OrderID type:', typeof selectedOrder.OrderID);
       console.log('OrderID value:', selectedOrder.OrderID);
       console.log('orderID type:', typeof selectedOrder.orderID);
       console.log('orderID value:', selectedOrder.orderID);
       console.log('Final orderId:', orderId);
+      console.log('Access Token:', localStorage.getItem('accessToken'));
       console.log('=== END DEBUG ===');
       
       await serviceOrderService.updateServiceOrderStatus(request);
-      alert('Cập nhật trạng thái thành công!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Thành công!',
+        text: 'Cập nhật trạng thái thành công!',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'OK'
+      });
       setShowUpdateModal(false);
       setSelectedOrder(null);
       setNewStatus('');
       fetchServiceOrders(); // Refresh the list
     } catch (err: any) {
-      alert(err.message || 'Không thể cập nhật trạng thái');
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi',
+        text: err.message || 'Không thể cập nhật trạng thái',
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Đã hiểu'
+      });
     }
   };
 
@@ -105,13 +139,13 @@ const ServiceOrderProgress: React.FC = () => {
     switch (status.toLowerCase()) {
       case 'completed':
       case 'done':
-      case 'closed':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'inprogress':
         return <Clock className="w-5 h-5 text-blue-500" />;
       case 'pending':
         return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
       case 'cancelled':
+      case 'closed':
         return <AlertTriangle className="w-5 h-5 text-red-500" />;
       default:
         return <Clock className="w-5 h-5 text-gray-500" />;
@@ -122,13 +156,13 @@ const ServiceOrderProgress: React.FC = () => {
     switch (status.toLowerCase()) {
       case 'completed':
       case 'done':
-      case 'closed':
         return 'bg-green-100 text-green-800';
       case 'inprogress':
         return 'bg-blue-100 text-blue-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
+      case 'closed':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -143,9 +177,9 @@ const ServiceOrderProgress: React.FC = () => {
         return 'Đang bảo dưỡng';
       case 'completed':
       case 'done':
-      case 'closed':
         return 'Hoàn tất';
       case 'cancelled':
+      case 'closed':
         return 'Đã hủy';
       default:
         return status;

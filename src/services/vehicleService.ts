@@ -25,6 +25,7 @@ export interface EditVehicleRequest {
 
 export interface VehicleResponse {
   vehicleID: number;
+  ownerName: string;
   model: string;
   vin: string;
   licensePlate: string;
@@ -32,10 +33,6 @@ export interface VehicleResponse {
   notes?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
-  customerId?: string;
-  batteryCapacity?: string;
-  mileage?: number;
-  status?: string;
 }
 
 export interface GetVehicleRequest {
@@ -151,6 +148,42 @@ class VehicleService {
       return [];
     } catch (error: any) {
       console.error('Error getting vehicles:', error);
+      throw new Error(error.message || 'Không thể lấy danh sách xe');
+    }
+  }
+
+  /**
+   * Lấy tất cả xe (cho admin/staff)
+   */
+  async getAllVehicles(): Promise<VehicleResponse[]> {
+    try {
+      console.log('Calling getAllVehicles API...');
+      const response = await httpClient.get('/GetAllVehicleAPI');
+      console.log('getAllVehicles API Response:', response);
+      
+      // Backend trả về format {message, vehicles}
+      if (response && typeof response === 'object' && 'vehicles' in response) {
+        console.log('Returning response.vehicles:', response.vehicles);
+        return response.vehicles as VehicleResponse[];
+      }
+      
+      // Nếu response có format {success, data}
+      if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response) {
+        console.log('Returning response.data:', response.data);
+        return response.data as VehicleResponse[];
+      }
+      
+      // Backend trả về array trực tiếp
+      if (Array.isArray(response)) {
+        console.log('Returning response directly:', response);
+        return response;
+      }
+      
+      // Fallback
+      console.log('No valid data found, returning empty array');
+      return [];
+    } catch (error: any) {
+      console.error('Error getting all vehicles:', error);
       throw new Error(error.message || 'Không thể lấy danh sách xe');
     }
   }
