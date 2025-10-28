@@ -94,8 +94,11 @@ export const API_CONFIG = {
       GET_ALL: '/GetAppointmentAPI', // For Staff/Admin to view all appointments
       CANCEL: '/CancelAppointmentAPI',
     },
-
-   
+    PAYMENT: {
+      CREATE: '/CreatePaymentAPI',
+      GET_HISTORY: '/GetPaymentHistoryAPI',
+      GET_BY_ORDER: '/GetPaymentHistoryAPI', // GET /GetPaymentHistoryAPI/{orderId}
+    },
   }
 };
 export const HTTP_STATUS = {

@@ -23,6 +23,11 @@ export interface ServiceOrder {
   serviceType: string;
   centerName: string;
   requestDate: string;
+  // Payment info
+  paymentID?: number;
+  paymentMethod?: string; // "online", "cash"
+  paymentStatus?: string; // "pending", "completed", "failed"
+  paymentAmount?: number;
 }
 
 export interface UpdateServiceOrderRequest {

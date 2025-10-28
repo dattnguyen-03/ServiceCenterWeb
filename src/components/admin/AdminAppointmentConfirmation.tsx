@@ -409,6 +409,9 @@ const AdminAppointmentConfirmation: React.FC = () => {
                   Trạng thái
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Thanh toán
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Thao tác
                 </th>
               </tr>
@@ -468,6 +471,35 @@ const AdminAppointmentConfirmation: React.FC = () => {
                         {appointment.status}
                       </Tag>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {appointment.paymentMethod ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Tag color={appointment.paymentMethod === 'online' ? 'blue' : 'orange'}>
+                            {appointment.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
+                          </Tag>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {appointment.paymentAmount && `₫${appointment.paymentAmount.toLocaleString('vi-VN')}`}
+                        </div>
+                        {appointment.paymentStatus && (
+                          <div className="text-xs">
+                            <Tag 
+                              color={
+                                appointment.paymentStatus === 'completed' ? 'green' :
+                                appointment.paymentStatus === 'pending' ? 'orange' : 'red'
+                              }
+                              size="small"
+                            >
+                              {appointment.paymentStatus}
+                            </Tag>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Text type="secondary" className="text-sm">Chưa thanh toán</Text>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Space>

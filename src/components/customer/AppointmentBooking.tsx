@@ -274,37 +274,15 @@ const AppointmentBooking: React.FC = () => {
 
                       <Divider className="!my-2 bg-blue-100" />
 
-                      {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
                         <button 
-                    onClick={() => {
-                      setSelectedAppointment(ap);
-                      setDetailModalVisible(true);
-                    }}
-                    className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-300 hover:border-blue-400">
-                      Chi Tiết
-                    </button>
-                    {ap.status === 'Pending' && (
-                      <button 
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await showDeleteConfirm('lịch hẹn này');
-                          
-                          if (result.isConfirmed) {
-                            try {
-                              await appointmentService.cancelAppointment(ap.appointmentID);
-                              showSuccess('Hủy lịch hẹn thành công!');
-                              await fetchData();
-                            } catch (error: any) {
-                              showError('Lỗi', error.message || 'Không thể hủy lịch hẹn');
-                            }
-                          }
-                        }}
-                        className="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-all duration-200 border border-red-300 hover:border-red-400"
-                      >
-                        Hủy
-                      </button>
-                    )}
+                          onClick={() => {
+                            setSelectedAppointment(ap);
+                            setDetailModalVisible(true);
+                          }}
+                          className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-all duration-200 border border-blue-300 hover:border-blue-400">
+                          Chi Tiết
+                        </button>
                       </div>
                     </div>
                   </Card>
@@ -421,20 +399,6 @@ const AppointmentBooking: React.FC = () => {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              {/* <Button 
-                type="primary" 
-                size="large" 
-                style={{
-                  flex: 1,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #3b82f6 0%, #0284c7 100%)',
-                  border: 'none',
-                  fontWeight: 600,
-                  height: 40
-                }}
-              >
-                Chỉnh sửa
-              </Button> */}
               {selectedAppointment.status === 'Pending' && (
                 <Button 
                   danger 

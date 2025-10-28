@@ -12,6 +12,9 @@ export interface Appointment {
   status: string;
   vehicleID?: number;
   serviceCenterID?: number;
+  paymentMethod?: string; // "online", "cash"
+  paymentStatus?: string; // "pending", "completed", "failed"
+  paymentAmount?: number;
 }
 
 export interface BookAppointmentRequest {
@@ -23,6 +26,7 @@ export interface BookAppointmentRequest {
 
 export interface BookAppointmentResponse {
   message?: string;
+  appointmentID?: number;
 }
 
 export interface EditAppointmentRequest {
@@ -39,18 +43,18 @@ export interface DeleteAppointmentRequest {
 }
 
 class AppointmentService {
-  async book(data: BookAppointmentRequest): Promise<string> {
+  async book(data: BookAppointmentRequest): Promise<BookAppointmentResponse> {
     const res = await httpClient.post<BookAppointmentResponse>(
       API_CONFIG.ENDPOINTS.APPOINTMENT.BOOK,
       data
     );
 
-    // Backend typically returns { message } or ApiResponse
-    if (typeof res === 'string') return res;
-    if (res && (res as any).message) return (res as any).message as string;
-    if ((res as any).success && (res as any).message) return (res as any).message as string;
+    // Backend returns { message, appointmentID }
+    if (res && typeof res === 'object' && 'message' in res) {
+      return res as BookAppointmentResponse;
+    }
 
-    return 'Đặt lịch thành công';
+    return { message: 'Đặt lịch thành công' };
   }
 
   async getMyAppointments(): Promise<AppointmentSummary[]> {

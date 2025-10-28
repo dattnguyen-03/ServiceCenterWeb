@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { serviceOrderService, ServiceOrder } from '../../services/serviceOrderService';
-import { Wrench, AlertTriangle, Trash2 } from 'lucide-react';
+import { paymentService } from '../../services/paymentService';
+import { Wrench, AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
 import { Card, Button, Table, Tag, Space, message } from 'antd';
 import Swal from 'sweetalert2';
 
@@ -24,6 +25,49 @@ const ServiceOrderManagement: React.FC = () => {
       message.error(err.message || 'Không thể tải danh sách Service Order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Update payment status (for cash payments)
+  const handleUpdatePaymentStatus = async (paymentID: number, currentStatus: string) => {
+    const result = await Swal.fire({
+      title: 'Xác nhận thanh toán',
+      html: `Bạn có chắc khách hàng đã thanh toán?<br><br><small>Trạng thái hiện tại: <strong>${currentStatus}</strong></small>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Xác nhận đã thanh toán',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await paymentService.updatePaymentStatus({
+          paymentID: paymentID,
+          status: 'completed'
+        });
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công!',
+          text: 'Đã cập nhật trạng thái thanh toán',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        });
+        
+        fetchServiceOrders();
+      } catch (err: any) {
+        console.error('Error updating payment:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.message || 'Không thể cập nhật thanh toán',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Đã hiểu'
+        });
+      }
     }
   };
 
@@ -156,6 +200,54 @@ const ServiceOrderManagement: React.FC = () => {
       width: 120,
       render: (status: string) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
+      ),
+    },
+    {
+      title: 'Thanh toán',
+      key: 'payment',
+      width: 200,
+      render: (_: any, record: ServiceOrder) => (
+        record.paymentMethod ? (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Tag color={record.paymentMethod === 'online' ? 'blue' : 'orange'}>
+                {record.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
+              </Tag>
+              {record.paymentStatus && (
+                <Tag 
+                  color={
+                    record.paymentStatus === 'completed' ? 'green' :
+                    record.paymentStatus === 'pending' ? 'orange' : 'red'
+                  }
+                >
+                  {record.paymentStatus}
+                </Tag>
+              )}
+            </div>
+            {record.paymentAmount && (
+              <div className="text-xs text-gray-500">
+                ₫{record.paymentAmount.toLocaleString('vi-VN')}
+              </div>
+            )}
+            {/* Button for cash payment pending status - chỉ hiện khi Service Order đã hoàn thành */}
+            {record.paymentMethod === 'cash' && 
+             record.paymentStatus === 'pending' && 
+             record.paymentID &&
+             (record.status?.toLowerCase() === 'done' || record.status?.toLowerCase() === 'completed') && (
+              <Button
+                type="primary"
+                size="small"
+                icon={<CheckCircle size={14} />}
+                onClick={() => record.paymentID && handleUpdatePaymentStatus(record.paymentID, record.paymentStatus || 'pending')}
+                style={{ marginTop: 4 }}
+              >
+                Xác nhận đã nhận tiền
+              </Button>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400">Chưa thanh toán</span>
+        )
       ),
     },
     {

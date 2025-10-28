@@ -54,6 +54,9 @@ import StaffServiceOrderManagement from './components/staff/ServiceOrderManageme
 import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
 import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
 import StaffChecklistView from './components/staff/StaffChecklistView';
+import PaymentSuccess from './components/common/PaymentSuccess';
+import QuoteManagement from './components/admin/QuoteManagement';
+import MyQuotes from './components/customer/MyQuotes';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -88,6 +91,7 @@ const AppContent: React.FC = () => {
         }
       />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/payment/success" element={<PaymentSuccess />} />
 
       <Route path="/" element={<HomeRoute />} />
 
@@ -109,6 +113,7 @@ const AppContent: React.FC = () => {
         <Route path="vehicles/:vehicleId" element={<VehicleDetail />} />
         <Route path="service-packages" element={<ServicePackages />} />
         <Route path="management-booking" element={<AppointmentBookingManagement />} />
+        <Route path="quotes" element={<MyQuotes />} />
       </Route>
 
       <Route
@@ -129,6 +134,7 @@ const AppContent: React.FC = () => {
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
         <Route path="service-checklists" element={<ServiceChecklistManagement />} />
+        <Route path="quotes" element={<QuoteManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
       </Route>

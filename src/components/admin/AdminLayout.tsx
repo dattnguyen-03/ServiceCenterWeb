@@ -51,6 +51,11 @@ const AdminLayout: React.FC = () => {
       label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
     },
     {
+      key: '/admin/quotes',
+      icon: <FileTextOutlined />,
+      label: <Link to="/admin/quotes">Quản lý báo giá</Link>,
+    },
+    {
       key: '/admin/service-orders',
       icon: <ShoppingCartOutlined />,
       label: <Link to="/admin/service-orders">Quản Lý Đơn Hàng Dịch Vụ</Link>,

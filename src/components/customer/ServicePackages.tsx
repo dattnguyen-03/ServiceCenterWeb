@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { 
   Card, Row, Col, Button, Tag, Spin, Typography, Steps, Input, 
-  Skeleton, Empty, ConfigProvider, Select, DatePicker, Divider, Space 
+  Skeleton, Empty, ConfigProvider, Select, DatePicker, Space, Radio 
 } from 'antd';
 import { 
   GiftOutlined, 
@@ -18,6 +18,7 @@ import { servicePackageService } from '../../services/servicePackageService';
 import { serviceCenterService } from '../../services/serviceCenterService';
 import { vehicleService } from '../../services/vehicleService';
 import { appointmentService } from '../../services/appointmentService';
+import { paymentService } from '../../services/paymentService';
 import { showSuccess, showError } from '../../utils/sweetAlert';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -42,6 +43,9 @@ const ServicePackages: React.FC = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Payment method - chọn trước khi đặt lịch
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('online');
 
   // --- DATA FETCHING ---
   useEffect(() => {
@@ -80,23 +84,124 @@ const ServicePackages: React.FC = () => {
   };
 
   const handleSubmitBooking = async () => {
-    if (!selectedCenter || !selectedPackage || !selectedVehicleId || !selectedDateTime) return;
+    console.log('=== NEW FLOW: Starting booking ===');
+    console.log('Payment method:', paymentMethod);
+    console.log('Payment method type:', typeof paymentMethod);
+    console.log('Payment method === "cash":', paymentMethod === 'cash');
+    console.log('Payment method === "online":', paymentMethod === 'online');
+    console.log('Selected package:', selectedPackage);
+    console.log('Selected package price:', selectedPackage?.price);
+    
+    if (!selectedCenter || !selectedPackage || !selectedVehicleId || !selectedDateTime) {
+      showError('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin');
+      return;
+    }
     if (selectedDateTime.isBefore(dayjs())) {
       showError('Ngày không hợp lệ', 'Vui lòng chọn ngày giờ trong tương lai.');
       return;
     }
+    if (selectedPackage.price === 0) {
+      showError('Gói dịch vụ miễn phí', 'Gói dịch vụ này không cần thanh toán. Vui lòng chọn gói khác.');
+      return;
+    }
+    
     setSubmitting(true);
+    
     try {
-      const payload = {
+      // Bước 1: Tạo Appointment
+      const appointmentPayload = {
         vehicleID: selectedVehicleId,
         serviceType: selectedPackage.name,
         centerID: selectedCenter.centerID,
         requestedDate: selectedDateTime.toISOString(),
       };
-      const message = await appointmentService.book(payload);
-      showSuccess('Đặt lịch thành công!', message || 'Yêu cầu của bạn đã được ghi nhận.');
+      
+      console.log('🚀 Step 1: Creating appointment...');
+      const appointmentResponse = await appointmentService.book(appointmentPayload);
+      const appointmentId = appointmentResponse?.appointmentID;
+      
+      if (!appointmentId) {
+        throw new Error('Không nhận được appointment ID từ server');
+      }
+      
+      console.log('✅ Appointment created, ID:', appointmentId);
+      
+      // Bước 2: Xử lý theo phương thức thanh toán
+      if (paymentMethod === 'online') {
+        // Validate giá trước khi thanh toán online
+        if (!selectedPackage.price || selectedPackage.price <= 0) {
+          throw new Error('Không thể thanh toán online cho gói dịch vụ miễn phí. Vui lòng chọn thanh toán tại trung tâm.');
+        }
+        
+        // Thanh toán online → Redirect to PayOS
+        console.log('💳 Selected: Online payment');
+        console.log('🚀 Step 2: Creating PayOS payment link...');
+        
+        const paymentData = {
+          appointmentID: appointmentId,
+          amount: selectedPackage.price,
+          description: `Thanh toán ${selectedPackage.name}`.substring(0, 25),
+          paymentMethod: 'online' as const,
+          returnUrl: `${window.location.origin}/payment/success`
+        };
+        
+        console.log('Payment data:', paymentData);
+        
+        const paymentResult = await paymentService.createPayment(paymentData);
+        
+        console.log('Payment result:', paymentResult);
+        
+        if (paymentResult?.paymentUrl) {
+          console.log('✅ Payment link created:', paymentResult.paymentUrl);
+          console.log('🔗 Redirecting to PayOS...');
+          
+          // Show confirmation before redirect
+          window.location.href = paymentResult.paymentUrl;
+        } else {
+          throw new Error('Không thể tạo payment link');
+        }
+        
+      } else if (paymentMethod === 'cash') {
+        // Thanh toán tại trung tâm → Chỉ tạo appointment, không cần payment link
+        console.log('💰 Selected: Cash payment');
+        console.log('🚀 Step 2: Creating cash payment record in DB (no PayOS link needed)...');
+        
+        const paymentData = {
+          appointmentID: appointmentId,
+          amount: selectedPackage.price,
+          description: `Thanh toán ${selectedPackage.name}`.substring(0, 25),
+          paymentMethod: 'cash' as const
+        };
+        
+        console.log('Cash payment data:', paymentData);
+        
+        try {
+          // Tạo payment record với status "pending" cho cash
+          await paymentService.createPayment(paymentData);
+          console.log('✅ Cash payment record created in DB');
+        } catch (paymentError: any) {
+          console.error('⚠️ Could not create payment record (non-critical):', paymentError);
+          // Không cần throw error vì appointment đã tạo thành công
+        }
+        
+        // Hiển thị thông báo thành công và redirect về trang booking
+        showSuccess(
+          'Đặt lịch thành công!', 
+          `Bạn đã đặt lịch thành công. Vui lòng đến trung tâm và thanh toán ${servicePackageService.formatPrice(selectedPackage.price)} khi nhận xe.`
+        );
+        
+        setTimeout(() => {
+          window.location.href = '/customer/booking';
+        }, 2000);
+        
+      } else {
+        // Trường hợp paymentMethod không được nhận dạng
+        console.error('⚠️ Unknown payment method:', paymentMethod);
+        throw new Error('Phương thức thanh toán không hợp lệ');
+      }
+      
     } catch (err: any) {
-      console.error('Booking error:', err);
+      console.error('❌ Booking error:', err);
       showError('Đặt lịch thất bại', err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
@@ -108,15 +213,6 @@ const ServicePackages: React.FC = () => {
   const prevStep = () => setCurrentStep(currentStep - 1);
 
   // --- DERIVED STATE & HELPERS ---
-  const bestValuePackageId = useMemo(() => {
-    if (packages.length < 2) return undefined;
-    return packages.reduce((best, pkg) => {
-      const bestScore = best.price / (best.durationMonths || 1);
-      const currentScore = pkg.price / (pkg.durationMonths || 1);
-      return currentScore < bestScore ? pkg : best;
-    }).packageID;
-  }, [packages]);
-
   const filteredCenters = useMemo(() => {
     if (!centerQuery.trim()) return serviceCenters;
     const q = centerQuery.trim().toLowerCase();
@@ -429,6 +525,33 @@ const ServicePackages: React.FC = () => {
                 style={{ width: '100%' }}
               />
             </div>
+            
+             {/* Payment Method Selection */}
+             <div>
+              <Title level={5} style={{ marginBottom: 12, fontWeight: 700, color: '#1f2937' }}>
+                💳 Phương thức thanh toán
+              </Title>
+              <Radio.Group 
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                style={{ width: '100%' }}
+              >
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Radio value="online" style={{ fontSize: 14 }}>
+                    <span style={{ fontWeight: 600 }}>💳 Thanh toán online (PayOS)</span>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                      Visa, MasterCard, ViettelPay, Momo...
+                    </div>
+                  </Radio>
+                  <Radio value="cash" style={{ fontSize: 14 }}>
+                    <span style={{ fontWeight: 600 }}>💵 Thanh toán tại trung tâm</span>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                      Tiền mặt hoặc chuyển khoản khi nhận xe
+                    </div>
+                  </Radio>
+                </Space>
+              </Radio.Group>
+            </div>
           </Card>
         </Col>
         <Col xs={24} lg={10}>
@@ -468,7 +591,7 @@ const ServicePackages: React.FC = () => {
               </div>
             )}
             {selectedCenter && (
-              <div>
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ 
                   background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
                   borderRadius: 16,
@@ -488,6 +611,8 @@ const ServicePackages: React.FC = () => {
                 </div>
               </div>
             )}
+
+           
           </Card>
         </Col>
       </Row>

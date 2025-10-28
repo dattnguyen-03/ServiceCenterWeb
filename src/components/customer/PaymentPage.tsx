@@ -1,23 +1,61 @@
-import React from 'react';
-import { Card, Row, Col, Button, Tag, List, Select, Space } from 'antd';
-import { CreditCardOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, Row, Col, Button, Tag, Select, Space, Spin } from 'antd';
+import { CreditCardOutlined, DownloadOutlined } from '@ant-design/icons';
+import { paymentService } from '../../services/paymentService';
+import { showError } from '../../utils/sweetAlert';
+import { Payment } from '../../services/paymentService';
 
 const { Option } = Select;
 
 const PaymentPage: React.FC = () => {
-  const invoiceHistory = [
-    { id: 'INV-001', date: '2024-01-15', service: 'Bảo dưỡng định kỳ', amount: 2500000, status: 'paid' },
-    { id: 'INV-002', date: '2024-02-20', service: 'Kiểm tra pin', amount: 1500000, status: 'paid' },
-    { id: 'INV-003', date: '2024-03-10', service: 'Thay lốp', amount: 3500000, status: 'pending' }
-  ];
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState('all');
 
-  const paymentMethods = [
-    { id: '1', type: 'visa', last4: '4242', expiry: '12/25', isDefault: true },
-    { id: '2', type: 'mastercard', last4: '8888', expiry: '08/26', isDefault: false }
-  ];
+  useEffect(() => {
+    loadPayments();
+  }, []);
+
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      const data = await paymentService.getPaymentHistory();
+      setPayments(data);
+    } catch (err: any) {
+      showError('Lỗi tải lịch sử thanh toán', err.message || 'Không thể tải dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPayments = payments.filter(p => {
+    if (filterStatus === 'all') return true;
+    return p.status === filterStatus;
+  });
+
+  const totalPaid = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+  const totalPending = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
   
-  const totalPaid = invoiceHistory.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0);
-  const totalPending = invoiceHistory.filter(inv => inv.status === 'pending').reduce((sum, inv) => sum + inv.amount, 0);
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('vi-VN', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit'
+    });
+  };
+
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, { color: string; text: string }> = {
+      completed: { color: 'green', text: '✅ Đã thanh toán' },
+      pending: { color: 'orange', text: '⏳ Chờ thanh toán' },
+      failed: { color: 'red', text: '❌ Thất bại' },
+      cancelled: { color: 'default', text: '❌ Đã hủy' }
+    };
+    
+    const statusInfo = statusMap[status] || { color: 'default', text: status };
+    return statusInfo;
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
@@ -74,82 +112,7 @@ const PaymentPage: React.FC = () => {
             </Card>
           </Col>
           
-          {/* Payment Methods */}
-          <Col xs={24} md={16}>
-            <Card 
-              style={{
-                borderRadius: 20,
-                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-                border: '1px solid #e5e7eb'
-              }}
-              bodyStyle={{ padding: 24 }}
-            >
-              <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1f2937', margin: 0 }}>
-                  💳 Phương thức thanh toán
-                </h3>
-                <Button 
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  size="large"
-                  style={{
-                    borderRadius: 10,
-                    background: 'linear-gradient(90deg, #f43f5e 0%, #fb7185 100%)',
-                    border: 'none',
-                    fontWeight: 600
-                  }}
-                >
-                  Thêm thẻ mới
-                </Button>
-              </div>
-
-              <List
-                itemLayout="horizontal"
-                dataSource={paymentMethods}
-                renderItem={item => (
-                  <List.Item
-                    style={{
-                      padding: 16,
-                      background: '#f9fafb',
-                      borderRadius: 12,
-                      marginBottom: 12,
-                      border: '1px solid #e5e7eb'
-                    }}
-                    actions={[
-                      <Button type="link" style={{ color: '#2563eb', fontWeight: 600 }}>Sửa</Button>, 
-                      <Button type="link" danger style={{ fontWeight: 600 }}>Xóa</Button>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={
-                        <div style={{
-                          width: 48,
-                          height: 48,
-                          background: 'linear-gradient(135deg, #60a5fa 0%, #22c55e 100%)',
-                          borderRadius: 10,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                          fontSize: 20
-                        }}>
-                          💳
-                        </div>
-                      }
-                      title={
-                        <span style={{ fontWeight: 700, color: '#1f2937' }}>
-                          •••• {item.last4} {item.isDefault && <Tag style={{ borderRadius: 20, marginLeft: 8 }} color="blue">Mặc định</Tag>}
-                        </span>
-                      }
-                      description={<span style={{ fontSize: 13, color: '#6b7280' }}>Hết hạn: {item.expiry}</span>}
-                    />
-                  </List.Item>
-                )}
-              />
-            </Card>
-          </Col>
-
-          {/* Invoice History */}
+          {/* Payment History */}
           <Col xs={24}>
             <Card 
               style={{
@@ -165,12 +128,14 @@ const PaymentPage: React.FC = () => {
                 </h3>
                 <Space style={{ gap: 12 }}>
                   <Select 
-                    defaultValue="all" 
+                    value={filterStatus}
+                    onChange={setFilterStatus}
                     style={{ width: 150, borderRadius: 10 }}
                   >
                     <Option value="all">Tất cả</Option>
-                    <Option value="paid">Đã thanh toán</Option>
+                    <Option value="completed">Đã thanh toán</Option>
                     <Option value="pending">Chờ thanh toán</Option>
+                    <Option value="failed">Thất bại</Option>
                   </Select>
                   <Button 
                     icon={<DownloadOutlined />}
@@ -185,54 +150,61 @@ const PaymentPage: React.FC = () => {
                 </Space>
               </div>
 
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%' }}>
-                  <thead style={{ backgroundColor: '#f3f4f6' }}>
-                    <tr>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Mã HĐ</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Ngày</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Dịch vụ</th>
-                      <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Số tiền</th>
-                      <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Trạng thái</th>
-                      <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoiceHistory.map((invoice, index) => (
-                      <tr 
-                        key={invoice.id}
-                        style={{
-                          borderBottom: '1px solid #e5e7eb',
-                          backgroundColor: index % 2 === 0 ? '#fafbfc' : '#fff',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fafbfc' : '#fff'}
-                      >
-                        <td style={{ padding: '12px 16px', fontWeight: 700, color: '#2563eb' }}>{invoice.id}</td>
-                        <td style={{ padding: '12px 16px', color: '#4b5563' }}>📅 {invoice.date}</td>
-                        <td style={{ padding: '12px 16px', color: '#4b5563' }}>{invoice.service}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#1f2937' }}>
-                          {invoice.amount.toLocaleString('vi-VN')} VNĐ
-                        </td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <Tag 
-                            color={invoice.status === 'paid' ? 'green' : 'orange'}
-                            style={{ borderRadius: 20, fontWeight: 600 }}
-                          >
-                            {invoice.status === 'paid' ? '✅ Đã thanh toán' : '⏳ Chờ thanh toán'}
-                          </Tag>
-                        </td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <Button type="link" style={{ color: '#2563eb', fontWeight: 600 }}>
-                            Xem chi tiết
-                          </Button>
-                        </td>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                  <Spin size="large" />
+                </div>
+              ) : filteredPayments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280' }}>
+                  Không có lịch sử thanh toán
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%' }}>
+                    <thead style={{ backgroundColor: '#f3f4f6' }}>
+                      <tr>
+                        <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Mã TT</th>
+                        <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Ngày tạo</th>
+                        <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Mô tả</th>
+                        <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Số tiền</th>
+                        <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: 600, color: '#6b7280', fontSize: 14 }}>Trạng thái</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredPayments.map((payment, index) => {
+                        const statusInfo = getStatusTag(payment.status);
+                        return (
+                          <tr 
+                            key={payment.paymentID}
+                            style={{
+                              borderBottom: '1px solid #e5e7eb',
+                              backgroundColor: index % 2 === 0 ? '#fafbfc' : '#fff',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fafbfc' : '#fff'}
+                          >
+                            <td style={{ padding: '12px 16px', fontWeight: 700, color: '#2563eb' }}>#{payment.paymentID}</td>
+                            <td style={{ padding: '12px 16px', color: '#4b5563' }}>📅 {formatDate(payment.createdAt)}</td>
+                            <td style={{ padding: '12px 16px', color: '#4b5563' }}>{payment.description}</td>
+                            <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#1f2937' }}>
+                              {paymentService.formatPrice(payment.amount)}
+                            </td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              <Tag 
+                                color={statusInfo.color as any}
+                                style={{ borderRadius: 20, fontWeight: 600 }}
+                              >
+                                {statusInfo.text}
+                              </Tag>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Card>
           </Col>
         </Row>
