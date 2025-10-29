@@ -20,12 +20,14 @@ export interface CreatePaymentResponse {
 export interface Payment {
   paymentID: number;
   orderID?: number;
+  appointmentID?: number; // Payment can be linked to Appointment directly
   amount: number;
   description: string;
   status: string;
   createdAt: string;
   completedAt?: string;
   transactionCode?: string;
+  paymentMethod?: string; // 'online' or 'cash'
 }
 
 export interface UpdatePaymentRequest {
@@ -108,7 +110,7 @@ class PaymentService {
     try {
       console.log('Fetching payment by order:', orderId);
       const response = await httpClient.get<Payment>(
-        `/GetPaymentHistoryAPI/${orderId}`
+        `/GetPaymentHistoryAPI/by-order/${orderId}`
       );
 
       console.log('Payment response:', response);
@@ -121,10 +123,12 @@ class PaymentService {
       if (anyRes && 'paymentID' in anyRes) {
         return {
           paymentID: anyRes.paymentID || 0,
-          orderID: anyRes.orderID || 0,
+          orderID: anyRes.orderID,
+          appointmentID: anyRes.appointmentID,
           amount: anyRes.amount || 0,
           description: anyRes.description || '',
           status: anyRes.status || '',
+          paymentMethod: anyRes.paymentMethod,
           createdAt: anyRes.createdAt || '',
           completedAt: anyRes.completedAt,
           transactionCode: anyRes.transactionCode
@@ -134,6 +138,45 @@ class PaymentService {
       return null;
     } catch (error: any) {
       console.error('Error getting payment by order:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy payment theo AppointmentID (cho Admin/Staff)
+   */
+  async getPaymentByAppointment(appointmentId: number): Promise<Payment | null> {
+    try {
+      console.log('Fetching payment by appointment:', appointmentId);
+      const response = await httpClient.get<Payment>(
+        `/GetPaymentHistoryAPI/by-appointment/${appointmentId}`
+      );
+
+      console.log('Payment response:', response);
+
+      const anyRes: any = response;
+      if (anyRes?.success && anyRes.data) {
+        return anyRes.data as Payment;
+      }
+      // Nếu response trả về trực tiếp
+      if (anyRes && 'paymentID' in anyRes) {
+        return {
+          paymentID: anyRes.paymentID || 0,
+          orderID: anyRes.orderID,
+          appointmentID: anyRes.appointmentID,
+          amount: anyRes.amount || 0,
+          description: anyRes.description || '',
+          status: anyRes.status || '',
+          paymentMethod: anyRes.paymentMethod,
+          createdAt: anyRes.createdAt || '',
+          completedAt: anyRes.completedAt,
+          transactionCode: anyRes.transactionCode
+        };
+      }
+      
+      return null;
+    } catch (error: any) {
+      console.error('Error getting payment by appointment:', error);
       return null;
     }
   }

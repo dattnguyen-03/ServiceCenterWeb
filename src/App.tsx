@@ -59,6 +59,8 @@ import PaymentSuccess from './components/common/PaymentSuccess';
 import QuoteManagement from './components/admin/QuoteManagement';
 import QuoteRequestManagement from './components/admin/QuoteRequestManagement';
 import MyQuotes from './components/customer/MyQuotes';
+import StaffQuoteManagement from './components/staff/StaffQuoteManagement';
+import StaffQuoteRequestManagement from './components/staff/StaffQuoteRequestManagement';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -163,6 +165,8 @@ const AppContent: React.FC = () => {
         <Route path="parts" element={<StaffPartsView />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
+        <Route path="quotes" element={<StaffQuoteManagement />} />
+        <Route path="quote-requests" element={<StaffQuoteRequestManagement />} />
       </Route>
 
       <Route

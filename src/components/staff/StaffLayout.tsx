@@ -78,6 +78,16 @@ const StaffLayout: React.FC = () => {
       icon: <DollarOutlined />,
       label: <Link to="/staff/invoices">Hóa đơn</Link>,
     },
+    {
+      key: '/staff/quotes',
+      icon: <FileTextOutlined />,
+      label: <Link to="/staff/quotes">Quản lý báo giá</Link>,
+    },
+    {
+      key: '/staff/quote-requests',
+      icon: <FileTextOutlined />,
+      label: <Link to="/staff/quote-requests">Yêu cầu báo giá</Link>,
+    },
   ];
 
   return (

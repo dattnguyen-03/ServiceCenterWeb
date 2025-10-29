@@ -4,9 +4,10 @@ import { technicianListService, Technician } from '../../services/technicianList
 import { serviceOrderService, CreateServiceOrderRequest } from '../../services/serviceOrderService';
 import { httpClient } from '../../services/httpClient';
 import { useAuth } from '../../contexts/AuthContext';
+import InvoiceViewer from '../common/InvoiceViewer';
 import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
-import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message, Descriptions } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 
 const { Title, Text } = Typography;
@@ -24,6 +25,10 @@ const AdminAppointmentConfirmation: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [form] = Form.useForm();
+  const [invoiceVisible, setInvoiceVisible] = useState(false);
+  const [selectedPaymentID, setSelectedPaymentID] = useState<number | undefined>(undefined);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedAppointmentForDetail, setSelectedAppointmentForDetail] = useState<Appointment | null>(null);
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -189,6 +194,20 @@ const AdminAppointmentConfirmation: React.FC = () => {
       console.error('Error updating appointment:', err);
       message.error(err.message || 'Không thể cập nhật lịch hẹn');
     }
+  };
+
+  // Handle export invoice
+  const handleExportInvoice = async (appointment: Appointment) => {
+    if (appointment.paymentStatus !== 'completed') {
+      message.warning('Chỉ có thể xuất hóa đơn cho các thanh toán đã hoàn tất');
+      return;
+    }
+    
+    // Dùng appointmentID trực tiếp, không cần tìm paymentID
+    // InvoiceService sẽ tự động tìm payment từ appointmentID
+    setSelectedPaymentID(undefined);
+    setSelectedAppointment(appointment);
+    setInvoiceVisible(true);
   };
 
   // Confirm cash payment
@@ -416,9 +435,9 @@ const AdminAppointmentConfirmation: React.FC = () => {
         </Card>
       )}
 
-      {/* Appointments Table */}
+      {/* Appointments Table - Simplified */}
       <Card className="border-0 shadow-sm">
-        <div className="mb-4 flex justify-between items-center">
+        <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
             <Title level={4} className="!mb-0 text-gray-700">
               <CheckCircleOutlined className="mr-2 text-green-500" />
@@ -428,10 +447,10 @@ const AdminAppointmentConfirmation: React.FC = () => {
               Quản lý và xác nhận các lịch hẹn dịch vụ
             </Text>
           </div>
-          <div className="w-64">
+          <div className="w-full sm:w-64">
             <Input.Search
-              placeholder="Tìm kiếm theo tên khách hàng hoặc model xe..."
-              size="large"
+              placeholder="Tìm kiếm..."
+              size="middle"
               allowClear
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
@@ -442,175 +461,75 @@ const AdminAppointmentConfirmation: React.FC = () => {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="min-w-full table-auto">
+          <table className="min-w-full">
             <thead>
               <tr className="bg-gray-50">
-                {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th> */}
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Khách hàng
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Xe
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Dịch vụ
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Trung tâm
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày hẹn
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Thanh toán
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
-                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Khách hàng</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Xe</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Dịch vụ</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày hẹn</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Thanh toán</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {appointments.map((appointment) => (
-                <tr key={appointment.appointmentID} className="hover:bg-gray-50 transition-colors duration-200">
-                  {/* <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge 
-                      count={appointment.appointmentID} 
-                      style={{ backgroundColor: '#1890ff' }}
-                      className="!bg-blue-500"
-                    />
-                  </td> */}
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={appointment.appointmentID} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">
-                      <UserOutlined className="text-blue-500 text-sm" />
-                      <Text strong className="text-gray-900">{appointment.userName}</Text>
+                      <UserOutlined className="text-blue-500" />
+                      <Text strong className="text-sm">{appointment.userName}</Text>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 md:hidden">{appointment.vehicleModel}</div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <div className="flex items-center space-x-2">
+                      <CarOutlined className="text-green-500" />
+                      <Text className="text-sm">{appointment.vehicleModel}</Text>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <CarOutlined className="text-green-500 text-sm" />
-                      <Text className="text-gray-900">{appointment.vehicleModel}</Text>
-                    </div>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <Text className="text-sm">{appointment.serviceType}</Text>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <ToolOutlined className="text-orange-500 text-sm" />
-                      <Text className="text-gray-900">{appointment.serviceType}</Text>
-                    </div>
+                  <td className="px-4 py-3">
+                    <Text className="text-sm">
+                      {new Date(appointment.requestedDate).toLocaleDateString('vi-VN')}
+                    </Text>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <EnvironmentOutlined className="text-purple-500 text-sm" />
-                      <Text className="text-gray-900">{appointment.centerName}</Text>
-                    </div>
+                  <td className="px-4 py-3">
+                    <Tag 
+                      color={
+                        appointment.status.toLowerCase() === 'confirmed' ? 'green' :
+                        appointment.status.toLowerCase() === 'pending' ? 'orange' : 
+                        appointment.status.toLowerCase() === 'completed' ? 'blue' : 'red'
+                      }
+                      className="border-0"
+                    >
+                      {appointment.status}
+                    </Tag>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <CalendarOutlined className="text-indigo-500 text-sm" />
-                      <Text className="text-gray-900">
-                        {new Date(appointment.requestedDate).toLocaleDateString('vi-VN')}
-                      </Text>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(appointment.status)}
-                      <Tag 
-                        color={
-                          appointment.status.toLowerCase() === 'confirmed' ? 'green' :
-                          appointment.status.toLowerCase() === 'pending' ? 'orange' : 'red'
-                        }
-                        className="border-0"
-                      >
-                        {appointment.status}
-                      </Tag>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {appointment.paymentMethod ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <Tag color={appointment.paymentMethod === 'online' ? 'blue' : 'orange'}>
-                            {appointment.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
-                          </Tag>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {appointment.paymentAmount && `₫${appointment.paymentAmount.toLocaleString('vi-VN')}`}
-                        </div>
-                        {appointment.paymentStatus && (
-                          <div className="text-xs">
-                            <Tag 
-                              color={
-                                appointment.paymentStatus === 'completed' ? 'green' :
-                                appointment.paymentStatus === 'pending' ? 'orange' : 'red'
-                              }
-                            >
-                              {appointment.paymentStatus}
-                            </Tag>
-                          </div>
-                        )}
-                      </div>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    {appointment.paymentStatus === 'completed' ? (
+                      <Tag color="green">Đã thanh toán</Tag>
+                    ) : appointment.paymentStatus === 'pending' ? (
+                      <Tag color="orange">Chờ thanh toán</Tag>
                     ) : (
-                      <Text type="secondary" className="text-sm">Chưa thanh toán</Text>
+                      <Text type="secondary" className="text-xs">Chưa thanh toán</Text>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Space>
-                      {appointment.status.toLowerCase() === 'pending' && (
-                        <Button
-                          type="primary"
-                          icon={<CheckCircleOutlined />}
-                          onClick={() => openAssignModal(appointment)}
-                          className="!bg-gradient-to-r !from-green-500 !to-emerald-600 hover:!from-green-600 hover:!to-emerald-700 !border-0"
-                          size="small"
-                        >
-                          Xác nhận
-                        </Button>
-                      )}
-                      {appointment.status.toLowerCase() === 'confirmed' && (
-                        <div className="flex items-center space-x-1 text-green-600">
-                          <CheckCircleOutlined />
-                          <Text className="text-green-600 font-medium">Đã xác nhận</Text>
-                        </div>
-                      )}
-                      {appointment.paymentMethod === 'cash' && appointment.paymentStatus === 'pending' && (
-                        <Button
-                          type="primary"
-                          icon={<CheckCircleOutlined />}
-                          onClick={() => handleConfirmCashPayment(appointment)}
-                          size="small"
-                          className="!bg-green-600"
-                        >
-                          Xác nhận đã nhận tiền
-                        </Button>
-                      )}
-                      <Button
-                        type="default"
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(appointment)}
-                        size="small"
-                      >
-                        Sửa
-                      </Button>
-                      <Button
-                        danger
-                        icon={<DeleteOutlined />}
-                        size="small"
-                        onClick={() => handleDelete(appointment.appointmentID, appointment)}
-                        disabled={appointment.status.toLowerCase() !== 'cancelled' && appointment.status.toLowerCase() !== 'completed'}
-                        title={
-                          appointment.status.toLowerCase() !== 'cancelled' && appointment.status.toLowerCase() !== 'completed'
-                            ? 'Chỉ có thể xóa lịch hẹn đã hủy hoặc hoàn thành'
-                            : 'Xóa lịch hẹn'
-                        }
-                      >
-                        Xóa
-                      </Button>
-                    </Space>
+                  <td className="px-4 py-3">
+                    <Button
+                      type="default"
+                      icon={<EyeOutlined />}
+                      onClick={() => {
+                        setSelectedAppointmentForDetail(appointment);
+                        setDetailModalVisible(true);
+                      }}
+                      size="small"
+                    >
+                      Chi tiết
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -825,6 +744,174 @@ const AdminAppointmentConfirmation: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <div style={{ fontSize: '18px', fontWeight: 600 }}>
+            Chi tiết lịch hẹn #{selectedAppointmentForDetail?.appointmentID}
+          </div>
+        }
+        open={detailModalVisible}
+        onCancel={() => {
+          setDetailModalVisible(false);
+          setSelectedAppointmentForDetail(null);
+        }}
+        footer={null}
+        width={700}
+      >
+        {selectedAppointmentForDetail && (
+          <div>
+            <Descriptions bordered column={2} size="small" className="mb-4">
+              <Descriptions.Item label="Khách hàng" span={2}>
+                <div className="flex items-center space-x-2">
+                  <UserOutlined className="text-blue-500" />
+                  <Text strong>{selectedAppointmentForDetail.userName}</Text>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Xe">
+                <div className="flex items-center space-x-2">
+                  <CarOutlined className="text-green-500" />
+                  <Text>{selectedAppointmentForDetail.vehicleModel}</Text>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Dịch vụ">
+                <div className="flex items-center space-x-2">
+                  <ToolOutlined className="text-orange-500" />
+                  <Text>{selectedAppointmentForDetail.serviceType}</Text>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Trung tâm">
+                <div className="flex items-center space-x-2">
+                  <EnvironmentOutlined className="text-purple-500" />
+                  <Text>{selectedAppointmentForDetail.centerName}</Text>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày hẹn">
+                <div className="flex items-center space-x-2">
+                  <CalendarOutlined className="text-indigo-500" />
+                  <Text>{new Date(selectedAppointmentForDetail.requestedDate).toLocaleDateString('vi-VN')}</Text>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag 
+                  color={
+                    selectedAppointmentForDetail.status.toLowerCase() === 'confirmed' ? 'green' :
+                    selectedAppointmentForDetail.status.toLowerCase() === 'pending' ? 'orange' : 
+                    selectedAppointmentForDetail.status.toLowerCase() === 'completed' ? 'blue' : 'red'
+                  }
+                >
+                  {selectedAppointmentForDetail.status}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Thanh toán" span={2}>
+                {selectedAppointmentForDetail.paymentMethod ? (
+                  <div className="space-y-2">
+                    <div>
+                      <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'}>
+                        {selectedAppointmentForDetail.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
+                      </Tag>
+                      {selectedAppointmentForDetail.paymentStatus && (
+                        <Tag 
+                          color={
+                            selectedAppointmentForDetail.paymentStatus === 'completed' ? 'green' :
+                            selectedAppointmentForDetail.paymentStatus === 'pending' ? 'orange' : 'red'
+                          }
+                          className="ml-2"
+                        >
+                          {selectedAppointmentForDetail.paymentStatus}
+                        </Tag>
+                      )}
+                    </div>
+                    {selectedAppointmentForDetail.paymentAmount && (
+                      <Text strong className="text-lg text-green-600">
+                        ₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}
+                      </Text>
+                    )}
+                  </div>
+                ) : (
+                  <Text type="secondary">Chưa thanh toán</Text>
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Divider />
+
+            <div className="flex flex-wrap gap-2 justify-end">
+              {selectedAppointmentForDetail.status.toLowerCase() === 'pending' && (
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    openAssignModal(selectedAppointmentForDetail);
+                  }}
+                  className="!bg-green-500 hover:!bg-green-600"
+                >
+                  Xác nhận & Gán kỹ thuật viên
+                </Button>
+              )}
+              {selectedAppointmentForDetail.paymentMethod === 'cash' && selectedAppointmentForDetail.paymentStatus === 'pending' && (
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    handleConfirmCashPayment(selectedAppointmentForDetail);
+                  }}
+                  className="!bg-orange-500 hover:!bg-orange-600"
+                >
+                  Xác nhận đã nhận tiền
+                </Button>
+              )}
+              {selectedAppointmentForDetail.paymentStatus === 'completed' && (
+                <Button
+                  type="default"
+                  icon={<FileTextOutlined />}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    handleExportInvoice(selectedAppointmentForDetail);
+                  }}
+                  className="!bg-blue-500 !text-white hover:!bg-blue-600"
+                >
+                  Xuất hóa đơn
+                </Button>
+              )}
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setDetailModalVisible(false);
+                  handleEdit(selectedAppointmentForDetail);
+                }}
+              >
+                Sửa
+              </Button>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => {
+                  setDetailModalVisible(false);
+                  handleDelete(selectedAppointmentForDetail.appointmentID, selectedAppointmentForDetail);
+                }}
+                disabled={selectedAppointmentForDetail.status.toLowerCase() !== 'cancelled' && selectedAppointmentForDetail.status.toLowerCase() !== 'completed'}
+              >
+                Xóa
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Invoice Viewer Modal */}
+      <InvoiceViewer
+        appointmentID={selectedAppointment?.appointmentID}
+        visible={invoiceVisible}
+        onClose={() => {
+          setInvoiceVisible(false);
+          setSelectedPaymentID(undefined);
+          setSelectedAppointment(null);
+        }}
+      />
     </div>
   );
 };
