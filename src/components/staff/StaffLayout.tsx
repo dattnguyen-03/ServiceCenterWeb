@@ -64,6 +64,11 @@ const StaffLayout: React.FC = () => {
       label: <Link to="/staff/service-packages">Gói dịch vụ</Link>,
     },
     {
+      key: '/staff/parts',
+      icon: <ShoppingCartOutlined />,
+      label: <Link to="/staff/parts">Phụ tùng</Link>,
+    },
+    {
       key: '/staff/progress',
       icon: <ClockCircleOutlined />,
       label: <Link to="/staff/progress">Tiến độ dịch vụ</Link>,

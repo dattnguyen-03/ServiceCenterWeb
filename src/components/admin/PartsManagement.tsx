@@ -1,182 +1,465 @@
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, TrendingDown, Plus } from 'lucide-react';
-import { mockParts } from '../../data/mockData';
+import { 
+  Table, Button, Modal, Form, Input, InputNumber, 
+  Space, Popconfirm, Card, Statistic, Row, Col, Descriptions, Tag
+} from 'antd';
+import { 
+  PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
+  WarningOutlined, AppstoreOutlined, DollarOutlined, InfoCircleOutlined
+} from '@ant-design/icons';
+import { partService, Part } from '../../services/partService';
+import { showSuccess, showError } from '../../utils/sweetAlert';
 
-// Define Part type
-interface Part {
-  id: string;
-  name: string;
-  category: string;
-  stock: number;
-  minThreshold: number;
-  price: number;
-  supplier: string;
-}
+const { TextArea } = Input;
 
 const PartsManagement: React.FC = () => {
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [editingPart, setEditingPart] = useState<Part | null>(null);
+  const [viewingPart, setViewingPart] = useState<Part | null>(null);
+  const [form] = Form.useForm();
 
   useEffect(() => {
-    // TODO: Replace with API call
-    const fetchParts = async () => {
-      setLoading(true);
-      // const response = await api.getParts();
-      // setParts(response.data);
-      setParts(mockParts); // Using mock data for now
-      setLoading(false);
-    };
-
-    fetchParts();
+    loadParts();
   }, []);
 
-  const lowStockParts = parts.filter(p => p.stock < p.minThreshold);
-  const totalStockValue = parts.reduce((total, p) => total + (p.stock * p.price), 0);
+  const loadParts = async () => {
+    try {
+      setLoading(true);
+      const data = await partService.getAllParts();
+      setParts(data);
+    } catch (error: any) {
+      console.error('Error loading parts:', error);
+      showError('Lỗi', error.message || 'Không thể tải danh sách phụ tùng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = () => {
+    setEditingPart(null);
+    form.resetFields();
+    setModalVisible(true);
+  };
+
+  const handleViewDetail = (part: Part) => {
+    setViewingPart(part);
+    setDetailModalVisible(true);
+  };
+
+  const handleEdit = (part: Part) => {
+    setEditingPart(part);
+    form.setFieldsValue({
+      name: part.name,
+      description: part.description,
+      price: part.price,
+      minStock: part.minStock
+    });
+    setModalVisible(true);
+  };
+
+  const handleDelete = async (partID: number) => {
+    try {
+      await partService.deletePart(partID);
+      showSuccess('Thành công', 'Xóa phụ tùng thành công');
+      loadParts();
+    } catch (error: any) {
+      showError('Lỗi', error.message || 'Không thể xóa phụ tùng');
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      
+      if (editingPart) {
+        await partService.updatePart({
+          partID: editingPart.partID,
+          name: values.name,
+          description: values.description,
+          price: values.price,
+          minStock: values.minStock || null
+        });
+        showSuccess('Thành công', 'Cập nhật phụ tùng thành công');
+      } else {
+        await partService.createPart({
+          name: values.name,
+          description: values.description,
+          price: values.price,
+          minStock: values.minStock || undefined
+        });
+        showSuccess('Thành công', 'Tạo phụ tùng thành công');
+      }
+      
+      setModalVisible(false);
+      loadParts();
+    } catch (error: any) {
+      showError('Lỗi', error.message || 'Không thể lưu phụ tùng');
+    }
+  };
+
+  const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'partID',
+      key: 'partID',
+      width: 80,
+      render: (id: number) => <Tag color="blue">#{id}</Tag>,
+    },
+    {
+      title: 'Tên phụ tùng',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string) => <strong style={{ fontSize: '15px' }}>{text}</strong>,
+    },
+    {
+      title: 'Mô tả',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: { showTitle: false },
+      render: (text: string) => (
+        <span style={{ color: '#6b7280' }}>{text}</span>
+      ),
+    },
+    {
+      title: 'Giá',
+      dataIndex: 'price',
+      key: 'price',
+      align: 'right' as const,
+      render: (price: number) => (
+        <span style={{ fontWeight: 700, color: '#2563eb', fontSize: '15px' }}>
+          {partService.formatPrice(price)}
+        </span>
+      ),
+    },
+    {
+      title: 'Tồn kho tối thiểu',
+      dataIndex: 'minStock',
+      key: 'minStock',
+      align: 'center' as const,
+      render: (minStock: number | null) => 
+        minStock ? (
+          <Tag color="blue" style={{ fontSize: '13px' }}>{minStock}</Tag>
+        ) : (
+          <Tag color="default" style={{ fontSize: '13px' }}>Không đặt</Tag>
+        ),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: 220,
+      render: (_: any, record: Part) => (
+        <Space size="small">
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+            size="small"
+          >
+            Xem
+          </Button>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+            size="small"
+          >
+            Sửa
+          </Button>
+          <Popconfirm
+            title="Xác nhận xóa"
+            description="Bạn có chắc chắn muốn xóa phụ tùng này?"
+            onConfirm={() => handleDelete(record.partID)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+            >
+              Xóa
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const stats = {
+    total: parts.length,
+    tracked: parts.filter(p => p.minStock !== null && p.minStock > 0).length,
+    totalValue: parts.reduce((sum, p) => sum + p.price, 0)
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quản lý phụ tùng</h2>
-          <p className="text-gray-600">Theo dõi tồn kho và quản lý phụ tùng xe điện</p>
-        </div>
-        <button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
-          <span>Thêm phụ tùng</span>
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{loading ? '...' : parts.length}</div>
-              <div className="text-sm text-gray-600">Tổng số phụ tùng</div>
-            </div>
+    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card 
+        style={{ 
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+      >
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', color: '#1f2937' }}>
+              <AppstoreOutlined style={{ marginRight: '12px', color: '#3b82f6' }} />
+              Quản lý phụ tùng
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '15px' }}>Quản lý kho phụ tùng cho dịch vụ bảo dưỡng xe điện</p>
           </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            size="large"
+            style={{
+              height: '48px',
+              fontSize: '16px',
+              fontWeight: 600,
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              border: 'none',
+            }}
+          >
+            Thêm phụ tùng
+          </Button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : lowStockParts.length}
-              </div>
-              <div className="text-sm text-gray-600">Phụ tùng thiếu</div>
-            </div>
-          </div>
-        </div>
+        {/* Statistics */}
+        <Row gutter={16} style={{ marginBottom: '24px' }}>
+          <Col xs={24} sm={8}>
+            <Card 
+              style={{ 
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                border: 'none',
+              }}
+            >
+              <Statistic
+                title={<span style={{ color: '#64748b' }}>Tổng phụ tùng</span>}
+                value={stats.total}
+                prefix={<AppstoreOutlined style={{ color: '#3b82f6' }} />}
+                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#1e40af' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card 
+              style={{ 
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                border: 'none',
+              }}
+            >
+              <Statistic
+                title={<span style={{ color: '#64748b' }}>Giá trị tồn kho</span>}
+                value={stats.totalValue}
+                precision={0}
+                prefix={<DollarOutlined style={{ color: '#10b981' }} />}
+                formatter={(value) => partService.formatPrice(Number(value))}
+                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#047857' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card 
+              style={{ 
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                border: 'none',
+              }}
+            >
+              <Statistic
+                title={<span style={{ color: '#64748b' }}>Theo dõi tồn kho</span>}
+                value={stats.tracked}
+                prefix={<WarningOutlined style={{ color: '#f59e0b' }} />}
+                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#d97706' }}
+              />
+            </Card>
+          </Col>
+        </Row>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-              <TrendingDown className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">
-                {loading ? '...' : totalStockValue.toLocaleString('vi-VN')} đ
-              </div>
-              <div className="text-sm text-gray-600">Giá trị tồn kho</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Parts Table */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Danh sách phụ tùng</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Tên phụ tùng</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Danh mục</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Tồn kho</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Ngưỡng tối thiểu</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Giá</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Nhà cung cấp</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Trạng thái</th>
-                <th className="text-left py-3 px-6 font-medium text-gray-600">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={8} className="text-center py-10">Đang tải...</td></tr>
-              ) : (
-                parts.map((part) => {
-                  const isLowStock = part.stock < part.minThreshold;
-                  return (
-                    <tr key={part.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900">{part.name}</div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{part.category}</td>
-                      <td className="py-4 px-6">
-                        <span className={`font-semibold ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
-                          {part.stock}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{part.minThreshold}</td>
-                      <td className="py-4 px-6 text-gray-900 font-medium">
-                        {part.price.toLocaleString('vi-VN')} đ
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{part.supplier}</td>
-                      <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isLowStock 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {isLowStock ? 'Thiếu hàng' : 'Đủ hàng'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex space-x-2">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            Sửa
-                          </button>
-                          <button className="text-green-600 hover:text-green-800 text-sm font-medium">
-                            Nhập kho
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Low Stock Alert */}
-      {!loading && lowStockParts.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-            <h3 className="text-lg font-semibold text-red-800">Cảnh báo tồn kho thấp</h3>
-          </div>
-          <div className="space-y-2">
-            {lowStockParts.map((part) => (
-              <div key={part.id} className="flex items-center justify-between text-sm">
-                <span className="text-red-700">{part.name} ({part.category})</span>
-                <span className="font-medium text-red-600">
-                  Còn {part.stock} - Cần ít nhất {part.minThreshold}
+        {/* Table */}
+        <Card style={{ borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+          <Table
+            columns={columns}
+            dataSource={parts}
+            loading={loading}
+            rowKey="partID"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => (
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                  Tổng cộng <span style={{ color: '#3b82f6' }}>{total}</span> phụ tùng
                 </span>
-              </div>
-            ))}
+              ),
+            }}
+          />
+        </Card>
+      </Card>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <InfoCircleOutlined style={{ color: '#3b82f6', fontSize: '20px' }} />
+            <span style={{ fontSize: '18px', fontWeight: 600 }}>Chi tiết phụ tùng</span>
           </div>
-        </div>
-      )}
+        }
+        open={detailModalVisible}
+        onCancel={() => {
+          setDetailModalVisible(false);
+          setViewingPart(null);
+        }}
+        footer={[
+          <Button 
+            key="edit" 
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setDetailModalVisible(false);
+              if (viewingPart) {
+                handleEdit(viewingPart);
+              }
+            }}
+          >
+            Chỉnh sửa
+          </Button>,
+          <Button 
+            key="close" 
+            onClick={() => {
+              setDetailModalVisible(false);
+              setViewingPart(null);
+            }}
+          >
+            Đóng
+          </Button>
+        ]}
+        width={700}
+      >
+        {viewingPart && (
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="Mã phụ tùng">
+              <Tag color="blue" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                #{viewingPart.partID}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Tên phụ tùng">
+              <strong style={{ fontSize: '16px' }}>{viewingPart.name}</strong>
+            </Descriptions.Item>
+            <Descriptions.Item label="Mô tả">
+              <div style={{ color: '#374151', lineHeight: '1.6' }}>
+                {viewingPart.description}
+              </div>
+            </Descriptions.Item>
+            <Descriptions.Item label="Giá">
+              <span style={{ fontWeight: 700, color: '#2563eb', fontSize: '18px' }}>
+                {partService.formatPrice(viewingPart.price)}
+              </span>
+            </Descriptions.Item>
+            <Descriptions.Item label="Tồn kho tối thiểu">
+              {viewingPart.minStock ? (
+                <Tag color="blue" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                  {viewingPart.minStock} sản phẩm
+                </Tag>
+              ) : (
+                <Tag color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                  Không đặt
+                </Tag>
+              )}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
+
+      {/* Create/Edit Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px', fontWeight: 600 }}>
+              {editingPart ? 'Chỉnh sửa phụ tùng' : 'Thêm phụ tùng mới'}
+            </span>
+          </div>
+        }
+        open={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          form.resetFields();
+        }}
+        onOk={handleSubmit}
+        okText="Lưu"
+        cancelText="Hủy"
+        width={600}
+        okButtonProps={{ 
+          style: { height: '40px', fontSize: '16px', fontWeight: 600 }
+        }}
+        cancelButtonProps={{
+          style: { height: '40px', fontSize: '16px' }
+        }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          autoComplete="off"
+        >
+          <Form.Item
+            name="name"
+            label={<strong>Tên phụ tùng</strong>}
+            rules={[{ required: true, message: 'Vui lòng nhập tên phụ tùng' }]}
+          >
+            <Input 
+              placeholder="Nhập tên phụ tùng" 
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label={<strong>Mô tả</strong>}
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+          >
+            <TextArea 
+              rows={4} 
+              placeholder="Nhập mô tả phụ tùng"
+              style={{ fontSize: '14px' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="price"
+            label={<strong>Giá (VND)</strong>}
+            rules={[
+              { required: true, message: 'Vui lòng nhập giá' },
+              { type: 'number', min: 0, message: 'Giá phải lớn hơn 0' }
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="Nhập giá phụ tùng"
+              size="large"
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="minStock"
+            label={<strong>Tồn kho tối thiểu (Tùy chọn)</strong>}
+            rules={[{ type: 'number', min: 0, message: 'Tồn kho phải lớn hơn 0' }]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="Nhập số lượng tối thiểu"
+              size="large"
+              min={0}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -40,9 +40,9 @@ import WorkOrders from './components/technician/WorkOrders';
 import HomeRoute from './components/home/HomeRoute';
 import AppointmentBookingManagement from './components/customer/AppointmentBookingManagement';
 import TechnicianSchedule from './components/technician/Schedule';
-import PartsUsage from './components/technician/PartsUsage';
+import TechnicianPartsView from './components/technician/PartsView';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
-import CustomerProfile from './components/customer/CustomerProfile';
+import StaffPartsView from './components/staff/PartsView';
 import TechnicianProfile from './components/technician/TechnicianProfile';
 import AppointmentConfirmation from './components/staff/AppointmentConfirmation';
 import ServiceOrderProgress from './components/technician/ServiceOrderProgress';
@@ -53,9 +53,11 @@ import ServiceOrderManagement from './components/admin/ServiceOrderManagement';
 import StaffServiceOrderManagement from './components/staff/ServiceOrderManagement';
 import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
 import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
+import PartsUsage from './components/technician/PartsUsage';
 import StaffChecklistView from './components/staff/StaffChecklistView';
 import PaymentSuccess from './components/common/PaymentSuccess';
 import QuoteManagement from './components/admin/QuoteManagement';
+import QuoteRequestManagement from './components/admin/QuoteRequestManagement';
 import MyQuotes from './components/customer/MyQuotes';
 
 const AppContent: React.FC = () => {
@@ -108,12 +110,13 @@ const AppContent: React.FC = () => {
         <Route path="booking" element={<AppointmentBooking />} />
         <Route path="history" element={<ServiceHistory />} />
         <Route path="payment" element={<PaymentPage />} />
-        <Route path="profile" element={<CustomerProfile />} />
+        <Route path="profile" element={<div>Profile</div>} />
         <Route path="vehicles" element={<VehicleManagement />} />
         <Route path="vehicles/:vehicleId" element={<VehicleDetail />} />
         <Route path="service-packages" element={<ServicePackages />} />
         <Route path="management-booking" element={<AppointmentBookingManagement />} />
         <Route path="quotes" element={<MyQuotes />} />
+        <Route path="parts" element={<StaffPartsView />} />
       </Route>
 
       <Route
@@ -134,7 +137,8 @@ const AppContent: React.FC = () => {
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
         <Route path="service-checklists" element={<ServiceChecklistManagement />} />
-        <Route path="quotes" element={<QuoteManagement />} />
+            <Route path="quotes" element={<QuoteManagement />} />
+            <Route path="quote-requests" element={<QuoteRequestManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
       </Route>
@@ -156,6 +160,7 @@ const AppContent: React.FC = () => {
         <Route path="appointment-confirmation" element={<AppointmentConfirmation />} />
         <Route path="service-checklists" element={<StaffChecklistView />} />
         <Route path="service-packages" element={<StaffServicePackageManagement />} />
+        <Route path="parts" element={<StaffPartsView />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
       </Route>
@@ -173,6 +178,7 @@ const AppContent: React.FC = () => {
         <Route path="work-orders" element={<WorkOrders />} />
         <Route path="service-order-progress" element={<ServiceOrderProgress />} />
         <Route path="checklists" element={<TechnicianChecklistView />} />
+        <Route path="parts" element={<TechnicianPartsView />} />
         <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />

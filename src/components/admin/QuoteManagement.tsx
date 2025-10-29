@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Tag, Space, Input, Modal, Form, InputNumber } from 'antd';
-import { FileTextOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Tag, Space, Input, Modal, Form, InputNumber, Divider } from 'antd';
+import { FileTextOutlined, EditOutlined, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { quoteService, Quote, CreateQuoteRequest, UpdateQuoteRequest } from '../../services/quoteService';
 import { showSuccess, showError } from '../../utils/sweetAlert';
 
@@ -98,20 +98,24 @@ const QuoteManagement: React.FC = () => {
       key: 'centerName',
     },
     {
-      title: 'Giá trị',
-      key: 'amount',
-      render: (_: any, record: Quote) => (
-        <div>
-          <div className="font-semibold text-lg text-blue-600">
-            {quoteService.formatPrice(record.finalAmount)}
-          </div>
-          {record.discountAmount && record.discountAmount > 0 && (
-            <div className="text-xs text-gray-500">
-              Giảm: {quoteService.formatPrice(record.discountAmount)}
+      title: 'Phụ tùng',
+      key: 'parts',
+      width: 200,
+      render: (_: any, record: Quote) => {
+        if (!record.parts || record.parts.length === 0) {
+          return <span className="text-gray-400">Không có</span>;
+        }
+        return (
+          <div>
+            <div className="text-sm font-medium">
+              {record.parts.length} phụ tùng
             </div>
-          )}
-        </div>
-      ),
+            <div className="text-xs text-gray-500">
+              {quoteService.formatPrice(quoteService.calculatePartsTotalFromDetail(record.parts))}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'Trạng thái',
@@ -282,6 +286,48 @@ const QuoteManagement: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Parts Section */}
+              {selectedQuote.parts && selectedQuote.parts.length > 0 && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <ShoppingCartOutlined className="text-blue-600" />
+                      <h3 className="text-lg font-semibold">Danh sách phụ tùng</h3>
+                      <Tag color="blue">{selectedQuote.parts.length} phụ tùng</Tag>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="space-y-3">
+                        {selectedQuote.parts.map((part) => (
+                          <div key={part.quotePartID} className="flex justify-between items-center p-3 bg-white rounded border">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{part.partName}</div>
+                              <div className="text-sm text-gray-600">{part.partDescription}</div>
+                              <div className="text-sm text-gray-500">
+                                Số lượng: {part.quantity} | Đơn giá: {quoteService.formatPrice(part.unitPrice)}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-green-600">
+                                {quoteService.formatPrice(part.totalPrice)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold">Tổng phụ tùng:</span>
+                          <span className="text-xl font-bold text-green-600">
+                            {quoteService.formatPrice(quoteService.calculatePartsTotalFromDetail(selectedQuote.parts))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             // Create/Edit mode

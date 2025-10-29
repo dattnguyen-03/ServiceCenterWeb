@@ -4,6 +4,7 @@ import { ApiResponse } from '../types/api';
 export interface ServiceChecklist {
   checklistID: number;
   orderID: number;
+  appointmentID: number;
   itemName: string;
   status: string;
   notes: string;

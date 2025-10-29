@@ -39,7 +39,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           { id: 'work-orders', label: 'Lệnh công việc', icon: Wrench },
           { id: 'service-order-progress', label: 'Cập nhật tiến độ', icon: ClipboardList },
           { id: 'checklists', label: 'Service Checklist', icon: FileText },
-          { id: 'parts-usage', label: 'Kiểm Tra Phụ Tùng', icon: Car },
+          { id: 'parts', label: 'Danh mục phụ tùng', icon: Package },
+          { id: 'parts-usage', label: 'Kiểm tra phụ tùng', icon: Car },
           { id: 'profile', label: 'Hồ sơ cá nhân', icon: UserOutlined }
         ];
       case 'admin':

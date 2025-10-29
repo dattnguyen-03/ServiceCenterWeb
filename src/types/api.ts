@@ -212,17 +212,11 @@ export interface WorkOrder {
 
 // Parts Types
 export interface Part {
-  id: string;
+  partID: number;
   name: string;
-  partNumber: string;
-  category: string;
-  supplier: string;
-  unitPrice: number;
-  stockQuantity: number;
-  minStockLevel: number;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+  description: string;
+  minStock: number | null;
+  price: number;
 }
 
 export interface PartUsage {

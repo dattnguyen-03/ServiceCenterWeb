@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { appointmentService, Appointment } from '../../services/appointmentService';
 import { technicianListService, Technician } from '../../services/technicianListService';
 import { serviceOrderService, CreateServiceOrderRequest } from '../../services/serviceOrderService';
+import { httpClient } from '../../services/httpClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
 import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message } from 'antd';
@@ -187,6 +188,63 @@ const AdminAppointmentConfirmation: React.FC = () => {
     } catch (err: any) {
       console.error('Error updating appointment:', err);
       message.error(err.message || 'Không thể cập nhật lịch hẹn');
+    }
+  };
+
+  // Confirm cash payment
+  const handleConfirmCashPayment = async (appointment: Appointment) => {
+    const result = await Swal.fire({
+      title: 'Xác nhận đã nhận tiền',
+      html: `
+        <p>Bạn có chắc chắn đã nhận tiền thanh toán từ khách hàng?</p>
+        <p><strong>Khách hàng:</strong> ${appointment.userName}</p>
+        <p><strong>Xe:</strong> ${appointment.vehicleModel}</p>
+        <p><strong>Số tiền:</strong> ${appointment.paymentAmount?.toLocaleString('vi-VN')} ₫</p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Xác nhận đã nhận tiền',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Call API to update payment status using appointmentID
+        const response = await httpClient.put<{ message?: string; success?: boolean }>(
+          '/UpdatePaymentAPI',
+          {
+            appointmentID: appointment.appointmentID,
+            status: 'completed'
+          }
+        );
+
+        const anyRes: any = response;
+        
+        if (anyRes.success !== false && (anyRes.message || anyRes.success)) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: anyRes.message || 'Đã xác nhận thanh toán thành công',
+            confirmButtonColor: '#10b981',
+            confirmButtonText: 'OK'
+          });
+          fetchAppointments();
+        } else {
+          throw new Error(anyRes.message || 'Không thể xác nhận thanh toán');
+        }
+      } catch (err: any) {
+        console.error('Error confirming payment:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.message || 'Không thể xác nhận thanh toán',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Đã hiểu'
+        });
+      }
     }
   };
 
@@ -490,7 +548,6 @@ const AdminAppointmentConfirmation: React.FC = () => {
                                 appointment.paymentStatus === 'completed' ? 'green' :
                                 appointment.paymentStatus === 'pending' ? 'orange' : 'red'
                               }
-                              size="small"
                             >
                               {appointment.paymentStatus}
                             </Tag>
@@ -519,6 +576,17 @@ const AdminAppointmentConfirmation: React.FC = () => {
                           <CheckCircleOutlined />
                           <Text className="text-green-600 font-medium">Đã xác nhận</Text>
                         </div>
+                      )}
+                      {appointment.paymentMethod === 'cash' && appointment.paymentStatus === 'pending' && (
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleOutlined />}
+                          onClick={() => handleConfirmCashPayment(appointment)}
+                          size="small"
+                          className="!bg-green-600"
+                        >
+                          Xác nhận đã nhận tiền
+                        </Button>
                       )}
                       <Button
                         type="default"

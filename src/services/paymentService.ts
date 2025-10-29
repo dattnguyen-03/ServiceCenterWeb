@@ -50,10 +50,13 @@ class PaymentService {
       
       // Backend returns { message, paymentUrl, amount, description } or wrapped
       const anyRes: any = response;
-      if (anyRes?.paymentUrl) {
+      
+      // Cash payment: paymentUrl = null, nhưng có message thành công
+      // Online payment: có paymentUrl
+      if (anyRes?.message && anyRes.message.includes('thành công')) {
         return {
-          message: anyRes.message || 'Tạo payment link thành công',
-          paymentUrl: anyRes.paymentUrl,
+          message: anyRes.message || 'Tạo payment thành công',
+          paymentUrl: anyRes.paymentUrl || null, // null cho cash payment
           amount: anyRes.amount || 0,
           description: anyRes.description || ''
         };

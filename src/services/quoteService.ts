@@ -1,5 +1,22 @@
 import { httpClient } from './httpClient';
 
+export interface QuotePart {
+  partID: number;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface QuotePartDetail {
+  quotePartID: number;
+  partID: number;
+  partName: string;
+  partDescription: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
 export interface CreateQuoteRequest {
   appointmentID: number;
   customerID: number;
@@ -11,6 +28,7 @@ export interface CreateQuoteRequest {
   description: string;
   notes?: string;
   expiresAt?: string;
+  parts?: QuotePart[]; // Danh sách phụ tùng
 }
 
 export interface Quote {
@@ -31,6 +49,7 @@ export interface Quote {
   expiresAt?: string;
   createdByName: string;
   approvedByName?: string;
+  parts?: QuotePartDetail[]; // Danh sách phụ tùng chi tiết
 }
 
 export interface UpdateQuoteRequest {
@@ -41,12 +60,20 @@ export interface UpdateQuoteRequest {
   description?: string;
   notes?: string;
   expiresAt?: string;
+  parts?: QuotePart[]; // Danh sách phụ tùng (optional)
 }
 
 export interface ApproveQuoteRequest {
   quoteID: number;
   action: 'approve' | 'reject';
   reason?: string;
+}
+
+export interface CreateQuoteRequestFromTechnician {
+  checklistID: number;
+  appointmentID: number;
+  parts: QuotePart[];
+  notes?: string;
 }
 
 class QuoteService {
@@ -155,21 +182,51 @@ class QuoteService {
   }
 
   /**
-   * TODO: Call Parts API (implemented by other team)
-   * 
-   * async getPartsForService(serviceId: number): Promise<Part[]> {
-   *   const response = await httpClient.get(`/PartsAPI/service/${serviceId}`);
-   *   return response.data;
-   * }
-   * 
-   * async getPartsCost(parts: Part[]): Promise<number> {
-   *   let total = 0;
-   *   for (const part of parts) {
-   *     total += part.price * part.quantity;
-   *   }
-   *   return total;
-   * }
+   * Tính tổng giá trị phụ tùng
    */
+  calculatePartsTotal(parts: QuotePart[]): number {
+    return parts.reduce((total, part) => total + part.totalPrice, 0);
+  }
+
+  /**
+   * Tính tổng giá trị phụ tùng từ QuotePartDetail
+   */
+  calculatePartsTotalFromDetail(parts: QuotePartDetail[]): number {
+    return parts.reduce((total, part) => total + part.totalPrice, 0);
+  }
+
+  /**
+   * Format danh sách phụ tùng để hiển thị
+   */
+  formatPartsList(parts: QuotePartDetail[]): string {
+    if (!parts || parts.length === 0) return 'Không có phụ tùng';
+    
+    return parts.map(part => 
+      `${part.partName} (${part.quantity}x ${this.formatPrice(part.unitPrice)})`
+    ).join(', ');
+  }
+
+  /**
+   * Tạo Quote từ yêu cầu của Technician
+   * (Method này sẽ được gọi từ PartsUsage component)
+   */
+  async createQuoteFromTechnicianRequest(data: CreateQuoteRequestFromTechnician): Promise<string> {
+    try {
+      const response = await httpClient.post<{ success: boolean; message: string; data: any }>(
+        '/CreateQuoteRequestAPI',
+        data
+      );
+      
+      if (response.success) {
+        return response.message;
+      } else {
+        throw new Error(response.message || 'Lỗi gửi yêu cầu báo giá');
+      }
+    } catch (error: any) {
+      console.error('Error creating quote request:', error);
+      throw new Error(error.message || 'Lỗi gửi yêu cầu báo giá');
+    }
+  }
 }
 
 export const quoteService = new QuoteService();
