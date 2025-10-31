@@ -10,6 +10,7 @@ import {
 import { partService, Part } from '../../services/partService';
 import { serviceChecklistService, ServiceChecklist } from '../../services/serviceChecklistService';
 import { quoteService, CreateQuoteRequestFromTechnician } from '../../services/quoteService';
+import { serviceOrderService, ServiceOrder } from '../../services/serviceOrderService';
 import { showSuccess, showError } from '../../utils/sweetAlert';
 
 interface SelectedPart extends Part {
@@ -25,10 +26,12 @@ const PartsUsage: React.FC = () => {
   const [checklists, setChecklists] = useState<ServiceChecklist[]>([]);
   const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
   const [loading, setLoading] = useState(false);
+  const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
     loadParts();
+    loadServiceOrders();
     loadChecklists();
   }, []);
 
@@ -42,6 +45,17 @@ const PartsUsage: React.FC = () => {
         message: 'Lỗi tải phụ tùng',
         description: error.message || 'Không thể tải danh sách phụ tùng'
       });
+    }
+  };
+
+  const loadServiceOrders = async () => {
+    try {
+      const orders = await serviceOrderService.getMyServiceOrders();
+      setServiceOrders(orders || []);
+      console.log('Loaded service orders for status check:', orders);
+    } catch (error: any) {
+      console.error('Error loading service orders:', error);
+      // Không hiển thị error vì không quan trọng lắm
     }
   };
 
@@ -276,28 +290,48 @@ const PartsUsage: React.FC = () => {
       title: 'Thao tác',
       key: 'action',
       width: 200,
-      render: (_: any, record: ServiceChecklist) => (
-        <Space size="small">
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => {
-              setSelectedChecklist(record);
-              setIsChecklistModalVisible(true);
-            }}
-            size="small"
-          >
-            Xem
-          </Button>
-          <Button
-            type="primary"
-            icon={<ShoppingCartOutlined />}
-            onClick={() => handleSelectChecklist(record)}
-            size="small"
-          >
-            Chọn phụ tùng
-          </Button>
-        </Space>
-      ),
+      render: (_: any, record: ServiceChecklist) => {
+        // Kiểm tra xem Service Order của checklist này đã completed chưa
+        const relatedOrder = serviceOrders.find(order => {
+          const orderId = order.OrderID || order.orderID;
+          return orderId === record.orderID;
+        });
+        
+        const isOrderCompleted = relatedOrder && (
+          relatedOrder.status?.toLowerCase() === 'completed' || 
+          relatedOrder.status?.toLowerCase() === 'done'
+        );
+
+        return (
+          <Space size="small">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => {
+                setSelectedChecklist(record);
+                setIsChecklistModalVisible(true);
+              }}
+              size="small"
+            >
+              Xem
+            </Button>
+            {!isOrderCompleted && (
+              <Button
+                type="primary"
+                icon={<ShoppingCartOutlined />}
+                onClick={() => handleSelectChecklist(record)}
+                size="small"
+              >
+                Chọn phụ tùng
+              </Button>
+            )}
+            {isOrderCompleted && (
+              <Tag color="green" style={{ fontSize: '12px' }}>
+                Đã hoàn thành
+              </Tag>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

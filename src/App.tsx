@@ -26,6 +26,8 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import AdminProfile from './components/admin/AdminProfile';
 import CustomerManagement from './components/admin/CustomerManagement';
 import PartsManagement from './components/admin/PartsManagement';
+import InventoryManagement from './components/admin/InventoryManagement';
+import PartUsageManagement from './components/admin/PartUsageManagement';
 import FinancialReports from './components/admin/FinancialReports';
 import StaffManagement from './components/admin/StaffManagement';
 import AdminServicePackageManagement from './components/admin/ServicePackageManagement';
@@ -54,6 +56,7 @@ import StaffServiceOrderManagement from './components/staff/ServiceOrderManageme
 import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
 import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
 import PartsUsage from './components/technician/PartsUsage';
+import TechnicianPartUsage from './components/technician/TechnicianPartUsage';
 import StaffChecklistView from './components/staff/StaffChecklistView';
 import PaymentSuccess from './components/common/PaymentSuccess';
 import QuoteManagement from './components/admin/QuoteManagement';
@@ -135,6 +138,8 @@ const AppContent: React.FC = () => {
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="appointments" element={<AdminAppointmentConfirmation />} />
         <Route path="parts" element={<PartsManagement />} />
+        <Route path="inventory" element={<InventoryManagement />} />
+        <Route path="part-usage" element={<PartUsageManagement />} />
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
@@ -185,6 +190,7 @@ const AppContent: React.FC = () => {
         <Route path="parts" element={<TechnicianPartsView />} />
         <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
+        <Route path="part-usage" element={<TechnicianPartUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />
       </Route>
 

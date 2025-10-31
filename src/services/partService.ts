@@ -62,10 +62,21 @@ class PartService {
    */
   async createPart(data: CreatePartRequest): Promise<ApiResponse<Part>> {
     try {
-      const response = await httpClient.post<Part>('/CreatePartAPI', data);
+      const response = await httpClient.post<any>('/CreatePartAPI', data) as any;
       
-      if (response && response.success) {
-        return response;
+      // Backend trả về {message: '...', part: {...}} không có field success
+      if (response && response.part) {
+        // Map response về format ApiResponse
+        return {
+          success: true,
+          message: response.message || 'Tạo phụ tùng thành công',
+          data: response.part as Part
+        };
+      }
+      
+      // Nếu có message nhưng không có part, có thể là lỗi
+      if (response && response.message && !response.part) {
+        throw new Error(response.message);
       }
       
       throw new Error(response?.message || 'Không thể tạo phụ tùng');
@@ -98,13 +109,29 @@ class PartService {
    */
   async deletePart(partID: number): Promise<ApiResponse<void>> {
     try {
-      const response = await httpClient.deleteWithBody<void>('/DeletePartAPI', { partID });
+      const response = await httpClient.deleteWithBody<any>('/DeletePartAPI', { partID }) as any;
       
+      // Nếu httpClient không throw error, nghĩa là status code là 200-299 (thành công)
+      // Backend trả về {message: '...'} không có field success
+      if (response && response.message) {
+        return {
+          success: true,
+          message: response.message,
+          data: undefined
+        };
+      }
+      
+      // Nếu có success field (format cũ hoặc format khác)
       if (response && response.success) {
         return response;
       }
       
-      throw new Error(response?.message || 'Không thể xóa phụ tùng');
+      // Fallback: nếu không có message hoặc success, coi như thành công
+      return {
+        success: true,
+        message: 'Xóa phụ tùng thành công',
+        data: undefined
+      };
     } catch (error: any) {
       console.error('Error deleting part:', error);
       throw new Error(error.message || 'Lỗi khi xóa phụ tùng');
