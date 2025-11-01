@@ -13,13 +13,14 @@ import {
   DownOutlined,
   BankOutlined,
   ShoppingCartOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 
 const StaffLayout: React.FC = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -69,15 +70,20 @@ const StaffLayout: React.FC = () => {
       label: <Link to="/staff/parts">Phụ tùng</Link>,
     },
     {
+      key: '/staff/inventory',
+      icon: <DatabaseOutlined />,
+      label: <Link to="/staff/inventory">Tồn kho</Link>,
+    },
+    {
       key: '/staff/progress',
       icon: <ClockCircleOutlined />,
       label: <Link to="/staff/progress">Tiến độ dịch vụ</Link>,
     },
-    {
-      key: '/staff/invoices',
-      icon: <DollarOutlined />,
-      label: <Link to="/staff/invoices">Hóa đơn</Link>,
-    },
+    // {
+    //   key: '/staff/invoices',
+    //   icon: <DollarOutlined />,
+    //   label: <Link to="/staff/invoices">Hóa đơn</Link>,
+    // },
     {
       key: '/staff/quotes',
       icon: <FileTextOutlined />,
@@ -107,6 +113,11 @@ const StaffLayout: React.FC = () => {
       >
         <div className="p-4 text-xl font-bold text-center border-b">
           Staff Portal
+          {user?.centerID && (
+            <div className="text-sm font-normal text-gray-500 mt-1">
+              ServiceCenter ID: {user.centerID}
+            </div>
+          )}
         </div>
         <Menu
           mode="inline"
@@ -147,7 +158,7 @@ const StaffLayout: React.FC = () => {
               ]
             }}>
               <Space className="cursor-pointer">
-                <span className="text-base">Staff</span>
+                <span className="text-base">{user?.name || 'Staff'}</span>
                 <DownOutlined />
               </Space>
             </Dropdown>

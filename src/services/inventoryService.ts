@@ -28,9 +28,9 @@ class InventoryService {
       if (response && response.data && Array.isArray(response.data)) {
         return response.data.map((item: any) => ({
           inventoryID: item.inventoryID,
-          partID: item.partID || 0,
+          partID: item.partID || 0, // ✅ Map PartID từ backend
           partName: item.partName || '',
-          centerID: item.centerID || 0,
+          centerID: item.centerID || 0, // ✅ Map CenterID từ backend
           centerName: item.centerName || '',
           quantity: item.quantity || 0,
         }));
@@ -40,9 +40,9 @@ class InventoryService {
       if (response && Array.isArray(response)) {
         return response.map((item: any) => ({
           inventoryID: item.inventoryID,
-          partID: item.partID || 0,
+          partID: item.partID || 0, // ✅ Map PartID từ backend
           partName: item.partName || '',
-          centerID: item.centerID || 0,
+          centerID: item.centerID || 0, // ✅ Map CenterID từ backend
           centerName: item.centerName || '',
           quantity: item.quantity || 0,
         }));
@@ -66,9 +66,9 @@ class InventoryService {
       if (response && response.data && Array.isArray(response.data)) {
         return response.data.map((item: any) => ({
           inventoryID: item.inventoryID,
-          partID: item.partID || 0,
+          partID: item.partID || 0, // ✅ Map PartID từ backend
           partName: item.partName || '',
-          centerID: item.centerID || 0,
+          centerID: item.centerID || 0, // ✅ Map CenterID từ backend
           centerName: item.centerName || '',
           quantity: item.quantity || 0,
         }));
@@ -78,9 +78,9 @@ class InventoryService {
       if (response && Array.isArray(response)) {
         return response.map((item: any) => ({
           inventoryID: item.inventoryID,
-          partID: item.partID || 0,
+          partID: item.partID || 0, // ✅ Map PartID từ backend
           partName: item.partName || '',
-          centerID: item.centerID || 0,
+          centerID: item.centerID || 0, // ✅ Map CenterID từ backend
           centerName: item.centerName || '',
           quantity: item.quantity || 0,
         }));

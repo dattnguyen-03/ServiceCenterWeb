@@ -29,12 +29,13 @@ class AuthService {
         id: userData.userID?.toString() || userData.username || '',
         fullName: userData.name || userData.username || '',
         email: userData.email || '',
-        phone: '',
-        address: '',
+        phone: userData.phone || '',
+        address: userData.address || '',
         role: (userData.role || '').toLowerCase() as 'admin' | 'staff' | 'technician' | 'customer',
         status: 'active' as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        centerID: userData.centerID ?? null, // ✅ Lưu CenterID từ backend response
       };
 
       const authResponse: AuthResponse = {

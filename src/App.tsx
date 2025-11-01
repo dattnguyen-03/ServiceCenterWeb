@@ -64,6 +64,7 @@ import QuoteRequestManagement from './components/admin/QuoteRequestManagement';
 import MyQuotes from './components/customer/MyQuotes';
 import StaffQuoteManagement from './components/staff/StaffQuoteManagement';
 import StaffQuoteRequestManagement from './components/staff/StaffQuoteRequestManagement';
+import StaffInventoryManagement from './components/staff/StaffInventoryManagement';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -168,6 +169,7 @@ const AppContent: React.FC = () => {
         <Route path="service-checklists" element={<StaffChecklistView />} />
         <Route path="service-packages" element={<StaffServicePackageManagement />} />
         <Route path="parts" element={<StaffPartsView />} />
+        <Route path="inventory" element={<StaffInventoryManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
         <Route path="quotes" element={<StaffQuoteManagement />} />

@@ -71,6 +71,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   profileImage?: string;
+  centerID?: number | null; // ✅ Staff và Technician thuộc về một ServiceCenter
 }
 
 // Customer Types

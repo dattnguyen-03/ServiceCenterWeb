@@ -1,5 +1,14 @@
 import { paymentService } from './paymentService';
 import { appointmentService, Appointment } from './appointmentService';
+import { partUsageService } from './partUsageService';
+import { serviceOrderService } from './serviceOrderService';
+
+export interface InvoicePart {
+  partName: string;
+  quantity: number;
+  unitPrice?: number; // Nếu có thông tin giá
+  totalPrice?: number; // Nếu có thông tin giá
+}
 
 export interface InvoiceData {
   paymentID: number;
@@ -18,6 +27,7 @@ export interface InvoiceData {
   completedAt: string;
   appointmentID: number;
   orderID?: number;
+  parts?: InvoicePart[]; // ✅ Danh sách phụ tùng đã sử dụng
 }
 
 class InvoiceService {
@@ -71,6 +81,72 @@ class InvoiceService {
       // Tạo invoice number
       const invoiceNumber = `INV-${payment.paymentID.toString().padStart(6, '0')}-${new Date(payment.completedAt || payment.createdAt).getFullYear()}`;
 
+      // ✅ Lấy danh sách phụ tùng đã sử dụng từ PartUsage
+      let parts: InvoicePart[] = [];
+      let orderIDForParts = payment.orderID;
+      
+      console.log('[Invoice] Payment data:', { 
+        paymentID: payment.paymentID, 
+        orderID: payment.orderID, 
+        appointmentID: payment.appointmentID 
+      });
+      
+      // Nếu không có orderID trong payment, thử lấy từ ServiceOrder qua appointmentID
+      if (!orderIDForParts) {
+        const targetAppointmentID = payment.appointmentID || (appointment?.appointmentID);
+        if (targetAppointmentID) {
+          try {
+            console.log('[Invoice] No orderID in payment, searching ServiceOrder for appointmentID:', targetAppointmentID);
+            
+            const allServiceOrders = await serviceOrderService.getAllServiceOrders();
+            console.log('[Invoice] Total service orders found:', allServiceOrders.length);
+            
+            const serviceOrder = allServiceOrders.find(so => so.appointmentID === targetAppointmentID);
+            if (serviceOrder) {
+              orderIDForParts = serviceOrder.OrderID || serviceOrder.orderID;
+              console.log('[Invoice] ✅ Found service order:', { 
+                OrderID: serviceOrder.OrderID || serviceOrder.orderID, 
+                appointmentID: serviceOrder.appointmentID 
+              });
+            } else {
+              console.warn('[Invoice] ❌ No service order found for appointmentID:', targetAppointmentID);
+            }
+          } catch (err: any) {
+            console.error('[Invoice] ❌ Could not fetch service order:', err.message || err);
+          }
+        } else {
+          console.warn('[Invoice] ❌ No appointmentID available to search for ServiceOrder');
+        }
+      } else {
+        console.log('[Invoice] ✅ Using orderID from payment:', orderIDForParts);
+      }
+      
+      // Lấy PartUsage nếu có orderID
+      if (orderIDForParts) {
+        try {
+          console.log('[Invoice] Fetching part usage for orderID:', orderIDForParts);
+          const allPartUsage = await partUsageService.getAllPartUsage();
+          console.log('[Invoice] Total part usage records:', allPartUsage.length);
+          
+          const orderPartUsage = allPartUsage.filter(pu => pu.orderID === orderIDForParts);
+          console.log('[Invoice] Part usage for orderID', orderIDForParts, ':', orderPartUsage.length, 'records');
+          
+          parts = orderPartUsage.map(pu => ({
+            partName: pu.partName,
+            quantity: pu.quantityUsed,
+            // unitPrice và totalPrice có thể lấy từ Part service nếu cần
+          }));
+          console.log('[Invoice] ✅ Mapped parts for invoice:', parts);
+        } catch (err: any) {
+          console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
+          // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị
+        }
+      } else {
+        console.warn('[Invoice] ❌ No orderID found - cannot fetch parts');
+        console.warn('[Invoice] Payment:', payment);
+        console.warn('[Invoice] Appointment:', appointment);
+      }
+
       return {
         paymentID: payment.paymentID,
         invoiceNumber,
@@ -87,7 +163,8 @@ class InvoiceService {
         createdAt: payment.createdAt,
         completedAt: payment.completedAt || payment.createdAt,
         appointmentID: appointment?.appointmentID || 0,
-        orderID: payment.orderID
+        orderID: payment.orderID || orderIDForParts, // ✅ Lấy orderID từ payment hoặc serviceOrder
+        parts // ✅ Thêm parts vào invoice data
       };
     } catch (error: any) {
       console.error('Error getting invoice data:', error);
@@ -128,6 +205,78 @@ class InvoiceService {
 
       const invoiceNumber = `INV-${payment.paymentID.toString().padStart(6, '0')}-${new Date(payment.completedAt || payment.createdAt).getFullYear()}`;
 
+      // ✅ Lấy danh sách phụ tùng đã sử dụng từ PartUsage
+      let parts: InvoicePart[] = [];
+      let orderIDForParts = payment.orderID;
+      
+      console.log('[Invoice] Payment data:', { 
+        paymentID: payment.paymentID, 
+        orderID: payment.orderID, 
+        appointmentID: payment.appointmentID || appointmentID 
+      });
+      
+      // Nếu không có orderID trong payment, thử lấy từ ServiceOrder qua appointmentID (từ tham số)
+      if (!orderIDForParts) {
+        try {
+          const targetAppointmentID = appointmentID || payment.appointmentID;
+          console.log('[Invoice] No orderID in payment, searching ServiceOrder for appointmentID:', targetAppointmentID);
+          
+          const allServiceOrders = await serviceOrderService.getAllServiceOrders();
+          console.log('[Invoice] Total service orders found:', allServiceOrders.length);
+          console.log('[Invoice] Service orders:', allServiceOrders.map(so => ({ 
+            OrderID: so.OrderID || so.orderID, 
+            appointmentID: so.appointmentID 
+          })));
+          
+          const serviceOrder = allServiceOrders.find(so => so.appointmentID === targetAppointmentID);
+          if (serviceOrder) {
+            orderIDForParts = serviceOrder.OrderID || serviceOrder.orderID;
+            console.log('[Invoice] ✅ Found service order:', { 
+              OrderID: serviceOrder.OrderID || serviceOrder.orderID, 
+              appointmentID: serviceOrder.appointmentID 
+            });
+          } else {
+            console.warn('[Invoice] ❌ No service order found for appointmentID:', targetAppointmentID);
+            console.warn('[Invoice] Available appointmentIDs:', allServiceOrders.map(so => so.appointmentID));
+          }
+        } catch (err: any) {
+          console.error('[Invoice] ❌ Could not fetch service order:', err.message || err);
+        }
+      } else {
+        console.log('[Invoice] ✅ Using orderID from payment:', orderIDForParts);
+      }
+      
+      // Lấy PartUsage nếu có orderID
+      if (orderIDForParts) {
+        try {
+          console.log('[Invoice] Fetching part usage for orderID:', orderIDForParts);
+          const allPartUsage = await partUsageService.getAllPartUsage();
+          console.log('[Invoice] Total part usage records:', allPartUsage.length);
+          console.log('[Invoice] Part usage orders:', allPartUsage.map(pu => ({ 
+            usageID: pu.usageID, 
+            orderID: pu.orderID, 
+            partName: pu.partName 
+          })));
+          
+          const orderPartUsage = allPartUsage.filter(pu => pu.orderID === orderIDForParts);
+          console.log('[Invoice] Part usage for orderID', orderIDForParts, ':', orderPartUsage.length, 'records');
+          console.log('[Invoice] Part usage details:', orderPartUsage);
+          
+          parts = orderPartUsage.map(pu => ({
+            partName: pu.partName,
+            quantity: pu.quantityUsed,
+            // unitPrice và totalPrice có thể lấy từ Part service nếu cần
+          }));
+          console.log('[Invoice] ✅ Mapped parts for invoice:', parts);
+        } catch (err: any) {
+          console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
+          // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị
+        }
+      } else {
+        console.warn('[Invoice] ❌ No orderID found - cannot fetch parts');
+        console.warn('[Invoice] Payment data:', payment);
+      }
+
       return {
         paymentID: payment.paymentID,
         invoiceNumber,
@@ -144,7 +293,8 @@ class InvoiceService {
         createdAt: payment.createdAt,
         completedAt: payment.completedAt || payment.createdAt,
         appointmentID: appointment.appointmentID,
-        orderID: payment.orderID
+        orderID: payment.orderID || orderIDForParts, // ✅ Lấy orderID từ payment hoặc serviceOrder
+        parts // ✅ Thêm parts vào invoice data
       };
     } catch (error: any) {
       console.error('Error getting invoice data from appointment:', error);

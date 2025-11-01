@@ -97,23 +97,31 @@ class ServiceOrderService {
   async getAllServiceOrders(): Promise<ServiceOrder[]> {
     try {
       console.log('Fetching all service orders...');
-      const response = await httpClient.get<ServiceOrder[]>(
+      const response = await httpClient.get<any[]>(
         `/GetServiceOrderAPI`
       );
 
       console.log('All service orders response:', response);
 
-      if (Array.isArray(response)) return response;
-      if (response && typeof response === 'object') {
+      let orders: any[] = [];
+      
+      if (Array.isArray(response)) {
+        orders = response;
+      } else if (response && typeof response === 'object') {
         const anyRes: any = response as any;
         if (anyRes.success && Array.isArray(anyRes.data)) {
-          return anyRes.data as ServiceOrder[];
-        }
-        if (Array.isArray(anyRes.data)) {
-          return anyRes.data as ServiceOrder[];
+          orders = anyRes.data;
+        } else if (Array.isArray(anyRes.data)) {
+          orders = anyRes.data;
         }
       }
-      throw new Error('Không thể tải danh sách Service Order');
+
+      // ✅ Map để đảm bảo appointmentID được map đúng (AppointmentID -> appointmentID)
+      return orders.map(order => ({
+        ...order,
+        appointmentID: order.AppointmentID || order.appointmentID, // ✅ Map từ AppointmentID (backend) hoặc appointmentID
+        OrderID: order.OrderID || order.orderID, // ✅ Đảm bảo OrderID cũng được map
+      })) as ServiceOrder[];
     } catch (error: any) {
       console.error('Error getting all service orders:', error);
       // If error message indicates no service orders, return empty array

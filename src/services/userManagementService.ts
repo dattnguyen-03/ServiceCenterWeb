@@ -9,6 +9,7 @@ export interface UserListItem {
   email: string;
   phone: string;
   address: string;
+  centerID?: number | null; // ✅ Staff và Technician thuộc về một ServiceCenter
 }
 
 export interface CreateUserRequest {
@@ -19,6 +20,7 @@ export interface CreateUserRequest {
   Email: string;     // Changed from email to Email
   Phone: string;     // Changed from phone to Phone
   Address: string;   // Changed from address to Address
+  CenterID?: number | null; // ✅ Staff và Technician cần gán CenterID
 }
 
 export interface EditUserRequest {
@@ -27,6 +29,7 @@ export interface EditUserRequest {
   Email: string;   // Changed from email to Email
   Phone: string;   // Changed from phone to Phone
   Address: string; // Changed from address to Address
+  CenterID?: number | null; // ✅ Admin có thể thay đổi CenterID cho Staff/Technician
 }
 
 export interface DeleteUserRequest {

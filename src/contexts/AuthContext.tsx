@@ -10,6 +10,7 @@ const convertApiUserToLocalUser = (apiUser: ApiUser): LocalUser => ({
   email: apiUser.email,
   role: apiUser.role,
   avatar: apiUser.profileImage,
+  centerID: apiUser.centerID ?? undefined, // ✅ Lưu CenterID cho Staff/Technician
 });
 
 export interface AuthContextType {

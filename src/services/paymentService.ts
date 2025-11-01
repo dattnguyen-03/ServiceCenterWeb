@@ -248,6 +248,35 @@ class PaymentService {
       throw new Error(error.message || 'Lỗi xác nhận thanh toán');
     }
   }
+
+  /**
+   * Lấy tất cả payments (Admin only)
+   */
+  async getAllPayments(): Promise<Payment[]> {
+    try {
+      console.log('Fetching all payments...');
+      const response = await httpClient.get<Payment[]>(
+        '/GetPaymentHistoryAPI/all'
+      );
+
+      console.log('All payments response:', response);
+
+      if (Array.isArray(response)) return response;
+      if (response && typeof response === 'object') {
+        const anyRes: any = response as any;
+        if (anyRes.success && Array.isArray(anyRes.data)) {
+          return anyRes.data as Payment[];
+        }
+        if (Array.isArray(anyRes.data)) {
+          return anyRes.data as Payment[];
+        }
+      }
+      return [];
+    } catch (error: any) {
+      console.error('Error getting all payments:', error);
+      throw new Error(error.message || 'Lỗi tải danh sách thanh toán');
+    }
+  }
 }
 
 export const paymentService = new PaymentService();

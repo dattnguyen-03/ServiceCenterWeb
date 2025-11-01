@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'customer' | 'staff' | 'technician' | 'admin';
   avatar?: string;
+  centerID?: number | null; // ✅ Staff và Technician thuộc về một ServiceCenter
 }
 
 export interface Vehicle {

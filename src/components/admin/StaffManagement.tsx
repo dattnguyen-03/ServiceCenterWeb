@@ -37,6 +37,7 @@ interface Staff {
   email: string;
   address: string;
   status: 'active' | 'off-duty' | 'on-leave';
+  centerID?: number | null; // ✅ Staff và Technician thuộc về một ServiceCenter
   certifications: {
     name: string;
     issueDate: string;
@@ -49,6 +50,7 @@ interface Staff {
 }
 
 import { getAllUsers, searchUsers, createUser, editUser, deleteUser, type UserListItem } from '../../api/users';
+import { getAllServiceCenters, type ServiceCenter } from '../../services/serviceCenterManagementService';
 
 const StaffManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -58,6 +60,7 @@ const StaffManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [serviceCenters, setServiceCenters] = useState<ServiceCenter[]>([]); // ✅ Danh sách ServiceCenter
   const mapUsers = (data: UserListItem[]): Staff[] =>
     data.map((u) => ({
       id: String(u.userID),
@@ -70,6 +73,7 @@ const StaffManagement: React.FC = () => {
       status: 'active',
       certifications: [],
       schedule: [],
+      centerID: u.centerID, // ✅ Lưu centerID từ API
     }));
 
   useEffect(() => {
@@ -84,7 +88,18 @@ const StaffManagement: React.FC = () => {
         setLoading(false);
       }
     };
+    
+    const fetchServiceCenters = async () => {
+      try {
+        const centers = await getAllServiceCenters();
+        setServiceCenters(centers);
+      } catch (error) {
+        console.error('Error fetching service centers:', error);
+      }
+    };
+    
     fetchStaff();
+    fetchServiceCenters(); // ✅ Load danh sách ServiceCenter
   }, []);
 
   // Handle create user
@@ -99,7 +114,8 @@ const StaffManagement: React.FC = () => {
         Name: values.name,
         Email: values.email,
         Phone: values.phone,
-        Address: values.address
+        Address: values.address,
+        CenterID: (values.role === 'Staff' || values.role === 'Technician') ? values.centerID : null // ✅ Gán CenterID cho Staff/Technician
       };
       
       const result = await createUser(createData);
@@ -131,7 +147,8 @@ const StaffManagement: React.FC = () => {
         Name: values.name,
         Email: values.email,
         Phone: values.phone,
-        Address: values.address
+        Address: values.address,
+        CenterID: (editingStaff.role === 'Staff' || editingStaff.role === 'Technician') ? values.centerID : null // ✅ Cập nhật CenterID cho Staff/Technician
       };
       
       const result = await editUser(editData);
@@ -326,6 +343,7 @@ const StaffManagement: React.FC = () => {
       phone: staff.phone,
       address: staff.address || '',
       role: staff.role,
+      centerID: staff.centerID, // ✅ Set CenterID vào form
     });
     setIsModalVisible(true);
   };
@@ -669,6 +687,61 @@ const StaffManagement: React.FC = () => {
                 className="rounded-lg"
               />
             </Form.Item>
+            
+            {/* ✅ Field chọn ServiceCenter - chỉ hiện với Staff/Technician */}
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) => 
+                prevValues.role !== currentValues.role || 
+                prevValues !== currentValues
+              }
+            >
+              {({ getFieldValue }) => {
+                const role = getFieldValue('role');
+                const isEditing = !!editingStaff;
+                const editingRole = editingStaff?.role;
+                
+                // Xác định role hiện tại (form value hoặc editing role)
+                const currentRole = isEditing ? editingRole : role;
+                const isStaffOrTechnician = currentRole === 'Staff' || currentRole === 'Technician';
+                
+                if (!isStaffOrTechnician) return null;
+                
+                return (
+                  <Form.Item
+                    name="centerID"
+                    label={
+                      <span className="text-gray-700 font-medium">
+                        <EnvironmentOutlined className="mr-2 text-purple-500" />
+                        Trung tâm dịch vụ <span className="text-red-500">*</span>
+                      </span>
+                    }
+                    rules={[
+                      { 
+                        required: true, 
+                        message: 'Vui lòng chọn trung tâm dịch vụ' 
+                      }
+                    ]}
+                  >
+                    <Select 
+                      placeholder="Chọn trung tâm dịch vụ"
+                      size="large"
+                      className="rounded-lg"
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                      options={serviceCenters.map(center => ({
+                        value: center.centerID,
+                        label: `${center.name} - ${center.address}`,
+                      }))}
+                      notFoundContent={serviceCenters.length === 0 ? 'Đang tải danh sách trung tâm...' : 'Không tìm thấy trung tâm'}
+                    />
+                  </Form.Item>
+                );
+              }}
+            </Form.Item>
           </Form>
         </div>
       </Modal>
@@ -763,6 +836,25 @@ const StaffManagement: React.FC = () => {
                         <Tag color="green" className="border-0">Hoạt động</Tag>
                       </div>
                     </div>
+                    {/* ✅ Hiển thị ServiceCenter cho Staff/Technician */}
+                    {(selectedStaff.role === 'Staff' || selectedStaff.role === 'Technician') && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <EnvironmentOutlined className="text-purple-500" />
+                        <Text type="secondary">Trung tâm dịch vụ:</Text>
+                        {selectedStaff.centerID ? (
+                          (() => {
+                            const center = serviceCenters.find(sc => sc.centerID === selectedStaff.centerID);
+                            return center ? (
+                              <Text className="font-medium">{center.name} ({center.address})</Text>
+                            ) : (
+                              <Text className="font-medium text-orange-500">ID: {selectedStaff.centerID} (Chưa tải thông tin)</Text>
+                            );
+                          })()
+                        ) : (
+                          <Text className="font-medium text-red-500">Chưa được gán</Text>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

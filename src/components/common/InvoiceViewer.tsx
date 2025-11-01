@@ -255,6 +255,17 @@ const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
                       <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
                         {invoiceData.description}
                       </div>
+                      {/* ✅ Hiển thị danh sách phụ tùng nếu có */}
+                      {invoiceData.parts && invoiceData.parts.length > 0 && (
+                        <div style={{ marginTop: '10px', fontSize: '12px' }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>Phụ tùng đã sử dụng:</div>
+                          {invoiceData.parts.map((part, index) => (
+                            <div key={index} style={{ marginLeft: '10px', marginTop: '3px', color: '#666' }}>
+                              • {part.partName} x {part.quantity}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
                       {formatCurrency(invoiceData.amount)}
