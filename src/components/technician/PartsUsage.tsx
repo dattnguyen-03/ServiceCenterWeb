@@ -11,6 +11,7 @@ import { partService, Part } from '../../services/partService';
 import { serviceChecklistService, ServiceChecklist } from '../../services/serviceChecklistService';
 import { quoteService, CreateQuoteRequestFromTechnician } from '../../services/quoteService';
 import { serviceOrderService, ServiceOrder } from '../../services/serviceOrderService';
+import { quoteRequestService, QuoteRequest } from '../../services/quoteRequestService';
 import { showSuccess, showError } from '../../utils/sweetAlert';
 
 interface SelectedPart extends Part {
@@ -27,13 +28,25 @@ const PartsUsage: React.FC = () => {
   const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
   const [loading, setLoading] = useState(false);
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
     loadParts();
     loadServiceOrders();
     loadChecklists();
+    loadQuoteRequests();
   }, []);
+  
+  const loadQuoteRequests = async () => {
+    try {
+      const requests = await quoteRequestService.getAllQuoteRequests();
+      setQuoteRequests(requests);
+    } catch (error: any) {
+      console.error('Error loading quote requests:', error);
+      // Không hiển thị error vì không quan trọng lắm
+    }
+  };
 
   const loadParts = async () => {
     try {
@@ -64,10 +77,8 @@ const PartsUsage: React.FC = () => {
       setLoading(true);
       const data = await serviceChecklistService.getMyChecklists();
       console.log('All checklists from backend:', data);
-      // Chỉ lấy những checklist có status "NeedReplace"
-      const needReplaceChecklists = data.filter(c => c.status === 'NeedReplace');
-      console.log('Filtered checklists (NeedReplace):', needReplaceChecklists);
-      setChecklists(needReplaceChecklists);
+      // Lấy tất cả checklist (không chỉ NeedReplace) để có thể báo giá cho cả gói dịch vụ
+      setChecklists(data);
     } catch (error: any) {
       console.error('Error loading checklists:', error);
       notification.error({
@@ -122,14 +133,30 @@ const PartsUsage: React.FC = () => {
 
   const handleSelectChecklist = (checklist: ServiceChecklist) => {
     setSelectedChecklist(checklist);
-    setIsModalVisible(true); // Mở modal chọn phụ tùng
+    
+    // Nếu status là "NeedReplace", mở modal chọn phụ tùng
+    // Nếu không phải "NeedReplace", vẫn có thể gửi báo giá theo gói dịch vụ (không cần chọn phụ tùng)
+    if (checklist.status === 'NeedReplace') {
+      setIsModalVisible(true); // Mở modal chọn phụ tùng
+    }
+    // Nếu không phải NeedReplace, vẫn có thể gửi báo giá (theo gói dịch vụ, không cần phụ tùng)
   };
 
   const handleSendQuoteRequest = async () => {
-    if (!selectedChecklist || selectedParts.length === 0) {
+    if (!selectedChecklist) {
       notification.warning({
         message: 'Thiếu thông tin',
-        description: 'Vui lòng chọn checklist và ít nhất một phụ tùng'
+        description: 'Vui lòng chọn checklist'
+      });
+      return;
+    }
+
+    // Nếu status là "NeedReplace", phải có ít nhất một phụ tùng
+    // Nếu không phải "NeedReplace", có thể gửi báo giá theo gói dịch vụ (không cần phụ tùng)
+    if (selectedChecklist.status === 'NeedReplace' && selectedParts.length === 0) {
+      notification.warning({
+        message: 'Thiếu thông tin',
+        description: 'Checklist cần thay thế phụ tùng, vui lòng chọn ít nhất một phụ tùng'
       });
       return;
     }
@@ -150,11 +177,16 @@ const PartsUsage: React.FC = () => {
           unitPrice: part.price,
           totalPrice: part.price * part.quantity
         })),
-        notes: `Yêu cầu báo giá từ Technician cho checklist #${selectedChecklist.checklistID} - ${selectedChecklist.itemName}`
+        notes: selectedChecklist.status === 'NeedReplace' 
+          ? `Yêu cầu báo giá từ Technician cho checklist #${selectedChecklist.checklistID} - ${selectedChecklist.itemName} (Cần thay thế phụ tùng)`
+          : `Yêu cầu báo giá từ Technician cho checklist #${selectedChecklist.checklistID} - ${selectedChecklist.itemName} (Theo gói dịch vụ đã chọn)`
       };
 
       const result = await quoteService.createQuoteFromTechnicianRequest(quoteRequest);
       showSuccess('Thành công', result);
+      
+      // Reload quote requests để cập nhật trạng thái
+      await loadQuoteRequests();
       
       // Reset form
       setSelectedParts([]);
@@ -274,11 +306,20 @@ const PartsUsage: React.FC = () => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (_: any) => (
-        <Tag color="orange" style={{ borderRadius: 12, fontWeight: 600 }}>
-          ⚠ Cần thay thế
-        </Tag>
-      ),
+      render: (status: string) => {
+        if (status === 'NeedReplace') {
+          return (
+            <Tag color="orange" style={{ borderRadius: 12, fontWeight: 600 }}>
+              ⚠ Cần thay thế
+            </Tag>
+          );
+        }
+        return (
+          <Tag color="blue" style={{ borderRadius: 12, fontWeight: 600 }}>
+            ✓ Theo gói dịch vụ
+          </Tag>
+        );
+      },
     },
     {
       title: 'Ngày tạo',
@@ -302,6 +343,14 @@ const PartsUsage: React.FC = () => {
           relatedOrder.status?.toLowerCase() === 'done'
         );
 
+        // Kiểm tra xem có quote request đã được duyệt cho checklist này chưa
+        const approvedQuoteRequest = quoteRequests.find(qr => 
+          qr.checklistID === record.checklistID && 
+          qr.status?.toLowerCase() === 'approved'
+        );
+        
+        const hasApprovedQuote = !!approvedQuoteRequest;
+
         return (
           <Space size="small">
             <Button
@@ -314,19 +363,32 @@ const PartsUsage: React.FC = () => {
             >
               Xem
             </Button>
-            {!isOrderCompleted && (
+            {!isOrderCompleted && !hasApprovedQuote && (
               <Button
                 type="primary"
-                icon={<ShoppingCartOutlined />}
-                onClick={() => handleSelectChecklist(record)}
+                icon={record.status === 'NeedReplace' ? <ShoppingCartOutlined /> : <SendOutlined />}
+                onClick={() => {
+                  if (record.status === 'NeedReplace') {
+                    handleSelectChecklist(record);
+                  } else {
+                    // Nếu không phải NeedReplace, chọn checklist và cho phép gửi báo giá ngay
+                    setSelectedChecklist(record);
+                    setSelectedParts([]); // Không cần phụ tùng
+                  }
+                }}
                 size="small"
               >
-                Chọn phụ tùng
+                {record.status === 'NeedReplace' ? 'Chọn phụ tùng' : 'Gửi báo giá'}
               </Button>
             )}
             {isOrderCompleted && (
               <Tag color="green" style={{ fontSize: '12px' }}>
                 Đã hoàn thành
+              </Tag>
+            )}
+            {hasApprovedQuote && (
+              <Tag color="blue" style={{ fontSize: '12px' }}>
+                Đã duyệt báo giá
               </Tag>
             )}
           </Space>
@@ -353,7 +415,7 @@ const PartsUsage: React.FC = () => {
           </h2>
         </div>
         <p style={{ color: '#6b7280', fontSize: '15px', margin: 0 }}>
-          Chọn checklist cần thay thế phụ tùng và gửi yêu cầu báo giá cho admin/staff
+          Chọn checklist và gửi yêu cầu báo giá cho admin/staff (có thể chọn phụ tùng nếu cần thay thế, hoặc báo giá theo gói dịch vụ)
         </p>
       </Card>
 
@@ -368,7 +430,7 @@ const PartsUsage: React.FC = () => {
             }}
           >
             <Statistic
-              title={<span style={{ color: '#64748b' }}>Checklist cần thay thế</span>}
+              title={<span style={{ color: '#64748b' }}>Tổng checklist</span>}
               value={checklists.length}
               prefix={<AppstoreOutlined style={{ color: '#3b82f6' }} />}
               valueStyle={{ fontSize: '24px', fontWeight: 700, color: '#1e40af' }}
@@ -416,7 +478,7 @@ const PartsUsage: React.FC = () => {
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AppstoreOutlined style={{ color: '#3b82f6' }} />
-            <span style={{ fontSize: '18px', fontWeight: 600 }}>Danh sách checklist cần thay thế</span>
+            <span style={{ fontSize: '18px', fontWeight: 600 }}>Danh sách checklist</span>
           </div>
         }
         style={{ 
@@ -431,37 +493,46 @@ const PartsUsage: React.FC = () => {
           rowKey="checklistID"
           loading={loading}
           pagination={{ pageSize: 5 }}
-          locale={{ emptyText: 'Không có checklist nào cần thay thế phụ tùng' }}
+          locale={{ emptyText: 'Không có checklist nào' }}
         />
       </Card>
 
-      {/* Selected Parts Table */}
-      {selectedParts.length > 0 && (
+      {/* Selected Checklist Info - Hiển thị khi đã chọn checklist */}
+      {selectedChecklist && (
         <Card 
           title={
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <ShoppingCartOutlined style={{ color: '#10b981' }} />
-                <span style={{ fontSize: '18px', fontWeight: 600 }}>Phụ tùng đã chọn</span>
+                {selectedChecklist.status === 'NeedReplace' ? (
+                  <ShoppingCartOutlined style={{ color: '#10b981' }} />
+                ) : (
+                  <SendOutlined style={{ color: '#3b82f6' }} />
+                )}
+                <span style={{ fontSize: '18px', fontWeight: 600 }}>
+                  {selectedChecklist.status === 'NeedReplace' ? 'Phụ tùng đã chọn' : 'Thông tin báo giá'}
+                </span>
               </div>
               {selectedChecklist && (
                 <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: 400 }}>
                   Checklist #{selectedChecklist.checklistID} - {selectedChecklist.itemName} | 
                   Khách hàng: <strong>{selectedChecklist.customerName}</strong> | 
-                  Xe: <strong>{selectedChecklist.vehicleModel}</strong>
+                  Xe: <strong>{selectedChecklist.vehicleModel}</strong> | 
+                  Trạng thái: <strong>{selectedChecklist.status === 'NeedReplace' ? 'Cần thay thế phụ tùng' : 'Theo gói dịch vụ'}</strong>
                 </div>
               )}
             </div>
           }
           extra={
             <Space>
-              <Button 
-                icon={<PlusOutlined />} 
-                onClick={() => setIsModalVisible(true)}
-                disabled={!selectedChecklist}
-              >
-                Thêm phụ tùng
-              </Button>
+              {selectedChecklist?.status === 'NeedReplace' && (
+                <Button 
+                  icon={<PlusOutlined />} 
+                  onClick={() => setIsModalVisible(true)}
+                  disabled={!selectedChecklist}
+                >
+                  Thêm phụ tùng
+                </Button>
+              )}
               <Button 
                 type="primary"
                 icon={<SendOutlined />}
@@ -478,17 +549,34 @@ const PartsUsage: React.FC = () => {
             marginBottom: '24px'
           }}
         >
-          <Table
-            columns={columns}
-            dataSource={selectedParts}
-            rowKey="partID"
-            pagination={false}
-            footer={() => (
-              <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
-                Tổng cộng: {partService.formatPrice(calculateTotal())}
-              </div>
-            )}
-          />
+          {selectedChecklist?.status === 'NeedReplace' && selectedParts.length > 0 ? (
+            <Table
+              columns={columns}
+              dataSource={selectedParts}
+              rowKey="partID"
+              pagination={false}
+              footer={() => (
+                <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
+                  Tổng cộng: {partService.formatPrice(calculateTotal())}
+                </div>
+              )}
+            />
+          ) : selectedChecklist?.status !== 'NeedReplace' ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+              <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+                Checklist này sẽ được báo giá theo <strong>gói dịch vụ</strong> mà khách hàng đã chọn ban đầu.
+              </p>
+              <p style={{ fontSize: '14px', color: '#9ca3af' }}>
+                Nhấn "Gửi yêu cầu báo giá" để gửi yêu cầu đến Admin/Staff.
+              </p>
+            </div>
+          ) : (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+              <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+                Vui lòng chọn phụ tùng cần thay thế.
+              </p>
+            </div>
+          )}
         </Card>
       )}
 

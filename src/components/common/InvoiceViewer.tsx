@@ -241,37 +241,99 @@ const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
               }}>
                 Chi tiết dịch vụ
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', border: '1px solid #ddd' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f5f5f5' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Mô tả</th>
-                    <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>Thành tiền</th>
+                  <tr style={{ backgroundColor: '#1890ff', color: '#fff' }}>
+                    <th style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>STT</th>
+                    <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd', fontWeight: 'bold' }}>Tên hàng hóa, dịch vụ</th>
+                    <th style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn vị tính</th>
+                    <th style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Số lượng</th>
+                    <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn giá</th>
+                    <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                      Thành tiền
+                      <div style={{ fontSize: '11px', fontWeight: 'normal', marginTop: '3px' }}>
+                        (Thành tiền = Số lượng × Đơn giá)
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
+                  {/* Dịch vụ */}
                   <tr>
+                    <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>1</td>
                     <td style={{ padding: '12px', border: '1px solid #ddd' }}>
                       <div style={{ fontWeight: 'bold' }}>{invoiceData.serviceType}</div>
                       <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
                         {invoiceData.description}
                       </div>
-                      {/* ✅ Hiển thị danh sách phụ tùng nếu có */}
-                      {invoiceData.parts && invoiceData.parts.length > 0 && (
-                        <div style={{ marginTop: '10px', fontSize: '12px' }}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>Phụ tùng đã sử dụng:</div>
-                          {invoiceData.parts.map((part, index) => (
-                            <div key={index} style={{ marginLeft: '10px', marginTop: '3px', color: '#666' }}>
-                              • {part.partName} x {part.quantity}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>Gói</td>
+                    <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>1</td>
+                    <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>
+                      {invoiceData.parts && invoiceData.parts.length > 0 
+                        ? formatCurrency(invoiceData.amount - (invoiceData.parts.reduce((sum, p) => sum + (p.totalPrice || (p.unitPrice || 0) * p.quantity), 0)))
+                        : formatCurrency(invoiceData.amount)
+                      }
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                      {invoiceData.parts && invoiceData.parts.length > 0 
+                        ? formatCurrency(invoiceData.amount - (invoiceData.parts.reduce((sum, p) => sum + (p.totalPrice || (p.unitPrice || 0) * p.quantity), 0)))
+                        : formatCurrency(invoiceData.amount)
+                      }
+                    </td>
+                  </tr>
+                  
+                  {/* Phụ tùng đã sử dụng */}
+                  {invoiceData.parts && invoiceData.parts.length > 0 && invoiceData.parts.map((part, index) => (
+                    <tr key={index}>
+                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 2}</td>
+                      <td style={{ padding: '12px', border: '1px solid #ddd' }}>
+                        {part.partName}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>Chiếc</td>
+                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>
+                        {part.quantity}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>
+                        {part.unitPrice ? formatCurrency(part.unitPrice) : '-'}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                        {part.totalPrice 
+                          ? formatCurrency(part.totalPrice)
+                          : part.unitPrice 
+                            ? formatCurrency(part.unitPrice * part.quantity)
+                            : '-'
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ backgroundColor: '#f5f5f5' }}>
+                    <td 
+                      colSpan={5} 
+                      style={{ 
+                        padding: '15px 12px', 
+                        textAlign: 'right', 
+                        border: '1px solid #ddd',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Tổng cộng tiền thanh toán:
+                    </td>
+                    <td style={{ 
+                      padding: '15px 12px', 
+                      textAlign: 'right', 
+                      border: '1px solid #ddd',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      color: '#ff4d4f'
+                    }}>
                       {formatCurrency(invoiceData.amount)}
                     </td>
                   </tr>
-                </tbody>
+                </tfoot>
               </table>
             </div>
 
@@ -302,14 +364,6 @@ const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
                       </td>
                     </tr>
                   )}
-                  <tr style={{ borderTop: '2px solid #1890ff' }}>
-                    <td style={{ padding: '12px 0', textAlign: 'right', fontSize: '16px', fontWeight: 'bold' }}>
-                      Tổng cộng:
-                    </td>
-                    <td style={{ padding: '12px 0', textAlign: 'right', fontSize: '20px', color: '#1890ff', fontWeight: 'bold' }}>
-                      {formatCurrency(invoiceData.amount)}
-                    </td>
-                  </tr>
                 </tbody>
               </table>
             </div>

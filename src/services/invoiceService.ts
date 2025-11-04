@@ -2,6 +2,8 @@ import { paymentService } from './paymentService';
 import { appointmentService, Appointment } from './appointmentService';
 import { partUsageService } from './partUsageService';
 import { serviceOrderService } from './serviceOrderService';
+import { partService } from './partService';
+import { quoteService } from './quoteService';
 
 export interface InvoicePart {
   partName: string;
@@ -81,15 +83,41 @@ class InvoiceService {
       // Tạo invoice number
       const invoiceNumber = `INV-${payment.paymentID.toString().padStart(6, '0')}-${new Date(payment.completedAt || payment.createdAt).getFullYear()}`;
 
-      // ✅ Lấy danh sách phụ tùng đã sử dụng từ PartUsage
+      // ✅ Lấy danh sách phụ tùng từ Quote hoặc PartUsage
       let parts: InvoicePart[] = [];
       let orderIDForParts = payment.orderID;
+      const targetAppointmentID = payment.appointmentID || appointment?.appointmentID;
       
       console.log('[Invoice] Payment data:', { 
         paymentID: payment.paymentID, 
         orderID: payment.orderID, 
-        appointmentID: payment.appointmentID 
+        appointmentID: payment.appointmentID,
+        targetAppointmentID
       });
+      
+      // Ưu tiên 1: Lấy parts từ Quote (nếu có) - Quote có thông tin đầy đủ nhất
+      if (targetAppointmentID) {
+        try {
+          console.log('[Invoice] Trying to fetch Quote for appointmentID:', targetAppointmentID);
+          const allQuotes = await quoteService.getAllQuotes();
+          const quote = allQuotes.find(q => q.appointmentID === targetAppointmentID && (q.status === 'approved' || q.status === 'pending'));
+          
+          if (quote && quote.parts && quote.parts.length > 0) {
+            console.log('[Invoice] ✅ Found Quote with parts:', quote.quoteID, 'status:', quote.status, 'parts count:', quote.parts.length);
+            parts = quote.parts.map(qp => ({
+              partName: qp.partName,
+              quantity: qp.quantity,
+              unitPrice: qp.unitPrice,
+              totalPrice: qp.totalPrice,
+            }));
+            console.log('[Invoice] ✅ Mapped parts from Quote:', parts);
+          } else {
+            console.log('[Invoice] No Quote found with parts for appointmentID:', targetAppointmentID);
+          }
+        } catch (quoteErr: any) {
+          console.warn('[Invoice] Could not fetch Quote for parts:', quoteErr.message);
+        }
+      }
       
       // Nếu không có orderID trong payment, thử lấy từ ServiceOrder qua appointmentID
       if (!orderIDForParts) {
@@ -121,22 +149,75 @@ class InvoiceService {
         console.log('[Invoice] ✅ Using orderID from payment:', orderIDForParts);
       }
       
-      // Lấy PartUsage nếu có orderID
-      if (orderIDForParts) {
+      // Ưu tiên 2: Nếu không có Quote, lấy từ PartUsage
+      if (parts.length === 0 && orderIDForParts) {
         try {
           console.log('[Invoice] Fetching part usage for orderID:', orderIDForParts);
           const allPartUsage = await partUsageService.getAllPartUsage();
           console.log('[Invoice] Total part usage records:', allPartUsage.length);
           
-          const orderPartUsage = allPartUsage.filter(pu => pu.orderID === orderIDForParts);
+          // Filter PartUsage - kiểm tra cả orderID và OrderID (nếu có)
+          const orderPartUsage = allPartUsage.filter(pu => {
+            const puOrderID = (pu as any).orderID || (pu as any).OrderID;
+            return puOrderID === orderIDForParts;
+          });
           console.log('[Invoice] Part usage for orderID', orderIDForParts, ':', orderPartUsage.length, 'records');
+          console.log('[Invoice] Filtered part usage details:', orderPartUsage);
           
-          parts = orderPartUsage.map(pu => ({
-            partName: pu.partName,
-            quantity: pu.quantityUsed,
-            // unitPrice và totalPrice có thể lấy từ Part service nếu cần
-          }));
-          console.log('[Invoice] ✅ Mapped parts for invoice:', parts);
+          if (orderPartUsage.length === 0) {
+            console.warn('[Invoice] ⚠️ No part usage found for orderID:', orderIDForParts);
+            console.warn('[Invoice] All part usage orderIDs:', allPartUsage.map(pu => ({
+              usageID: pu.usageID,
+              orderID: (pu as any).orderID || (pu as any).OrderID,
+              partID: pu.partID,
+              partName: pu.partName
+            })));
+          }
+          
+          // Lấy danh sách Part để lấy giá
+          let allParts: any[] = [];
+          try {
+            allParts = await partService.getAllParts();
+            console.log('[Invoice] Total parts found:', allParts.length);
+            console.log('[Invoice] Sample parts:', allParts.slice(0, 3).map(p => ({
+              partID: p.partID,
+              name: p.name,
+              price: p.price
+            })));
+          } catch (partErr: any) {
+            console.warn('[Invoice] Could not fetch parts for pricing:', partErr.message);
+          }
+          
+          // Map PartUsage với giá từ Part service
+          parts = orderPartUsage.map(pu => {
+            // Tìm Part tương ứng để lấy giá - kiểm tra cả partID
+            const part = pu.partID ? allParts.find(p => p.partID === pu.partID) : null;
+            
+            if (!part && pu.partID) {
+              console.warn('[Invoice] ⚠️ Part not found for partID:', pu.partID, 'partName:', pu.partName);
+            }
+            
+            const unitPrice = part?.price || part?.unitPrice || 0;
+            const totalPrice = unitPrice * pu.quantityUsed;
+            
+            console.log('[Invoice] Part mapping result:', {
+              partID: pu.partID,
+              partName: pu.partName,
+              quantity: pu.quantityUsed,
+              unitPrice,
+              totalPrice,
+              foundPart: !!part,
+              partPrice: part?.price
+            });
+            
+            return {
+              partName: pu.partName,
+              quantity: pu.quantityUsed,
+              unitPrice: unitPrice > 0 ? unitPrice : undefined,
+              totalPrice: totalPrice > 0 ? totalPrice : undefined,
+            };
+          });
+          console.log('[Invoice] ✅ Final mapped parts for invoice:', parts);
         } catch (err: any) {
           console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
           // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị
@@ -205,15 +286,41 @@ class InvoiceService {
 
       const invoiceNumber = `INV-${payment.paymentID.toString().padStart(6, '0')}-${new Date(payment.completedAt || payment.createdAt).getFullYear()}`;
 
-      // ✅ Lấy danh sách phụ tùng đã sử dụng từ PartUsage
+      // ✅ Lấy danh sách phụ tùng từ Quote hoặc PartUsage
       let parts: InvoicePart[] = [];
       let orderIDForParts = payment.orderID;
+      const targetAppointmentID = appointmentID || payment.appointmentID;
       
       console.log('[Invoice] Payment data:', { 
         paymentID: payment.paymentID, 
         orderID: payment.orderID, 
-        appointmentID: payment.appointmentID || appointmentID 
+        appointmentID: payment.appointmentID || appointmentID,
+        targetAppointmentID
       });
+      
+      // Ưu tiên 1: Lấy parts từ Quote (nếu có) - Quote có thông tin đầy đủ nhất
+      if (targetAppointmentID) {
+        try {
+          console.log('[Invoice] Trying to fetch Quote for appointmentID:', targetAppointmentID);
+          const allQuotes = await quoteService.getAllQuotes();
+          const quote = allQuotes.find(q => q.appointmentID === targetAppointmentID && (q.status === 'approved' || q.status === 'pending'));
+          
+          if (quote && quote.parts && quote.parts.length > 0) {
+            console.log('[Invoice] ✅ Found Quote with parts:', quote.quoteID, 'status:', quote.status, 'parts count:', quote.parts.length);
+            parts = quote.parts.map(qp => ({
+              partName: qp.partName,
+              quantity: qp.quantity,
+              unitPrice: qp.unitPrice,
+              totalPrice: qp.totalPrice,
+            }));
+            console.log('[Invoice] ✅ Mapped parts from Quote:', parts);
+          } else {
+            console.log('[Invoice] No Quote found with parts for appointmentID:', targetAppointmentID);
+          }
+        } catch (quoteErr: any) {
+          console.warn('[Invoice] Could not fetch Quote for parts:', quoteErr.message);
+        }
+      }
       
       // Nếu không có orderID trong payment, thử lấy từ ServiceOrder qua appointmentID (từ tham số)
       if (!orderIDForParts) {
@@ -246,8 +353,8 @@ class InvoiceService {
         console.log('[Invoice] ✅ Using orderID from payment:', orderIDForParts);
       }
       
-      // Lấy PartUsage nếu có orderID
-      if (orderIDForParts) {
+      // Ưu tiên 2: Nếu không có Quote, lấy từ PartUsage
+      if (parts.length === 0 && orderIDForParts) {
         try {
           console.log('[Invoice] Fetching part usage for orderID:', orderIDForParts);
           const allPartUsage = await partUsageService.getAllPartUsage();
@@ -255,19 +362,72 @@ class InvoiceService {
           console.log('[Invoice] Part usage orders:', allPartUsage.map(pu => ({ 
             usageID: pu.usageID, 
             orderID: pu.orderID, 
+            partID: pu.partID,
             partName: pu.partName 
           })));
           
-          const orderPartUsage = allPartUsage.filter(pu => pu.orderID === orderIDForParts);
+          // Filter PartUsage - kiểm tra cả orderID và OrderID (nếu có)
+          const orderPartUsage = allPartUsage.filter(pu => {
+            const puOrderID = (pu as any).orderID || (pu as any).OrderID;
+            return puOrderID === orderIDForParts;
+          });
           console.log('[Invoice] Part usage for orderID', orderIDForParts, ':', orderPartUsage.length, 'records');
-          console.log('[Invoice] Part usage details:', orderPartUsage);
+          console.log('[Invoice] Filtered part usage details:', orderPartUsage);
           
-          parts = orderPartUsage.map(pu => ({
-            partName: pu.partName,
-            quantity: pu.quantityUsed,
-            // unitPrice và totalPrice có thể lấy từ Part service nếu cần
-          }));
-          console.log('[Invoice] ✅ Mapped parts for invoice:', parts);
+          if (orderPartUsage.length === 0) {
+            console.warn('[Invoice] ⚠️ No part usage found for orderID:', orderIDForParts);
+            console.warn('[Invoice] All part usage orderIDs:', allPartUsage.map(pu => ({
+              usageID: pu.usageID,
+              orderID: (pu as any).orderID || (pu as any).OrderID,
+              partID: pu.partID,
+              partName: pu.partName
+            })));
+          }
+          
+          // Lấy danh sách Part để lấy giá
+          let allParts: any[] = [];
+          try {
+            allParts = await partService.getAllParts();
+            console.log('[Invoice] Total parts found:', allParts.length);
+            console.log('[Invoice] Sample parts:', allParts.slice(0, 3).map(p => ({
+              partID: p.partID,
+              name: p.name,
+              price: p.price
+            })));
+          } catch (partErr: any) {
+            console.warn('[Invoice] Could not fetch parts for pricing:', partErr.message);
+          }
+          
+          // Map PartUsage với giá từ Part service
+          parts = orderPartUsage.map(pu => {
+            // Tìm Part tương ứng để lấy giá - kiểm tra cả partID
+            const part = pu.partID ? allParts.find(p => p.partID === pu.partID) : null;
+            
+            if (!part && pu.partID) {
+              console.warn('[Invoice] ⚠️ Part not found for partID:', pu.partID, 'partName:', pu.partName);
+            }
+            
+            const unitPrice = part?.price || part?.unitPrice || 0;
+            const totalPrice = unitPrice * pu.quantityUsed;
+            
+            console.log('[Invoice] Part mapping result:', {
+              partID: pu.partID,
+              partName: pu.partName,
+              quantity: pu.quantityUsed,
+              unitPrice,
+              totalPrice,
+              foundPart: !!part,
+              partPrice: part?.price
+            });
+            
+            return {
+              partName: pu.partName,
+              quantity: pu.quantityUsed,
+              unitPrice: unitPrice > 0 ? unitPrice : undefined,
+              totalPrice: totalPrice > 0 ? totalPrice : undefined,
+            };
+          });
+          console.log('[Invoice] ✅ Final mapped parts for invoice:', parts);
         } catch (err: any) {
           console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
           // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị
