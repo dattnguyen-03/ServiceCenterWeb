@@ -47,10 +47,10 @@ const PaymentPage: React.FC = () => {
 
   const getStatusTag = (status: string) => {
     const statusMap: Record<string, { color: string; text: string }> = {
-      completed: { color: 'green', text: '✅ Đã thanh toán' },
-      pending: { color: 'orange', text: '⏳ Chờ thanh toán' },
-      failed: { color: 'red', text: '❌ Thất bại' },
-      cancelled: { color: 'default', text: '❌ Đã hủy' }
+      completed: { color: 'green', text: ' Đã thanh toán' },
+      pending: { color: 'orange', text: ' Chờ thanh toán' },
+      failed: { color: 'red', text: ' Thất bại' },
+      cancelled: { color: 'default', text: ' Đã hủy' }
     };
     
     const statusInfo = statusMap[status] || { color: 'default', text: status };
@@ -82,7 +82,7 @@ const PaymentPage: React.FC = () => {
               bodyStyle={{ padding: 24 }}
             >
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1f2937', marginBottom: 24 }}>
-                💰 Tổng quan chi phí
+                 Tổng quan chi phí
               </h3>
               
               <div style={{
@@ -92,7 +92,7 @@ const PaymentPage: React.FC = () => {
                 marginBottom: 16,
                 border: '2px solid #fda4af'
               }}>
-                <div style={{ fontSize: 12, color: '#be185d', marginBottom: 4, fontWeight: 600 }}>✅ Đã thanh toán</div>
+                <div style={{ fontSize: 12, color: '#be185d', marginBottom: 4, fontWeight: 600 }}>Đã thanh toán</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#be185d' }}>
                   {totalPaid.toLocaleString('vi-VN')} VNĐ
                 </div>
@@ -104,7 +104,7 @@ const PaymentPage: React.FC = () => {
                 borderRadius: 12,
                 border: '2px solid #fbbd23'
               }}>
-                <div style={{ fontSize: 12, color: '#d97706', marginBottom: 4, fontWeight: 600 }}>⏳ Chờ thanh toán</div>
+                <div style={{ fontSize: 12, color: '#d97706', marginBottom: 4, fontWeight: 600 }}>Chờ thanh toán</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#d97706' }}>
                   {totalPending.toLocaleString('vi-VN')} VNĐ
                 </div>
@@ -124,7 +124,7 @@ const PaymentPage: React.FC = () => {
             >
               <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1f2937', margin: 0 }}>
-                  📋 Lịch sử hóa đơn
+                  Lịch sử hóa đơn
                 </h3>
                 <Space style={{ gap: 12 }}>
                   <Select 
@@ -185,7 +185,7 @@ const PaymentPage: React.FC = () => {
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fafbfc' : '#fff'}
                           >
                             <td style={{ padding: '12px 16px', fontWeight: 700, color: '#2563eb' }}>#{payment.paymentID}</td>
-                            <td style={{ padding: '12px 16px', color: '#4b5563' }}>📅 {formatDate(payment.createdAt)}</td>
+                            <td style={{ padding: '12px 16px', color: '#4b5563' }}>{formatDate(payment.createdAt)}</td>
                             <td style={{ padding: '12px 16px', color: '#4b5563' }}>{payment.description}</td>
                             <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#1f2937' }}>
                               {paymentService.formatPrice(payment.amount)}

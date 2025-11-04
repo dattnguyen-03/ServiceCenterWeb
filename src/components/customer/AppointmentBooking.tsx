@@ -71,7 +71,7 @@ const AppointmentBooking: React.FC = () => {
         <div className="header-section mb-8">
           <div className="flex flex-col gap-2 mb-6">
             <Title level={2} className="!mb-0 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              🗓️ Lịch Hẹn Dịch Vụ Của Tôi
+              Lịch Hẹn Dịch Vụ Của Tôi
             </Title>
             <Text className="text-gray-600 text-base">
               Quản lý và theo dõi các cuộc hẹn dịch vụ của bạn
@@ -84,7 +84,7 @@ const AppointmentBooking: React.FC = () => {
               <div className="flex-1 w-full md:w-auto">
                 <Input.Search
                   allowClear
-                  placeholder="🔍 Tìm theo xe, trung tâm, dịch vụ..."
+                  placeholder=" Tìm theo xe, trung tâm, dịch vụ..."
                   value={q}
                   onChange={e => setQ(e.target.value)}
                   className="w-full"
@@ -297,7 +297,7 @@ const AppointmentBooking: React.FC = () => {
       <Modal
         title={
           <div style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
-            📅 Chi tiết lịch hẹn
+             Chi tiết lịch hẹn
           </div>
         }
         open={detailModalVisible}
@@ -338,7 +338,7 @@ const AppointmentBooking: React.FC = () => {
               borderRadius: 10,
               border: '1px solid #e5e7eb'
             }}>
-              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>🚗 XE</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}> XE</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#1f2937' }}>
                 {selectedAppointment.vehicleModel}
               </div>
@@ -351,7 +351,7 @@ const AppointmentBooking: React.FC = () => {
               borderRadius: 10,
               border: '1px solid #e5e7eb'
             }}>
-              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>📍 TRUNG TÂM DỊch VỤ</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}> TRUNG TÂM DỊch VỤ</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#1f2937' }}>
                 {selectedAppointment.centerName}
               </div>
@@ -365,7 +365,7 @@ const AppointmentBooking: React.FC = () => {
                 borderRadius: 10,
                 border: '1px solid #e5e7eb'
               }}>
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>📅 NGÀY</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}> NGÀY</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>
                   {dayjs(selectedAppointment.requestedDate).format('DD/MM/YYYY')}
                 </div>
@@ -377,7 +377,7 @@ const AppointmentBooking: React.FC = () => {
                 borderRadius: 10,
                 border: '1px solid #e5e7eb'
               }}>
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>⏰ GIỜ</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, fontWeight: 600 }}> GIỜ</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937' }}>
                   {dayjs(selectedAppointment.requestedDate).format('HH:mm')}
                 </div>
@@ -391,7 +391,7 @@ const AppointmentBooking: React.FC = () => {
               borderRadius: 10,
               border: '1px solid #bfdbfe'
             }}>
-              <div style={{ fontSize: 12, color: '#0c4a6e', marginBottom: 6, fontWeight: 600 }}>⚙️ LOẠI DỊCH VỤ</div>
+              <div style={{ fontSize: 12, color: '#0c4a6e', marginBottom: 6, fontWeight: 600 }}> LOẠI DỊCH VỤ</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#0284c7' }}>
                 {selectedAppointment.serviceType}
               </div>

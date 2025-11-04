@@ -91,13 +91,39 @@ class PartService {
    */
   async updatePart(data: Part): Promise<ApiResponse<Part>> {
     try {
-      const response = await httpClient.put<Part>('/EditPartAPI', data);
+      const response = await httpClient.put<any>('/EditPartAPI', data);
       
-      if (response && response.success) {
-        return response;
+      // Backend trả về {message, part} hoặc {success, data, message}
+      if (response) {
+        // Nếu có response.success (format ApiResponse)
+        if (response.success && response.data) {
+          return {
+            success: true,
+            data: response.data,
+            message: response.message || 'Cập nhật phụ tùng thành công'
+          };
+        }
+        
+        // Nếu có response.part (format backend)
+        if (response.part) {
+          return {
+            success: true,
+            data: response.part,
+            message: response.message || 'Cập nhật phụ tùng thành công'
+          };
+        }
+        
+        // Nếu response là Part trực tiếp
+        if (response.partID) {
+          return {
+            success: true,
+            data: response as Part,
+            message: 'Cập nhật phụ tùng thành công'
+          };
+        }
       }
       
-      throw new Error(response?.message || 'Không thể cập nhật phụ tùng');
+      throw new Error('Không thể cập nhật phụ tùng: Response không hợp lệ');
     } catch (error: any) {
       console.error('Error updating part:', error);
       throw new Error(error.message || 'Lỗi khi cập nhật phụ tùng');

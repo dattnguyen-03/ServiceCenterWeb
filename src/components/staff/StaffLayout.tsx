@@ -75,11 +75,11 @@ const StaffLayout: React.FC = () => {
       icon: <DatabaseOutlined />,
       label: <Link to="/staff/inventory">Tồn kho</Link>,
     },
-    {
-      key: '/staff/progress',
-      icon: <ClockCircleOutlined />,
-      label: <Link to="/staff/progress">Tiến độ dịch vụ</Link>,
-    },
+    // {
+    //   key: '/staff/progress',
+    //   icon: <ClockCircleOutlined />,
+    //   label: <Link to="/staff/progress">Tiến độ dịch vụ</Link>,
+    // },
     // {
     //   key: '/staff/invoices',
     //   icon: <DollarOutlined />,

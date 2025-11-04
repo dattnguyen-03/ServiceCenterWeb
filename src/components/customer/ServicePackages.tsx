@@ -424,7 +424,7 @@ const ServicePackages: React.FC = () => {
           >
             <div style={{ marginBottom: 24 }}>
               <Title level={4} style={{ marginBottom: 12, fontWeight: 800, color: '#1f2937' }}>
-                🚗 Chọn xe của bạn
+                 Chọn xe của bạn
               </Title>
               <Select
                 showSearch
@@ -443,7 +443,7 @@ const ServicePackages: React.FC = () => {
             </div>
             <div>
               <Title level={4} style={{ marginBottom: 12, fontWeight: 800, color: '#1f2937' }}>
-                📅 Chọn ngày giờ mong muốn
+                Chọn ngày giờ mong muốn
               </Title>
               <DatePicker
                 showTime
@@ -507,10 +507,10 @@ const ServicePackages: React.FC = () => {
                     {selectedCenter.name}
                   </div>
                   <div style={{ fontSize: 14, marginTop: 8, opacity: 0.95 }}>
-                    📍 {selectedCenter.address}
+                     {selectedCenter.address}
                   </div>
                   <div style={{ fontSize: 14, marginTop: 6, opacity: 0.95 }}>
-                    ☎️ {selectedCenter.phone}
+                     {selectedCenter.phone}
                   </div>
                 </div>
               </div>
