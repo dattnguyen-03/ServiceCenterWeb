@@ -9,6 +9,7 @@ import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCi
 import Swal from 'sweetalert2';
 import { httpClient } from '../../services/httpClient';
 import InvoiceViewer from '../common/InvoiceViewer';
+import { quoteService, Quote } from '../../services/quoteService';
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,30 @@ const AppointmentConfirmation: React.FC = () => {
   const [selectedPaymentID, setSelectedPaymentID] = useState<number | undefined>(undefined);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedAppointmentForDetail, setSelectedAppointmentForDetail] = useState<Appointment | null>(null);
+  const [quoteDetails, setQuoteDetails] = useState<Quote | null>(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
+
+  // Load quote details khi modal mở
+  useEffect(() => {
+    const loadQuoteDetails = async () => {
+      if (detailModalVisible && selectedAppointmentForDetail && !quoteDetails && !loadingQuote) {
+        setLoadingQuote(true);
+        try {
+          const quotes = await quoteService.getAllQuotes();
+          const quote = quotes.find(q => q.appointmentID === selectedAppointmentForDetail.appointmentID);
+          if (quote) {
+            setQuoteDetails(quote);
+          }
+        } catch (error: any) {
+          console.error('Error loading quote:', error);
+        } finally {
+          setLoadingQuote(false);
+        }
+      }
+    };
+    
+    loadQuoteDetails();
+  }, [detailModalVisible, selectedAppointmentForDetail?.appointmentID]);
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -521,7 +546,6 @@ const AppointmentConfirmation: React.FC = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Dịch vụ</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày hẹn</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Thanh toán</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
               </tr>
             </thead>
@@ -808,9 +832,10 @@ const AppointmentConfirmation: React.FC = () => {
         onCancel={() => {
           setDetailModalVisible(false);
           setSelectedAppointmentForDetail(null);
+          setQuoteDetails(null);
         }}
         footer={null}
-        width={700}
+        width={900}
       >
         {selectedAppointmentForDetail && (
           <div>
@@ -856,36 +881,94 @@ const AppointmentConfirmation: React.FC = () => {
                   {selectedAppointmentForDetail.status}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Thanh toán" span={2}>
-                {selectedAppointmentForDetail.paymentMethod ? (
-                  <div className="space-y-2">
-                    <div>
-                      <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'}>
-                        {selectedAppointmentForDetail.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
-                      </Tag>
-                      {selectedAppointmentForDetail.paymentStatus && (
-                        <Tag 
-                          color={
-                            selectedAppointmentForDetail.paymentStatus === 'completed' ? 'green' :
-                            selectedAppointmentForDetail.paymentStatus === 'pending' ? 'orange' : 'red'
-                          }
-                          className="ml-2"
-                        >
-                          {selectedAppointmentForDetail.paymentStatus}
-                        </Tag>
-                      )}
-                    </div>
-                    {selectedAppointmentForDetail.paymentAmount && (
-                      <Text strong className="text-lg text-green-600">
-                        ₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}
-                      </Text>
-                    )}
+              
+            </Descriptions>
+
+            {/* Chi tiết tiền bạc - Dịch vụ và Phụ tùng */}
+            {selectedAppointmentForDetail.paymentStatus === 'completed' && selectedAppointmentForDetail.paymentAmount && (
+              <>
+                <Divider>Chi tiết thanh toán</Divider>
+                {loadingQuote ? (
+                  <div className="flex justify-center py-4">
+                    <Spin />
+                  </div>
+                ) : quoteDetails && quoteDetails.parts && quoteDetails.parts.length > 0 ? (
+                  <div className="mb-4">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', border: '1px solid #ddd', marginBottom: '16px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#1890ff', color: '#fff' }}>
+                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>STT</th>
+                          <th style={{ padding: '10px', textAlign: 'left', border: '1px solid #ddd', fontWeight: 'bold' }}>Tên hàng hóa, dịch vụ</th>
+                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn vị</th>
+                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Số lượng</th>
+                          <th style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn giá</th>
+                          <th style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>Thành tiền</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Dịch vụ */}
+                        {(() => {
+                          const partsTotal = quoteDetails.parts.reduce((sum, p) => sum + p.totalPrice, 0);
+                          const serviceAmount = quoteDetails.finalAmount - partsTotal;
+                          return (
+                            <tr style={{ backgroundColor: '#fafafa' }}>
+                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>1</td>
+                              <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                                {quoteDetails.serviceType}
+                              </td>
+                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>Gói</td>
+                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>1</td>
+                              <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#1890ff' }}>
+                                ₫{serviceAmount.toLocaleString('vi-VN')}
+                              </td>
+                              <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#1890ff' }}>
+                                ₫{serviceAmount.toLocaleString('vi-VN')}
+                              </td>
+                            </tr>
+                          );
+                        })()}
+                        
+                        {/* Phụ tùng */}
+                        {quoteDetails.parts.map((part, index) => (
+                          <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa' }}>
+                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 2}</td>
+                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: '500' }}>
+                              {part.partName}
+                            </td>
+                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>Chiếc</td>
+                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                              {part.quantity}
+                            </td>
+                            <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#52c41a' }}>
+                              ₫{part.unitPrice.toLocaleString('vi-VN')}
+                            </td>
+                            <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#52c41a' }}>
+                              ₫{part.totalPrice.toLocaleString('vi-VN')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ backgroundColor: '#f0f9ff', borderTop: '2px solid #1890ff' }}>
+                          <td colSpan={5} style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontSize: '15px', fontWeight: 'bold' }}>
+                            Tổng cộng:
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontSize: '16px', fontWeight: 'bold', color: '#ff4d4f' }}>
+                            ₫{quoteDetails.finalAmount.toLocaleString('vi-VN')}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
                 ) : (
-                  <Text type="secondary">Chưa thanh toán</Text>
+                  <div className="mb-4 p-3 bg-gray-50 rounded">
+                    <Text type="secondary" className="text-sm">
+                      Chưa có thông tin chi tiết báo giá. Tổng tiền: <Text strong>₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}</Text>
+                    </Text>
+                  </div>
                 )}
-              </Descriptions.Item>
-            </Descriptions>
+              </>
+            )}
 
             <Divider />
 

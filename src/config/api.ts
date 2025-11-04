@@ -107,6 +107,9 @@ export const API_CONFIG = {
       EDIT: '/EditMessageAPI',
       DELETE_BOX: '/DeleteMessageBoxAPI',
     },
+    SERVICE_HISTORY: {
+      GET: '/ViewServiceHistoryAPI/GetServiceHistory',
+    },
   }
 };
 export const HTTP_STATUS = {

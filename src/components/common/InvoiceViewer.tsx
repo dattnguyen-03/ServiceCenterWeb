@@ -351,7 +351,7 @@ const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
                       Phương thức thanh toán:
                     </td>
                     <td style={{ padding: '8px 0', fontWeight: 'bold', textAlign: 'right' }}>
-                      {invoiceData.paymentMethod === 'online' ? '💳 Thanh toán online' : '💵 Thanh toán tiền mặt'}
+                      {invoiceData.paymentMethod === 'online' ? ' Thanh toán online' : ' Thanh toán tiền mặt'}
                     </td>
                   </tr>
                   {invoiceData.transactionCode && (

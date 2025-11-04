@@ -137,7 +137,7 @@ const PaymentPage: React.FC = () => {
                     <Option value="pending">Chờ thanh toán</Option>
                     <Option value="failed">Thất bại</Option>
                   </Select>
-                  <Button 
+                  {/* <Button 
                     icon={<DownloadOutlined />}
                     size="large"
                     style={{
@@ -146,7 +146,7 @@ const PaymentPage: React.FC = () => {
                     }}
                   >
                     Xuất Excel
-                  </Button>
+                  </Button> */}
                 </Space>
               </div>
 

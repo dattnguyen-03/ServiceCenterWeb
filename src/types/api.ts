@@ -175,6 +175,37 @@ export interface AppointmentSummary {
 }
 
 // Service Types
+// Service History từ API
+export interface ServiceHistoryItem {
+  vehicleID: number;
+  vehicleModel: string;
+  licensePlate: string;
+  orderID: number;
+  serviceType: string;
+  requestedDate: string;
+  appointmentStatus: string;
+  technicianName: string;
+  centerName: string;
+  centerAddress: string;
+  checklistItems: ServiceChecklistItem[];
+  partUsages: PartUsageItem[];
+  totalAmount?: number;
+  paymentStatus?: string;
+}
+
+export interface ServiceChecklistItem {
+  itemName: string;
+  status: string;
+  notes?: string;
+}
+
+export interface PartUsageItem {
+  partName: string;
+  quantityUsed: number;
+  unitPrice: number;
+  total: number;
+}
+
 export interface ServiceRecord {
   id: string;
   appointmentId: string;

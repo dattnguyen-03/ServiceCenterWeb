@@ -94,7 +94,7 @@ const CustomerDashboard: React.FC = () => {
       {/* Welcome Header */}
       <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-b-3xl shadow-lg mb-8">
         <Title level={2} className="!mb-1 !text-white">
-          Chào mừng trở lại, Nguyễn Văn A! 👋
+          Chào mừng trở lại, Nguyễn Văn A! 
         </Title>
         <Text className="text-blue-100 text-lg">{formattedDate}</Text>
       </div>
@@ -109,7 +109,7 @@ const CustomerDashboard: React.FC = () => {
               bodyStyle={{ padding: 20 }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🚗</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Tổng số xe</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#1d4ed8' }}>
                   {vehicles.length}
@@ -124,7 +124,7 @@ const CustomerDashboard: React.FC = () => {
               bodyStyle={{ padding: 20 }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📅</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Bảo dưỡng tiếp theo</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#16a34a' }}>
                   14 <span style={{ fontSize: 18 }}>ngày</span>
@@ -139,7 +139,7 @@ const CustomerDashboard: React.FC = () => {
               bodyStyle={{ padding: 20 }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>⚡</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Hiệu suất năng lượng</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706' }}>
                   87<span style={{ fontSize: 18 }}>%</span>
@@ -154,7 +154,7 @@ const CustomerDashboard: React.FC = () => {
               bodyStyle={{ padding: 20 }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>💰</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}></div>
                 <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Tiết kiệm chi phí</div>
                 <div style={{ fontSize: 32, fontWeight: 900, color: '#7c3aed' }}>
                   2.8<span style={{ fontSize: 18 }}>tr</span>
@@ -234,7 +234,7 @@ const CustomerDashboard: React.FC = () => {
                               fontWeight: 600
                             }}
                           >
-                            📅 Đặt lịch
+                             Đặt lịch
                           </Button>
                         </Link>,
                         <Link key="details" to={`/customer/vehicles/${vehicle.vehicleID}`}>
@@ -246,7 +246,7 @@ const CustomerDashboard: React.FC = () => {
                               fontWeight: 600
                             }}
                           >
-                            🔧 Chi tiết
+                             Chi tiết
                           </Button>
                         </Link>,
                       ]}
@@ -255,7 +255,7 @@ const CustomerDashboard: React.FC = () => {
                         <Col xs={24} md={8}>
                           <List.Item.Meta
                             title={<Link to={`/customer/vehicles/${vehicle.vehicleID}`} className="text-xl font-bold text-blue-700">{vehicle.model}</Link>}
-                            description={`📍 Biển số: ${vehicle.licensePlate}`}
+                            description={` Biển số: ${vehicle.licensePlate}`}
                           />
                         </Col>
                         <Col xs={24} md={16}>
@@ -328,7 +328,7 @@ const CustomerDashboard: React.FC = () => {
                       description={
                         <div>
                           <p className="text-gray-600 mb-2">{item.message}</p>
-                          <span style={{ fontSize: 12, color: '#9ca3af' }}>⏰ {item.time}</span>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>{item.time}</span>
                         </div>
                       }
                     />

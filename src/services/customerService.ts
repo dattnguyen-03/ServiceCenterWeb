@@ -10,7 +10,8 @@ import {
   CreatePaymentRequest,
   DashboardStats,
   AppointmentFilters,
-  PaginatedResponse
+  PaginatedResponse,
+  ServiceHistoryItem
 } from '../types/api';
 
 class CustomerService {
@@ -126,14 +127,42 @@ class CustomerService {
   }
 
   // Service History
-  async getServiceHistory(): Promise<ServiceRecord[]> {
-    const response = await httpClient.get<ServiceRecord[]>(
-      API_CONFIG.ENDPOINTS.CUSTOMER.SERVICE_HISTORY
-    );
-    if (response.success && response.data) {
-      return response.data;
+  async getServiceHistory(userId: number, vehicleId: number): Promise<ServiceHistoryItem[]> {
+    try {
+      const response = await httpClient.get<any>(
+        API_CONFIG.ENDPOINTS.SERVICE_HISTORY.GET,
+        { userId, vehicleId }
+      );
+      
+      // Backend trả về { Message, Data }
+      if (response && typeof response === 'object') {
+        const anyRes: any = response;
+        if (Array.isArray(anyRes.Data)) {
+          return anyRes.Data as ServiceHistoryItem[];
+        }
+        if (Array.isArray(anyRes.data)) {
+          return anyRes.data as ServiceHistoryItem[];
+        }
+        if (Array.isArray(anyRes)) {
+          return anyRes as ServiceHistoryItem[];
+        }
+      }
+      
+      return [];
+    } catch (error: any) {
+      // Nếu là 404 (không có lịch sử), return empty array thay vì throw error
+      if (error.message && (
+        error.message.includes('Không có lịch sử') || 
+        error.message.includes('404') ||
+        error.message.toLowerCase().includes('not found')
+      )) {
+        console.log('No service history found for this vehicle - returning empty array');
+        return [];
+      }
+      
+      console.error('Error getting service history:', error);
+      throw new Error(error.message || 'Không thể lấy lịch sử dịch vụ');
     }
-    throw new Error(response.message || 'Không thể lấy lịch sử dịch vụ');
   }
 
   async getServiceDetails(id: string): Promise<ServiceRecord> {
