@@ -4,6 +4,7 @@ import {
   UserOutlined, 
   LogoutOutlined, 
   GlobalOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
@@ -88,6 +89,7 @@ const CustomerPortal: React.FC = () => {
                 { key: '/customer/quotes', label: <Link to="/customer/quotes">Báo giá của tôi</Link> },
                 { key: '/customer/payment', label: <Link to="/customer/payment">Thanh Toán</Link> },
                 { key: '/customer/history', label: <Link to="/customer/history">Lịch sử</Link> },
+                { key: '/customer/messages', label: <Link to="/customer/messages"><MessageOutlined /> Tin nhắn</Link> },
                 
               ]}
             />

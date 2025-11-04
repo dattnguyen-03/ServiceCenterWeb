@@ -11,9 +11,11 @@ export { appointmentService } from './appointmentService';
 export { serviceCenterService } from './serviceCenterService';
 export { serviceOrderService } from './serviceOrderService';
 export { technicianListService } from './technicianListService';
+export { technicianCertificationService } from './technicianCertificationService';
 export { partService } from './partService';
 export { inventoryService } from './inventoryService';
 export { partUsageService } from './partUsageService';
+export { chatMessageService } from './chatMessageService';
 export { httpClient } from './httpClient';
 
 // Re-export commonly used types

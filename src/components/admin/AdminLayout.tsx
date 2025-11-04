@@ -16,6 +16,8 @@ import {
   BankOutlined,
   ShoppingCartOutlined,
   DatabaseOutlined,
+  IdcardOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -97,9 +99,19 @@ const AdminLayout: React.FC = () => {
       label: <Link to="/admin/staff">Nhân sự</Link>,
     },
     {
+      key: '/admin/technician-certifications',
+      icon: <IdcardOutlined />,
+      label: <Link to="/admin/technician-certifications">Chứng chỉ KTV</Link>,
+    },
+    {
       key: '/admin/finance',
       icon: <DollarOutlined />,
       label: <Link to="/admin/finance">Tài chính</Link>,
+    },
+    {
+      key: '/admin/messages',
+      icon: <MessageOutlined />,
+      label: <Link to="/admin/messages">Tin nhắn</Link>,
     },
   ];
 

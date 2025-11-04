@@ -27,6 +27,7 @@ import AdminProfile from './components/admin/AdminProfile';
 import CustomerManagement from './components/admin/CustomerManagement';
 import PartsManagement from './components/admin/PartsManagement';
 import InventoryManagement from './components/admin/InventoryManagement';
+import TechnicianCertificationManagement from './components/admin/TechnicianCertificationManagement';
 import PartUsageManagement from './components/admin/PartUsageManagement';
 import FinancialReports from './components/admin/FinancialReports';
 import StaffManagement from './components/admin/StaffManagement';
@@ -65,6 +66,7 @@ import MyQuotes from './components/customer/MyQuotes';
 import StaffQuoteManagement from './components/staff/StaffQuoteManagement';
 import StaffQuoteRequestManagement from './components/staff/StaffQuoteRequestManagement';
 import StaffInventoryManagement from './components/staff/StaffInventoryManagement';
+import ChatMessage from './components/common/ChatMessage';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -123,6 +125,7 @@ const AppContent: React.FC = () => {
         <Route path="management-booking" element={<AppointmentBookingManagement />} />
         <Route path="quotes" element={<MyQuotes />} />
         <Route path="parts" element={<StaffPartsView />} />
+        <Route path="messages" element={<ChatMessage />} />
       </Route>
 
       <Route
@@ -147,8 +150,10 @@ const AppContent: React.FC = () => {
         <Route path="service-checklists" element={<ServiceChecklistManagement />} />
             <Route path="quotes" element={<QuoteManagement />} />
             <Route path="quote-requests" element={<QuoteRequestManagement />} />
+        <Route path="technician-certifications" element={<TechnicianCertificationManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="finance" element={<FinancialReports />} />
+        <Route path="messages" element={<ChatMessage />} />
       </Route>
 
       <Route
@@ -174,6 +179,7 @@ const AppContent: React.FC = () => {
         <Route path="invoices" element={<Billing />} />
         <Route path="quotes" element={<StaffQuoteManagement />} />
         <Route path="quote-requests" element={<StaffQuoteRequestManagement />} />
+        <Route path="messages" element={<ChatMessage />} />
       </Route>
 
       <Route
@@ -194,6 +200,7 @@ const AppContent: React.FC = () => {
         <Route path="parts-usage" element={<PartsUsage />} />
         <Route path="part-usage" element={<TechnicianPartUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />
+        <Route path="messages" element={<ChatMessage />} />
       </Route>
 
       <Route path="*" element={<AuthRedirect />} />

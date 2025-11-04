@@ -14,6 +14,7 @@ import {
   BankOutlined,
   ShoppingCartOutlined,
   DatabaseOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -93,6 +94,11 @@ const StaffLayout: React.FC = () => {
       key: '/staff/quote-requests',
       icon: <FileTextOutlined />,
       label: <Link to="/staff/quote-requests">Yêu cầu báo giá</Link>,
+    },
+    {
+      key: '/staff/messages',
+      icon: <MessageOutlined />,
+      label: <Link to="/staff/messages">Tin nhắn</Link>,
     },
   ];
 

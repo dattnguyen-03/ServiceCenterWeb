@@ -545,3 +545,86 @@ export interface GetServicePackageResponse {
   data: ServicePackage[];
   message?: string;
 }
+
+// Chat Message Types
+export interface ChatMessage {
+  MessageID: number;
+  SenderID: number;
+  ReceiverID: number;
+  Content: string;
+  SentAt: string; // ISO string
+  Status: 'Sent' | 'Seen';
+  // Aliases for camelCase compatibility
+  messageID?: number;
+  senderID?: number;
+  receiverID?: number;
+  content?: string;
+  sentAt?: string;
+  status?: 'Sent' | 'Seen';
+}
+
+export interface SendMessageRequest {
+  receiverID?: number | null; // null or 0 -> send to support
+  content: string;
+}
+
+export interface SendMessageToCenterRequest {
+  centerID?: number | null; // null -> auto get from latest appointment
+  content: string;
+}
+
+export interface SendMessageToCenterResponse {
+  success: boolean;
+  message: string;
+  receiverID?: number;
+}
+
+export interface SendMessageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ViewMessageResponse {
+  message?: string;
+  Messages?: ChatMessage[]; // PascalCase (nếu có)
+  messages?: ChatMessage[]; // camelCase (nếu có)
+}
+
+export interface MessageBox {
+  TargetUserID: number;
+  TargetName: string;
+  LastMessage: string;
+  LastMessageTime: string; // ISO string
+  UnreadCount: number;
+  // Aliases for camelCase compatibility
+  targetUserID?: number;
+  targetName?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  unreadCount?: number;
+}
+
+export interface GetMessageBoxListResponse {
+  success: boolean;
+  message: string;
+  data: MessageBox[];
+}
+
+export interface EditMessageRequest {
+  messageID: number;
+  newContent: string;
+}
+
+export interface EditMessageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface DeleteMessageBoxRequest {
+  userID1?: number | null;
+  userID2?: number | null;
+}
+
+export interface DeleteMessageBoxResponse {
+  message: string;
+}

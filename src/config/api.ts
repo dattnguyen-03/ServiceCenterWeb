@@ -99,6 +99,14 @@ export const API_CONFIG = {
       GET_HISTORY: '/GetPaymentHistoryAPI',
       GET_BY_ORDER: '/GetPaymentHistoryAPI', // GET /GetPaymentHistoryAPI/{orderId}
     },
+    MESSAGE: {
+      SEND: '/SendMessageAPI',
+      SEND_TO_CENTER: '/SendMessageToCenterAPI',
+      VIEW: '/ViewMessageAPI',
+      GET_MESSAGE_BOXES: '/GetMessageBoxListAPI',
+      EDIT: '/EditMessageAPI',
+      DELETE_BOX: '/DeleteMessageBoxAPI',
+    },
   }
 };
 export const HTTP_STATUS = {
