@@ -383,7 +383,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
                     Liên hệ hỗ trợ chung
                   </Button>
                   <Button
-                    type="default"
+                    type="primary"
                     icon={<MessageOutlined />}
                     onClick={async () => {
                       setLoadingCenters(true);
@@ -503,7 +503,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
                   const isMyMsg = isMyMessage(msg);
                   const targetName = selectedBox?.TargetName || selectedBox?.targetName || 'Người dùng';
                   const targetInitial = targetName.charAt(0).toUpperCase();
-                  const userInitial = user?.name?.charAt(0).toUpperCase() || 'U';
                   
                   return (
                     <div
@@ -612,7 +611,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
             />
             {user?.role === 'customer' && (
               <Space direction="vertical" size="middle" className="w-full px-4">
-                <Button
+                {/* <Button
                   type="primary"
                   size="large"
                   icon={<MessageOutlined />}
@@ -632,9 +631,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
                   block
                 >
                   Liên hệ hỗ trợ chung
-                </Button>
+                </Button> */}
                 <Button
-                  type="default"
+                  type="primary"
                   size="large"
                   icon={<MessageOutlined />}
                   onClick={async () => {
@@ -653,11 +652,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
                 >
                   Gửi tin nhắn đến trung tâm dịch vụ
                 </Button>
-                <div className="mt-2 pt-2 border-t w-full">
+                {/* <div className="mt-2 pt-2 border-t w-full">
                   <Text type="secondary" className="text-xs text-center block">
                     Nếu có vấn đề gì, vui lòng liên hệ với <strong>Admin</strong>
                   </Text>
-                </div>
+                </div> */}
               </Space>
             )}
           </div>
