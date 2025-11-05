@@ -118,7 +118,7 @@ const VehicleDetail: React.FC = () => {
               bodyStyle={{ padding: 24 }}
             >
               <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
-                🚗 Thông tin xe
+                 Thông tin xe
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                 <div>
@@ -183,7 +183,7 @@ const VehicleDetail: React.FC = () => {
               bodyStyle={{ padding: 24 }}
             >
               <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
-                🔧 Lịch sử bảo dưỡng
+                 Lịch sử bảo dưỡng
               </h3>
               <Timeline
                 items={[
@@ -220,11 +220,11 @@ const VehicleDetail: React.FC = () => {
                             <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Kiểm tra tổng thể</p>
                           </div>
                           <Tag style={{ borderRadius: 20, fontWeight: 600 }} color="green">
-                            ✅ Hoàn tất
+                             Hoàn tất
                           </Tag>
                         </div>
                         <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>
-                          📅 {vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                           {vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
                         </p>
                         {vehicle.lastServiceDate && (
                           <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0 0' }}>
@@ -271,7 +271,7 @@ const VehicleDetail: React.FC = () => {
                           </Tag>
                         </div>
                         <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>
-                          📅 {vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                          {vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
                         </p>
                         {vehicle.nextServiceDate && (
                           <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0 0', fontWeight: 600 }}>
@@ -299,7 +299,7 @@ const VehicleDetail: React.FC = () => {
               bodyStyle={{ padding: 24 }}
             >
               <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
-                📊 Thống kê
+                 Thống kê
               </h3>
               
               <div style={{
@@ -322,7 +322,7 @@ const VehicleDetail: React.FC = () => {
                 marginBottom: 16,
                 border: '2px solid #86efac'
               }}>
-                <div style={{ fontSize: 12, color: '#166534', marginBottom: 4, fontWeight: 600 }}>📍 Quãng đường</div>
+                <div style={{ fontSize: 12, color: '#166534', marginBottom: 4, fontWeight: 600 }}> Quãng đường</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>
                   {(vehicle.mileage || 0).toLocaleString()} km
                 </div>
@@ -334,7 +334,7 @@ const VehicleDetail: React.FC = () => {
                 borderRadius: 12,
                 border: `2px solid ${maintenanceStatus.color === 'green' ? '#86efac' : maintenanceStatus.color === 'orange' ? '#fcd34d' : '#fca5a5'}`
               }}>
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>🔔 Trạng thái bảo dưỡng</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}> Trạng thái bảo dưỡng</div>
                 <div style={{
                   fontSize: 18,
                   fontWeight: 700,
@@ -355,7 +355,7 @@ const VehicleDetail: React.FC = () => {
               bodyStyle={{ padding: 24 }}
             >
               <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
-                ⚙️ Thao tác
+                 Thao tác
               </h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -370,7 +370,7 @@ const VehicleDetail: React.FC = () => {
                     height: 44
                   }}
                 >
-                  📅 Đặt lịch bảo dưỡng
+                   Đặt lịch bảo dưỡng
                 </Button>
                 
                 <Button 
@@ -384,7 +384,7 @@ const VehicleDetail: React.FC = () => {
                     background: '#fff'
                   }}
                 >
-                  📋 Xem lịch sử chi tiết
+                   Xem lịch sử chi tiết
                 </Button>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

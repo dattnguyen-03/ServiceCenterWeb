@@ -102,7 +102,7 @@ const VehicleManagement: React.FC = () => {
         <div className="header-section mb-8">
           <div className="flex flex-col gap-2 mb-6">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              🚗 Xe Của Tôi
+               Xe Của Tôi
             </h1>
             <p className="text-gray-600 text-base">
               Quản lý thông tin và lịch sử bảo dưỡng các xe điện của bạn
@@ -114,7 +114,7 @@ const VehicleManagement: React.FC = () => {
             <div className="flex-1 w-full md:w-auto">
               <Input.Search
                 allowClear
-                placeholder="🔍 Tìm theo model, biển số..."
+                placeholder=" Tìm theo model, biển số..."
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
                 className="w-full"
@@ -127,7 +127,7 @@ const VehicleManagement: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Tooltip title="Làm mới">
+              {/* <Tooltip title="Làm mới">
                 <button
                   className={`h-10 px-3 flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg transition-all duration-200 ${
                     refreshing ? 'opacity-60 scale-95' : 'hover:scale-105'
@@ -140,7 +140,7 @@ const VehicleManagement: React.FC = () => {
                 >
                   <ReloadOutlined className={refreshing ? 'animate-spin' : ''} />
                 </button>
-              </Tooltip>
+              </Tooltip> */}
 
               <Button
                 type="primary"
@@ -165,7 +165,7 @@ const VehicleManagement: React.FC = () => {
             {vehicles.length === 0 ? (
               <Col span={24}>
                 <div className="text-center py-20">
-                  <div className="text-6xl mb-4">🚗</div>
+                  <div className="text-6xl mb-4"></div>
                   <h3 className="text-2xl font-semibold text-gray-700 mb-3">Chưa có xe nào</h3>
                   <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
                     Hãy thêm xe đầu tiên để bắt đầu quản lý bảo dưỡng và theo dõi lịch sử dịch vụ
@@ -216,7 +216,7 @@ const VehicleManagement: React.FC = () => {
                         </Tag>
                       </div>
                       <h3 className="text-2xl font-bold mb-2">{vehicle.model}</h3>
-                      <p className="text-sm text-blue-100">📋 {vehicle.licensePlate}</p>
+                      <p className="text-sm text-blue-100"> {vehicle.licensePlate}</p>
                     </div>
                   </div>
 
@@ -230,7 +230,7 @@ const VehicleManagement: React.FC = () => {
                         borderRadius: 8,
                         border: '1px solid #bae6fd'
                       }}>
-                        <div style={{ fontSize: 11, color: '#0c4a6e', fontWeight: 600, marginBottom: 4 }}>⚡ Pin</div>
+                        <div style={{ fontSize: 11, color: '#0c4a6e', fontWeight: 600, marginBottom: 4 }}> Pin</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#0284c7' }}>
                           {vehicle.batteryCapacity || 'N/A'}
                         </div>
@@ -242,7 +242,7 @@ const VehicleManagement: React.FC = () => {
                         borderRadius: 8,
                         border: '1px solid #dcfce7'
                       }}>
-                        <div style={{ fontSize: 11, color: '#166534', fontWeight: 600, marginBottom: 4 }}>📍 Km</div>
+                        <div style={{ fontSize: 11, color: '#166534', fontWeight: 600, marginBottom: 4 }}> Km</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#16a34a' }}>
                           {(vehicle.mileage || 0).toLocaleString()}
                         </div>
@@ -347,7 +347,7 @@ const VehicleManagement: React.FC = () => {
       <Modal
         title={
           <div style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>
-            🚗 Chi tiết xe - {selectedVehicle?.model}
+             Chi tiết xe - {selectedVehicle?.model}
           </div>
         }
         open={detailModalVisible}
@@ -370,7 +370,7 @@ const VehicleManagement: React.FC = () => {
               bodyStyle={{ padding: 16 }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937', marginBottom: 16 }}>
-                ℹ️ Thông tin xe
+                 Thông tin xe
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -438,7 +438,7 @@ const VehicleManagement: React.FC = () => {
               bodyStyle={{ padding: 16 }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937', marginBottom: 16 }}>
-                📊 Thống kê
+                Thống kê
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{
@@ -447,7 +447,7 @@ const VehicleManagement: React.FC = () => {
                   borderRadius: 8,
                   border: '1px solid #bae6fd'
                 }}>
-                  <div style={{ fontSize: 11, color: '#0c4a6e', marginBottom: 4, fontWeight: 600 }}>⚡ Dung lượng pin</div>
+                  <div style={{ fontSize: 11, color: '#0c4a6e', marginBottom: 4, fontWeight: 600 }}> Dung lượng pin</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#0284c7 ' }}>
                     {selectedVehicle.batteryCapacity || 'N/A'}
                   </div>
@@ -459,7 +459,7 @@ const VehicleManagement: React.FC = () => {
                   borderRadius: 8,
                   border: '1px solid #dcfce7'
                 }}>
-                  <div style={{ fontSize: 11, color: '#166534', marginBottom: 4, fontWeight: 600 }}>📍 Quãng đường</div>
+                  <div style={{ fontSize: 11, color: '#166534', marginBottom: 4, fontWeight: 600 }}> Quãng đường</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>
                     {(selectedVehicle.mileage || 0).toLocaleString()} km
                   </div>
@@ -477,7 +477,7 @@ const VehicleManagement: React.FC = () => {
               bodyStyle={{ padding: 16 }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937', marginBottom: 16 }}>
-                🔧 Lịch sử bảo dưỡng
+                Lịch sử bảo dưỡng
               </div>
               <Timeline
                 items={[
@@ -515,11 +515,11 @@ const VehicleManagement: React.FC = () => {
                             <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Kiểm tra tổng thể</p>
                           </div>
                           <Tag style={{ borderRadius: 4, fontWeight: 600, fontSize: 11 }} color="green">
-                            ✅ Hoàn tất
+                             Hoàn tất
                           </Tag>
                         </div>
                         <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>
-                          📅 {selectedVehicle.lastServiceDate ? new Date(selectedVehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                           {selectedVehicle.lastServiceDate ? new Date(selectedVehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
                         </p>
                       </div>
                     )
@@ -558,7 +558,7 @@ const VehicleManagement: React.FC = () => {
                             <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Bảo dưỡng định kỳ</p>
                           </div>
                           <Tag style={{ borderRadius: 4, fontWeight: 600, fontSize: 11 }} color="orange">
-                            📅 Sắp đến
+                            Sắp đến
                           </Tag>
                         </div>
                         <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>

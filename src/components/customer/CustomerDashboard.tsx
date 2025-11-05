@@ -174,7 +174,7 @@ const CustomerDashboard: React.FC = () => {
             defaultActiveKey="1" 
             tabBarExtraContent={
               <Link to="/vehicles/add">
-                <Button 
+                {/* <Button 
                   type="primary" 
                   icon={<PlusOutlined />}
                   style={{
@@ -185,7 +185,7 @@ const CustomerDashboard: React.FC = () => {
                   }}
                 >
                   Thêm xe mới
-                </Button>
+                </Button> */}
               </Link>
             }
             style={{ padding: '24px' }}
@@ -224,19 +224,19 @@ const CustomerDashboard: React.FC = () => {
                         boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                       }}
                       actions={[
-                        <Link key="booking" to={`/customer/booking/${vehicle.vehicleID}`}>
-                          <Button 
-                            type="primary"
-                            style={{
-                              borderRadius: 10,
-                              background: 'linear-gradient(90deg, #60a5fa 0%, #22c55e 100%)',
-                              border: 'none',
-                              fontWeight: 600
-                            }}
-                          >
-                             Đặt lịch
-                          </Button>
-                        </Link>,
+                        // <Link key="booking" to={`/customer/booking/${vehicle.vehicleID}`}>
+                        //   <Button 
+                        //     type="primary"
+                        //     style={{
+                        //       borderRadius: 10,
+                        //       background: 'linear-gradient(90deg, #60a5fa 0%, #22c55e 100%)',
+                        //       border: 'none',
+                        //       fontWeight: 600
+                        //     }}
+                        //   >
+                        //      Đặt lịch
+                        //   </Button>
+                        // </Link>,
                         <Link key="details" to={`/customer/vehicles/${vehicle.vehicleID}`}>
                           <Button 
                             style={{
@@ -287,12 +287,12 @@ const CustomerDashboard: React.FC = () => {
               />
             </TabPane>
             <TabPane 
-              tab={
-                <span className="flex items-center font-semibold">
-                  <ClockCircleOutlined className="mr-2 text-green-600" style={{ fontSize: 18 }} />
-                  Hoạt động gần đây
-                </span>
-              } 
+              // tab={
+              //   <span className="flex items-center font-semibold">
+              //     <ClockCircleOutlined className="mr-2 text-green-600" style={{ fontSize: 18 }} />
+              //     Hoạt động gần đây
+              //   </span>
+              // } 
               key="2"
             >
               <List
