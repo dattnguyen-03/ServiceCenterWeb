@@ -153,7 +153,7 @@ const ServiceHistory: React.FC = () => {
                       marginBottom: 16,
                       border: '1px solid #86efac'
                     }}>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>📍 Biển số xe</div>
+                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}> Biển số xe</div>
                       <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>
                         {selectedVehicle.licensePlate}
                       </div>
@@ -167,7 +167,7 @@ const ServiceHistory: React.FC = () => {
                         marginBottom: 16,
                         border: '1px solid #7dd3fc'
                       }}>
-                        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>📅 Lần bảo dưỡng cuối</div>
+                        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Lần bảo dưỡng cuối</div>
                         <div style={{ fontSize: 16, fontWeight: 700, color: '#0284c7' }}>
                           {new Date(selectedVehicle.lastServiceDate).toLocaleDateString('vi-VN')}
                         </div>
@@ -317,7 +317,7 @@ const ServiceHistory: React.FC = () => {
                           {item.partUsages && item.partUsages.length > 0 && (
                             <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
                               <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>
-                                🔧 Phụ tùng đã thay:
+                                 Phụ tùng đã thay:
                               </p>
                               <div style={{ fontSize: 12, color: '#6b7280' }}>
                                 {item.partUsages.map((part: PartUsageItem, idx: number) => (

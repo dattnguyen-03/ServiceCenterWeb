@@ -322,63 +322,161 @@ const MyQuotes: React.FC = () => {
               </div>
             )}
 
-            {/* Parts Section */}
-            {selectedQuote.parts && selectedQuote.parts.length > 0 && (
-              <>
-                <Divider />
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <ShoppingCartOutlined className="text-blue-600" />
-                    <h3 className="text-lg font-semibold">Danh sách phụ tùng</h3>
-                    <Tag color="blue">{selectedQuote.parts.length} phụ tùng</Tag>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="space-y-3">
-                      {selectedQuote.parts.map((part, index) => (
-                        <div key={part.quotePartID} className="flex justify-between items-center p-3 bg-white rounded border">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">{part.partName}</div>
-                            <div className="text-sm text-gray-600">{part.partDescription}</div>
-                            <div className="text-sm text-gray-500">
-                              Số lượng: {part.quantity} | Đơn giá: {quoteService.formatPrice(part.unitPrice)}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-green-600">
-                              {quoteService.formatPrice(part.totalPrice)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold">Tổng phụ tùng:</span>
-                        <span className="text-xl font-bold text-green-600">
-                          {quoteService.formatPrice(quoteService.calculatePartsTotalFromDetail(selectedQuote.parts))}
-                        </span>
+            {/* Service Package and Parts Section */}
+            <Divider />
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <ShoppingCartOutlined className="text-blue-600" />
+                <h3 className="text-lg font-semibold">Danh sách hàng hóa, dịch vụ</h3>
+                {selectedQuote.parts && selectedQuote.parts.length > 0 && (
+                  <Tag color="blue">{selectedQuote.parts.length} phụ tùng</Tag>
+                )}
+              </div>
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <Table
+                  dataSource={(() => {
+                    const rows: any[] = [];
+                    let rowIndex = 1;
+                    
+                    // Calculate service package amount (totalAmount - parts total)
+                    const partsTotal = selectedQuote.parts && selectedQuote.parts.length > 0
+                      ? quoteService.calculatePartsTotalFromDetail(selectedQuote.parts)
+                      : 0;
+                    const servicePackageAmount = selectedQuote.totalAmount - partsTotal;
+                    
+                    // Add service package row if amount > 0
+                    if (servicePackageAmount > 0) {
+                      rows.push({
+                        key: 'service-package',
+                        rowIndex: rowIndex++,
+                        type: 'service',
+                        name: selectedQuote.serviceType || 'Gói dịch vụ',
+                        description: selectedQuote.description || '',
+                        unit: 'Gói',
+                        quantity: 1,
+                        unitPrice: servicePackageAmount,
+                        totalPrice: servicePackageAmount
+                      });
+                    }
+                    
+                    // Add parts rows
+                    if (selectedQuote.parts && selectedQuote.parts.length > 0) {
+                      selectedQuote.parts.forEach((part, index) => {
+                        rows.push({
+                          key: part.quotePartID || `part-${index}`,
+                          rowIndex: rowIndex++,
+                          type: 'part',
+                          name: part.partName,
+                          description: part.partDescription || '',
+                          unit: 'Chiếc',
+                          quantity: part.quantity,
+                          unitPrice: part.unitPrice,
+                          totalPrice: part.totalPrice
+                        });
+                      });
+                    }
+                    
+                    return rows.length > 0 ? rows : [];
+                  })()}
+                  pagination={false}
+                  size="small"
+                  className="rounded-lg"
+                  components={{
+                    header: {
+                      cell: (props: any) => (
+                        <th {...props} className="!bg-gray-50 !border-gray-300 !px-4 !py-2" />
+                      ),
+                    },
+                  }}
+                >
+                  <Table.Column
+                    title={<div className="text-center font-semibold">STT</div>}
+                    width={60}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div className="text-center">{record.rowIndex}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div className="font-semibold">Tên hàng hóa, dịch vụ</div>}
+                    width="40%"
+                    render={(_: any, record: any) => (
+                      <div>
+                        <div className="font-medium text-gray-900">{record.name}</div>
+                        {record.description && (
+                          <div className="text-sm text-gray-600 mt-1">{record.description}</div>
+                        )}
                       </div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div className="text-center font-semibold">Đơn vị tính</div>}
+                    width={100}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div className="text-center">{record.unit}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div className="text-center font-semibold">Số lượng</div>}
+                    width={100}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div className="text-center">{record.quantity}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div className="text-right font-semibold">Đơn giá</div>}
+                    width={150}
+                    align="right"
+                    render={(_: any, record: any) => (
+                      <div className="text-right">{quoteService.formatPrice(record.unitPrice)}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div className="text-right font-semibold">Thành tiền</div>}
+                    width={150}
+                    align="right"
+                    render={(_: any, record: any) => (
+                      <div className="text-right font-semibold text-green-600">
+                        {quoteService.formatPrice(record.totalPrice)}
+                      </div>
+                    )}
+                  />
+                </Table>
+                <div className="px-4 py-1 bg-gray-50 border-b border-gray-300">
+                  <div className="text-right text-xs italic text-gray-600">
+                    (Thành tiền = Số lượng × Đơn giá)
+                  </div>
+                </div>
+                <div className="px-4 py-3 bg-gray-50 border-t-2 border-gray-400">
+                  <div className="flex justify-between items-center">
+                    <div className="font-bold text-gray-900">
+                      Tổng cộng tiền thanh toán:
+                    </div>
+                    <div className="text-right text-xl font-bold text-red-600">
+                      {quoteService.formatPrice(selectedQuote.finalAmount)}
                     </div>
                   </div>
                 </div>
-              </>
-            )}
+              </div>
+            </div>
 
             <div className="border-t pt-4">
-              <div className="flex justify-between mb-2">
+              {/* <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Tổng giá:</span>
                 <span className="font-medium">{quoteService.formatPrice(selectedQuote.totalAmount)}</span>
-              </div>
-              {selectedQuote.discountAmount && selectedQuote.discountAmount > 0 && (
+              </div> */}
+              {/* {selectedQuote.discountAmount && selectedQuote.discountAmount > 0 && (
                 <div className="flex justify-between mb-2 text-green-600">
                   <span>Giảm giá:</span>
                   <span>-{quoteService.formatPrice(selectedQuote.discountAmount)}</span>
                 </div>
-              )}
-              <div className="flex justify-between text-xl font-bold text-blue-600 border-t pt-2">
+              )} */}
+              {/* <div className="flex justify-between text-xl font-bold text-blue-600 border-t pt-2">
                 <span>Thành tiền:</span>
                 <span>{quoteService.formatPrice(selectedQuote.finalAmount)}</span>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
