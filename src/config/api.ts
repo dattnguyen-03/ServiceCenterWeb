@@ -99,6 +99,16 @@ export const API_CONFIG = {
       GET_HISTORY: '/GetPaymentHistoryAPI',
       GET_BY_ORDER: '/GetPaymentHistoryAPI', // GET /GetPaymentHistoryAPI/{orderId}
     },
+    REVENUE: {
+      TOTAL: '/RevenueAPI/total',
+      TODAY: '/RevenueAPI/today',
+      MONTH: '/RevenueAPI/month',
+      BY_PERIOD: '/RevenueAPI/by-period',
+      BY_SERVICE: '/RevenueAPI/by-service',
+      BY_CENTER: '/RevenueAPI/by-center',
+      REPORT: '/RevenueAPI/report',
+      DASHBOARD: '/RevenueAPI/dashboard',
+    },
     MESSAGE: {
       SEND: '/SendMessageAPI',
       SEND_TO_CENTER: '/SendMessageToCenterAPI',

@@ -205,6 +205,136 @@ class AdminService {
     throw new Error(response.message || 'Không thể lấy báo cáo doanh thu');
   }
 
+  // Revenue API Methods
+  async getTotalRevenue(dateFrom?: string, dateTo?: string, centerID?: number): Promise<any> {
+    const params: Record<string, any> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    if (centerID) params.centerID = centerID;
+    
+    const response = await httpClient.get<any>(
+      API_CONFIG.ENDPOINTS.REVENUE.TOTAL,
+      params
+    );
+    // Backend returns { success: true, data: {...} }
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    // Fallback: response might be direct data
+    if (response && !response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy tổng doanh thu');
+  }
+
+  async getTodayRevenue(centerID?: number): Promise<any> {
+    const params: Record<string, any> = {};
+    if (centerID) params.centerID = centerID;
+    
+    const response = await httpClient.get<any>(
+      API_CONFIG.ENDPOINTS.REVENUE.TODAY,
+      params
+    );
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    if (response && !response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy doanh thu hôm nay');
+  }
+
+  async getMonthRevenue(centerID?: number): Promise<any> {
+    const params: Record<string, any> = {};
+    if (centerID) params.centerID = centerID;
+    
+    const response = await httpClient.get<any>(
+      API_CONFIG.ENDPOINTS.REVENUE.MONTH,
+      params
+    );
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    if (response && !response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy doanh thu tháng');
+  }
+
+  async getRevenueByPeriod(dateFrom: string, dateTo: string, periodType: string = 'day'): Promise<any[]> {
+    const params: Record<string, any> = {
+      dateFrom,
+      dateTo,
+      periodType
+    };
+    
+    const response = await httpClient.get<any[]>(
+      API_CONFIG.ENDPOINTS.REVENUE.BY_PERIOD,
+      params
+    );
+    if (response && response.success && response.data) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    if (response && !response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy doanh thu theo kỳ');
+  }
+
+  async getRevenueByService(dateFrom?: string, dateTo?: string, centerID?: number): Promise<any[]> {
+    const params: Record<string, any> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    if (centerID) params.centerID = centerID;
+    
+    const response = await httpClient.get<any[]>(
+      API_CONFIG.ENDPOINTS.REVENUE.BY_SERVICE,
+      params
+    );
+    if (response && response.success && response.data) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    if (response && !response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy doanh thu theo dịch vụ');
+  }
+
+  async getRevenueByCenter(dateFrom?: string, dateTo?: string): Promise<any[]> {
+    const params: Record<string, any> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    
+    const response = await httpClient.get<any[]>(
+      API_CONFIG.ENDPOINTS.REVENUE.BY_CENTER,
+      params
+    );
+    if (response && response.success && response.data) {
+      return Array.isArray(response.data) ? response.data : [];
+    }
+    if (response && !response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy doanh thu theo trung tâm');
+  }
+
+  async getDashboardRevenue(centerID?: number): Promise<any> {
+    const params: Record<string, any> = {};
+    if (centerID) params.centerID = centerID;
+    
+    const response = await httpClient.get<any>(
+      API_CONFIG.ENDPOINTS.REVENUE.DASHBOARD,
+      params
+    );
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    if (response && !response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Không thể lấy dữ liệu dashboard doanh thu');
+  }
+
   async getServiceReport(dateFrom: string, dateTo: string): Promise<ServiceReport[]> {
     const response = await httpClient.get<ServiceReport[]>(
       `${API_CONFIG.ENDPOINTS.ADMIN.REPORTS}/services?dateFrom=${dateFrom}&dateTo=${dateTo}`
