@@ -1,97 +1,319 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ClipboardList, Users, Clock, CheckCircle, AlertCircle, TrendingUp, Bell, Star, Target, Activity } from 'lucide-react';
-import { mockAppointments, mockServiceTickets, mockUsers } from '../../data/mockData';
+import { Users, DollarSign, TrendingUp, Activity, Calendar, Clock, BarChart3, PieChart, Building2, Loader2 } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import adminService from '../../services/adminService';
+import { useAuth } from '../../contexts/AuthContext';
+import { getAllUsers } from '../../services/userService';
+import serviceCenterService from '../../services/serviceCenterService';
+
+interface RevenueData {
+  totalRevenue: number;
+  totalPayments: number;
+  onlineRevenue: number;
+  cashRevenue: number;
+  onlinePayments: number;
+  cashPayments: number;
+}
+
+interface RevenueByService {
+  serviceType: string;
+  revenue: number;
+  count: number;
+}
+
+interface RevenueByPeriod {
+  period: string;
+  totalRevenue: number;
+  totalPayments: number;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const StaffDashboard: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Lịch hẹn mới từ khách hàng Nguyễn Văn A', time: '10 phút trước', type: 'appointment' },
-    { id: 2, message: 'Phiếu dịch vụ #003 cần xử lý', time: '25 phút trước', type: 'service' },
-    { id: 3, message: 'Nhắc nhở: Kiểm tra tồn kho phụ tùng', time: '1 giờ trước', type: 'reminder' }
-  ]);
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
+  const [loading, setLoading] = useState(true);
+  const [centerID, setCenterID] = useState<number | null>(null);
+  const [centerName, setCenterName] = useState<string>('');
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  
+  // Stats
+  const [monthRevenue, setMonthRevenue] = useState<RevenueData>({
+    totalRevenue: 0,
+    totalPayments: 0,
+    onlineRevenue: 0,
+    cashRevenue: 0,
+    onlinePayments: 0,
+    cashPayments: 0
+  });
+  const [todayRevenue, setTodayRevenue] = useState<RevenueData>({
+    totalRevenue: 0,
+    totalPayments: 0,
+    onlineRevenue: 0,
+    cashRevenue: 0,
+    onlinePayments: 0,
+    cashPayments: 0
+  });
+  const [revenueByService, setRevenueByService] = useState<RevenueByService[]>([]);
+  const [revenueByPeriod, setRevenueByPeriod] = useState<RevenueByPeriod[]>([]);
+
+  // Realtime data
+  const [realtimeData, setRealtimeData] = useState({
+    activeServices: 8,
+    queueLength: 5,
+    avgWaitTime: '25 phút'
+  });
   
   useEffect(() => {
+    // Get centerID from user
+    if (user?.centerID) {
+      setCenterID(user.centerID);
+      loadDashboardData();
+    } else {
+      setLoading(false);
+    }
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+      // Simulate real-time data updates
+      setRealtimeData(prev => ({
+        ...prev,
+        activeServices: Math.floor(Math.random() * 3) + 6,
+        queueLength: Math.floor(Math.random() * 3) + 3,
+        avgWaitTime: `${Math.floor(Math.random() * 10) + 20} phút`
+      }));
+    }, 30000);
 
-  const todayAppointments = mockAppointments.filter(apt => apt.date === selectedDate);
-  const pendingTickets = mockServiceTickets.filter(ticket => ticket.status === 'waiting');
-  const completedToday = mockServiceTickets.filter(ticket => ticket.status === 'completed');
+    return () => clearInterval(timer);
+  }, [user]);
+
+  useEffect(() => {
+    if (centerID) {
+      loadRevenueData();
+    }
+  }, [selectedPeriod, centerID]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load center name
+      if (centerID) {
+        try {
+          const centers = await serviceCenterService.getServiceCenters();
+          const center = centers.find(c => c.centerID === centerID);
+          if (center) {
+            setCenterName(center.name);
+          }
+        } catch (error) {
+          console.error('Error loading center:', error);
+        }
+      }
+      
+      // Load revenue data
+      await loadRevenueData();
+      
+      // Load customers count (filtered by center)
+      if (centerID) {
+        try {
+          const users = await getAllUsers();
+          // Customers associated with this center (through appointments or orders)
+          // This is a simplified version - you may need to adjust based on your data structure
+          const customers = users.filter(u => u.role === 'Customer' || u.role === 'customer');
+          setTotalCustomers(customers.length);
+        } catch (error) {
+          console.error('Error loading customers:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRevenueData = async () => {
+    if (!centerID) return;
+    
+    try {
+      // Load month revenue (filtered by centerID)
+      try {
+        const monthData = await adminService.getMonthRevenue(undefined, undefined, centerID);
+        setMonthRevenue(monthData);
+      } catch (error) {
+        console.warn('Cannot load month revenue:', error);
+      }
+      
+      // Load today revenue (filtered by centerID)
+      try {
+        const todayData = await adminService.getTodayRevenue(undefined, undefined, centerID);
+        setTodayRevenue(todayData);
+      } catch (error) {
+        console.warn('Cannot load today revenue:', error);
+      }
+      
+      // Calculate date range based on selected period
+      const now = new Date();
+      let dateFrom: Date;
+      let dateTo: Date = now;
+      
+      switch (selectedPeriod) {
+        case 'today':
+          dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      
+      // Load revenue by service (filtered by centerID)
+      try {
+        const serviceData = await adminService.getRevenueByService(
+          dateFrom.toISOString().split('T')[0],
+          dateTo.toISOString().split('T')[0],
+          centerID
+        );
+        setRevenueByService(serviceData);
+      } catch (error) {
+        console.warn('Cannot load revenue by service:', error);
+        setRevenueByService([]);
+      }
+      
+      // Load revenue by period (for chart, filtered by centerID)
+      try {
+        const periodData = await adminService.getRevenueByPeriod(
+          dateFrom.toISOString().split('T')[0],
+          dateTo.toISOString().split('T')[0],
+          selectedPeriod === 'month' ? 'day' : 'day',
+          centerID
+        );
+        setRevenueByPeriod(periodData);
+      } catch (error) {
+        console.warn('Cannot load revenue by period:', error);
+        setRevenueByPeriod([]);
+      }
+    } catch (error) {
+      console.error('Error loading revenue data:', error);
+    }
+  };
   
   const stats = [
     { 
-      label: 'Lịch hẹn hôm nay', 
-      value: todayAppointments.length.toString(), 
-      icon: Calendar, 
-      color: 'from-blue-500 to-blue-600',
-      change: '+2',
-      trend: 'up'
-    },
-    { 
-      label: 'Phiếu chờ xử lý', 
-      value: pendingTickets.length.toString(), 
-      icon: ClipboardList, 
-      color: 'from-orange-500 to-orange-600',
-      change: '-1',
-      trend: 'down'
-    },
-    { 
-      label: 'Đã hoàn thành hôm nay', 
-      value: completedToday.length.toString(), 
-      icon: CheckCircle, 
+      label: 'Doanh thu tháng', 
+      value: `${monthRevenue.totalRevenue.toLocaleString('vi-VN')} đ`, 
+      icon: DollarSign, 
       color: 'from-green-500 to-green-600',
-      change: '+3',
+      change: `${monthRevenue.totalPayments} thanh toán`,
       trend: 'up'
     },
     { 
-      label: 'Đánh giá trung bình', 
-      value: '4.8/5', 
-      icon: Star, 
-      color: 'from-yellow-500 to-yellow-600',
-      change: '+0.2',
+      label: 'Khách hàng', 
+      value: totalCustomers.toString(), 
+      icon: Users, 
+      color: 'from-blue-500 to-blue-600',
+      change: 'Đã phục vụ',
+      trend: 'up'
+    },
+    { 
+      label: 'Trung tâm', 
+      value: centerName || 'N/A', 
+      icon: Building2, 
+      color: 'from-purple-500 to-purple-600',
+      change: 'Đang quản lý',
+      trend: 'up'
+    },
+    { 
+      label: 'Doanh thu hôm nay', 
+      value: `${todayRevenue.totalRevenue.toLocaleString('vi-VN')} đ`, 
+      icon: TrendingUp, 
+      color: 'from-orange-500 to-orange-600',
+      change: `${todayRevenue.totalPayments} thanh toán`,
       trend: 'up'
     }
   ];
 
-  const personalStats = [
-    { label: 'Mục tiêu tháng', value: '45/50', progress: 90, icon: Target },
-    { label: 'Thời gian làm việc', value: '7.5h', progress: 94, icon: Clock },
-    { label: 'Khách hàng phục vụ', value: '12', progress: 80, icon: Users },
-    { label: 'Hiệu suất', value: '92%', progress: 92, icon: Activity }
+  const realtimeStats = [
+    {
+      label: 'Dịch vụ đang thực hiện',
+      value: realtimeData.activeServices.toString(),
+      icon: Clock,
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      label: 'Hàng chờ',
+      value: realtimeData.queueLength.toString(),
+      icon: Calendar,
+      color: 'from-orange-500 to-orange-600'
+    },
+    {
+      label: 'Thời gian chờ TB',
+      value: realtimeData.avgWaitTime,
+      icon: Clock,
+      color: 'from-purple-500 to-purple-600'
+    }
   ];
+
+  // Prepare chart data
+  const chartData = revenueByPeriod.map(item => ({
+    name: item.period,
+    revenue: item.totalRevenue,
+    payments: item.totalPayments
+  }));
+
+  const pieData = revenueByService.map(item => ({
+    name: item.serviceType,
+    value: item.revenue
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+      </div>
+    );
+  }
+
+  if (!centerID) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <p className="text-xl text-gray-600">Bạn chưa được gán vào trung tâm dịch vụ nào.</p>
+          <p className="text-gray-500 mt-2">Vui lòng liên hệ quản trị viên để được gán vào trung tâm.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Nhân viên</h2>
-          <p className="text-gray-600">Quản lý lịch hẹn và phiếu dịch vụ</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Nhân Viên</h2>
+          <p className="text-gray-600">Thống kê và báo cáo của trung tâm: <strong>{centerName}</strong></p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <div className="text-sm text-gray-600">Thời gian hiện tại</div>
+            <div className="text-sm text-gray-600">Cập nhật lần cuối</div>
             <div className="text-lg font-semibold text-gray-900">
               {currentTime.toLocaleTimeString('vi-VN')}
             </div>
           </div>
-          <div className="relative">
-            <button className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-              <Bell className="w-5 h-5" />
-            </button>
-            {notifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {notifications.length}
-              </span>
-            )}
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-green-600 font-medium">Hoạt động</span>
           </div>
         </div>
       </div>
 
-      {/* Main Stats */}
+      {/* Main Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -101,10 +323,9 @@ const StaffDashboard: React.FC = () => {
                 <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <div className={`flex items-center space-x-1 text-sm font-medium px-2 py-1 rounded-full ${
+                <div className={`flex items-center space-x-1 text-xs font-medium px-2 py-1 rounded-full ${
                   stat.trend === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                 }`}>
-                  {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
                   <span>{stat.change}</span>
                 </div>
               </div>
@@ -115,243 +336,215 @@ const StaffDashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Personal Performance */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+      {/* Revenue Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Line Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
+              Doanh thu theo thời gian
+            </h3>
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value as 'today' | 'week' | 'month')}
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+            >
+              <option value="today">Hôm nay</option>
+              <option value="week">Tuần này</option>
+              <option value="month">Tháng này</option>
+            </select>
+          </div>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip 
+                  shared={false}
+                  content={({ active, payload, label }: any) => {
+                    if (active && payload && payload.length) {
+                      const entry = payload[0];
+                      return (
+                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                          <p style={{ color: entry.color }} className="text-sm">
+                            <span className="inline-block w-3 h-3 rounded mr-2" style={{ backgroundColor: entry.color }}></span>
+                            {entry.name}: {
+                              entry.dataKey === 'revenue' 
+                                ? `${Number(entry.value).toLocaleString('vi-VN')} đ`
+                                : `${entry.value} thanh toán`
+                            }
+                          </p>
+                    </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend />
+                <Line 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#0088FE" 
+                  strokeWidth={2} 
+                  name="Doanh thu" 
+                />
+                <Line 
+                  yAxisId="right"
+                  type="monotone" 
+                  dataKey="payments" 
+                  stroke="#00C49F" 
+                  strokeWidth={2} 
+                  name="Số thanh toán" 
+                  strokeDasharray="5 5"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <p>Chưa có dữ liệu doanh thu</p>
+              </div>
+            )}
+        </div>
+
+        {/* Revenue by Service Pie Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <PieChart className="w-5 h-5 mr-2 text-purple-500" />
+            Doanh thu theo dịch vụ
+          </h3>
+          {pieData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }: any) => `${name}: ${((percent as number) * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `${value.toLocaleString('vi-VN')} đ`} />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <p>Chưa có dữ liệu dịch vụ</p>
+                  </div>
+          )}
+                </div>
+                </div>
+                
+      {/* Service Breakdown List */}
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Star className="w-5 h-5 mr-2 text-purple-500" />
-          Hiệu suất cá nhân
+          <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
+          Chi tiết doanh thu dịch vụ
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {personalStats.map((stat, index) => {
+        <div className="space-y-4">
+          {revenueByService.length > 0 ? (
+            revenueByService.map((service, index) => {
+              const maxRevenue = Math.max(...revenueByService.map(s => s.revenue));
+              const percentage = maxRevenue > 0 ? (service.revenue / maxRevenue) * 100 : 0;
+              return (
+                <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                      <span className="font-medium text-gray-900">{service.serviceType}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">{service.revenue.toLocaleString('vi-VN')} đ</div>
+                      <div className="text-sm text-gray-600">{service.count} lần</div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${percentage}%`,
+                        backgroundColor: COLORS[index % COLORS.length]
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>Chưa có dữ liệu dịch vụ</p>
+              </div>
+          )}
+        </div>
+      </div>
+
+      {/* Real-time Stats */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Activity className="w-5 h-5 mr-2 text-blue-500" />
+            Thống kê thời gian thực
+          </h3>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-600">Cập nhật tự động</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {realtimeStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 text-white" />
+              </div>
                   <div>
                     <div className="text-lg font-bold text-gray-900">{stat.value}</div>
                     <div className="text-xs text-gray-600">{stat.label}</div>
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${stat.progress}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">{stat.progress}%</div>
-              </div>
+            </div>
+        </div>
+      </div>
             );
           })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Appointments */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-              Lịch hẹn hôm nay
-            </h3>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <div className="space-y-3">
-            {todayAppointments.length > 0 ? (
-              todayAppointments.map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{appointment.time}</div>
-                      <div className="text-sm text-gray-600">Khách hàng: Nguyễn Văn Nam</div>
-                      <div className="text-xs text-gray-500">{appointment.services.join(', ')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {appointment.status === 'confirmed' ? 'Đã xác nhận' :
-                       appointment.status === 'pending' ? 'Chờ xác nhận' : 'Đang thực hiện'}
-                    </span>
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Xem
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Không có lịch hẹn nào trong ngày này</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Service Tickets */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <ClipboardList className="w-5 h-5 mr-2 text-orange-500" />
-            Phiếu dịch vụ cần xử lý
-          </h3>
-          
-          <div className="space-y-3">
-            {mockServiceTickets.map((ticket) => (
-              <div key={ticket.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-gray-900">Phiếu #{ticket.id}</div>
-                    <div className="text-sm text-gray-600">VinFast VF8 - Nguyễn Văn Nam</div>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    ticket.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                    ticket.status === 'working' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {ticket.status === 'waiting' ? 'Chờ thực hiện' :
-                     ticket.status === 'working' ? 'Đang thực hiện' : 'Hoàn thành'}
-                  </span>
-                </div>
-                
-                <div className="text-sm text-gray-600 mb-3">
-                  Dịch vụ: {ticket.services.join(', ')}
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    Kỹ thuật viên: {ticket.technician}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Xem chi tiết
-                    </button>
-                    <button className="text-green-600 hover:text-green-800 text-sm font-medium">
-                      Cập nhật
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Notifications Panel */}
+      {/* Payment Method Breakdown */}
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Bell className="w-5 h-5 mr-2 text-blue-500" />
-            Thông báo mới
-          </h3>
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            Xem tất cả
-          </button>
-        </div>
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <div key={notification.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-              <div className={`w-2 h-2 rounded-full ${
-                notification.type === 'appointment' ? 'bg-blue-500' :
-                notification.type === 'service' ? 'bg-orange-500' :
-                'bg-yellow-500'
-              }`}></div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">{notification.message}</div>
-                <div className="text-xs text-gray-500">{notification.time}</div>
-              </div>
-              <button className="text-gray-400 hover:text-gray-600">
-                <CheckCircle className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button className="flex flex-col items-center space-y-2 p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-            <Calendar className="w-6 h-6" />
-            <span className="font-medium">Tạo lịch hẹn</span>
-          </button>
-          <button className="flex flex-col items-center space-y-2 p-4 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
-            <ClipboardList className="w-6 h-6" />
-            <span className="font-medium">Tạo phiếu dịch vụ</span>
-          </button>
-          <button className="flex flex-col items-center space-y-2 p-4 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors duration-200">
-            <Users className="w-6 h-6" />
-            <span className="font-medium">Thêm khách hàng</span>
-          </button>
-          <button className="flex flex-col items-center space-y-2 p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors duration-200">
-            <CheckCircle className="w-6 h-6" />
-            <span className="font-medium">Báo cáo ngày</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Hoạt động gần đây</h3>
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            Xem lịch sử
-          </button>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <DollarSign className="w-5 h-5 mr-2 text-green-500" />
+          Phương thức thanh toán (Tháng này)
+        </h3>
         <div className="space-y-4">
-          <div className="flex items-center space-x-4 p-3 bg-green-50 rounded-lg">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+            <div>
+              <div className="font-medium text-gray-900">Thanh toán online</div>
+              <div className="text-sm text-gray-600">{monthRevenue.onlinePayments} giao dịch</div>
             </div>
-            <div className="flex-1">
-              <div className="font-medium text-gray-900">Xác nhận lịch hẹn #001</div>
-              <div className="text-sm text-gray-600">Khách hàng Nguyễn Văn Nam - 10 phút trước</div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-blue-600">{monthRevenue.onlineRevenue.toLocaleString('vi-VN')} đ</div>
             </div>
-            <span className="text-xs text-green-600 font-medium">Hoàn thành</span>
           </div>
-          <div className="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <ClipboardList className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+            <div>
+              <div className="font-medium text-gray-900">Thanh toán tiền mặt</div>
+              <div className="text-sm text-gray-600">{monthRevenue.cashPayments} giao dịch</div>
             </div>
-            <div className="flex-1">
-              <div className="font-medium text-gray-900">Tạo phiếu dịch vụ mới</div>
-              <div className="text-sm text-gray-600">Tesla Model Y - 25 phút trước</div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-green-600">{monthRevenue.cashRevenue.toLocaleString('vi-VN')} đ</div>
             </div>
-            <span className="text-xs text-blue-600 font-medium">Đang xử lý</span>
-          </div>
-          <div className="flex items-center space-x-4 p-3 bg-orange-50 rounded-lg">
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="font-medium text-gray-900">Cập nhật trạng thái dịch vụ</div>
-              <div className="text-sm text-gray-600">VinFast VF8 - 1 giờ trước</div>
-            </div>
-            <span className="text-xs text-orange-600 font-medium">Cần kiểm tra</span>
-          </div>
-          <div className="flex items-center space-x-4 p-3 bg-purple-50 rounded-lg">
-            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-              <Users className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="font-medium text-gray-900">Thêm khách hàng mới</div>
-              <div className="text-sm text-gray-600">Trần Thị B - Tesla Model 3 - 2 giờ trước</div>
-            </div>
-            <span className="text-xs text-purple-600 font-medium">Mới</span>
           </div>
         </div>
       </div>

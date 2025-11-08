@@ -227,8 +227,10 @@ class AdminService {
     throw new Error(response.message || 'Không thể lấy tổng doanh thu');
   }
 
-  async getTodayRevenue(centerID?: number): Promise<any> {
+  async getTodayRevenue(dateFrom?: string, dateTo?: string, centerID?: number): Promise<any> {
     const params: Record<string, any> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
     if (centerID) params.centerID = centerID;
     
     const response = await httpClient.get<any>(
@@ -244,8 +246,10 @@ class AdminService {
     throw new Error(response.message || 'Không thể lấy doanh thu hôm nay');
   }
 
-  async getMonthRevenue(centerID?: number): Promise<any> {
+  async getMonthRevenue(dateFrom?: string, dateTo?: string, centerID?: number): Promise<any> {
     const params: Record<string, any> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
     if (centerID) params.centerID = centerID;
     
     const response = await httpClient.get<any>(
@@ -261,12 +265,13 @@ class AdminService {
     throw new Error(response.message || 'Không thể lấy doanh thu tháng');
   }
 
-  async getRevenueByPeriod(dateFrom: string, dateTo: string, periodType: string = 'day'): Promise<any[]> {
+  async getRevenueByPeriod(dateFrom: string, dateTo: string, periodType: string = 'day', centerID?: number): Promise<any[]> {
     const params: Record<string, any> = {
       dateFrom,
       dateTo,
       periodType
     };
+    if (centerID) params.centerID = centerID;
     
     const response = await httpClient.get<any[]>(
       API_CONFIG.ENDPOINTS.REVENUE.BY_PERIOD,
