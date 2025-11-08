@@ -59,8 +59,7 @@ import PartsUsage from './components/technician/PartsUsage';
 import TechnicianPartUsage from './components/technician/TechnicianPartUsage';
 import StaffChecklistView from './components/staff/StaffChecklistView';
 import PaymentSuccess from './components/common/PaymentSuccess';
-import QuoteManagement from './components/admin/QuoteManagement';
-import QuoteRequestManagement from './components/admin/QuoteRequestManagement';
+import QuoteManagementCombined from './components/admin/QuoteManagementCombined';
 import MyQuotes from './components/customer/MyQuotes';
 import StaffQuoteManagement from './components/staff/StaffQuoteManagement';
 import StaffQuoteRequestManagement from './components/staff/StaffQuoteRequestManagement';
@@ -147,8 +146,7 @@ const AppContent: React.FC = () => {
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
         <Route path="service-checklists" element={<ServiceChecklistManagement />} />
-            <Route path="quotes" element={<QuoteManagement />} />
-            <Route path="quote-requests" element={<QuoteRequestManagement />} />
+        <Route path="quotes" element={<QuoteManagementCombined />} />
         <Route path="technician-certifications" element={<TechnicianCertificationManagement />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="messages" element={<ChatMessage />} />

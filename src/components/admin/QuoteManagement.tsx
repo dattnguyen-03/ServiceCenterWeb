@@ -182,10 +182,9 @@ const QuoteManagement: React.FC = () => {
   );
 
   return (
-    <div className="p-6">
+    <div>
       <Card>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Quản Lý Báo Giá</h2>
           <Space>
             <Search
               placeholder="Tìm kiếm báo giá..."

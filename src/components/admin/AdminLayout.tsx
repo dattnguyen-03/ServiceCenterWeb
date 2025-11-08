@@ -9,7 +9,6 @@ import {
   FileTextOutlined,
   ToolOutlined,
   TeamOutlined,
-  DollarOutlined,
   GiftOutlined,
   LogoutOutlined,
   DownOutlined,
@@ -54,14 +53,9 @@ const AdminLayout: React.FC = () => {
       label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
     },
     {
-      key: '/admin/quote-requests',
-      icon: <FileTextOutlined />,
-      label: <Link to="/admin/quote-requests">Yêu cầu báo giá</Link>,
-    },
-    {
       key: '/admin/quotes',
       icon: <FileTextOutlined />,
-      label: <Link to="/admin/quotes">Quản lý báo giá</Link>,
+      label: <Link to="/admin/quotes">Quản Lý Báo Giá</Link>,
     },
     {
       key: '/admin/service-orders',
