@@ -238,67 +238,39 @@ const StaffQuoteManagement: React.FC = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <FileTextOutlined className="text-white text-2xl" />
-              </div>
-              <div>
-                <Title level={2} className="!mb-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Quản Lý Báo Giá
-                </Title>
-                <Text type="secondary" className="text-base">
-                  Tạo và quản lý báo giá cho khách hàng
-                </Text>
-                <div className="flex items-center space-x-4 mt-2">
-                  <div className="flex items-center space-x-1 text-sm text-gray-500">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Hệ thống hoạt động bình thường</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Tổng cộng: {quotes.length} báo giá
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-             /
-            </div>
-          </div>
+    <div>
+      <Card>
+        <div className="flex justify-between items-center mb-6">
+          <Space>
+            <Search
+              placeholder="Tìm kiếm báo giá theo khách hàng, dịch vụ hoặc xe..."
+              size="large"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              allowClear
+              style={{ width: 300 }}
+            />
+          </Space>
+          <Button
+            type="primary"
+            icon={<FileTextOutlined />}
+            onClick={() => {
+              setSelectedQuote(null);
+              form.resetFields();
+              setModalVisible(true);
+            }}
+          >
+            Tạo Báo Giá
+          </Button>
         </div>
-      </div>
 
-      {/* Search Bar */}
-      <Card className="mb-6 border-0 shadow-sm">
-        <Search
-          placeholder="Tìm kiếm báo giá theo khách hàng, dịch vụ hoặc xe..."
-          size="large"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          allowClear
-          className="w-full"
-        />
-      </Card>
-
-      {/* Quotes Table */}
-      <Card className="border-0 shadow-sm">
+        {/* Quotes Table */}
         <Table
           columns={columns}
           dataSource={filteredQuotes}
           loading={loading}
           rowKey="quoteID"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} báo giá`,
-          }}
-          className="rounded-lg"
-          rowClassName="hover:bg-gray-50 transition-colors duration-200"
+          pagination={{ pageSize: 10 }}
         />
       </Card>
 

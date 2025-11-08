@@ -60,8 +60,7 @@ import StaffChecklistView from './components/staff/StaffChecklistView';
 import PaymentSuccess from './components/common/PaymentSuccess';
 import QuoteManagementCombined from './components/admin/QuoteManagementCombined';
 import MyQuotes from './components/customer/MyQuotes';
-import StaffQuoteManagement from './components/staff/StaffQuoteManagement';
-import StaffQuoteRequestManagement from './components/staff/StaffQuoteRequestManagement';
+import StaffQuoteManagementCombined from './components/staff/StaffQuoteManagementCombined';
 import StaffInventoryManagement from './components/staff/StaffInventoryManagement';
 import ChatMessage from './components/common/ChatMessage';
 
@@ -171,8 +170,7 @@ const AppContent: React.FC = () => {
         <Route path="inventory" element={<StaffInventoryManagement />} />
         <Route path="progress" element={<ServiceProgress />} />
         <Route path="invoices" element={<Billing />} />
-        <Route path="quotes" element={<StaffQuoteManagement />} />
-        <Route path="quote-requests" element={<StaffQuoteRequestManagement />} />
+        <Route path="quotes" element={<StaffQuoteManagementCombined />} />
         <Route path="messages" element={<ChatMessage />} />
       </Route>
 

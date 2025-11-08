@@ -205,22 +205,10 @@ const StaffQuoteRequestManagement: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Quản Lý Yêu Cầu Báo Giá
-      </h1>
-
+    <div>
       <Card
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <FileTextOutlined style={{ color: '#096dd9', fontSize: '24px' }} />
-            <span style={{ fontSize: '20px', fontWeight: 600 }}>
-              Danh sách yêu cầu báo giá từ Technician
-            </span>
-          </div>
-        }
         bordered={false}
-        className="shadow-lg rounded-xl mb-8"
+        className="shadow-lg rounded-xl"
         extra={
           <Input.Search
             placeholder="Tìm kiếm yêu cầu báo giá..."
