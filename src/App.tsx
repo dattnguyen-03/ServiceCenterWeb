@@ -26,9 +26,8 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import AdminProfile from './components/admin/AdminProfile';
 import CustomerManagement from './components/admin/CustomerManagement';
 import PartsManagement from './components/admin/PartsManagement';
-import InventoryManagement from './components/admin/InventoryManagement';
 import TechnicianCertificationManagement from './components/admin/TechnicianCertificationManagement';
-import PartUsageManagement from './components/admin/PartUsageManagement';
+import InventoryPartUsageCombined from './components/admin/InventoryPartUsageCombined';
 import StaffManagement from './components/admin/StaffManagement';
 import AdminServicePackageManagement from './components/admin/ServicePackageManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
@@ -140,8 +139,7 @@ const AppContent: React.FC = () => {
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="appointments" element={<AdminAppointmentConfirmation />} />
         <Route path="parts" element={<PartsManagement />} />
-        <Route path="inventory" element={<InventoryManagement />} />
-        <Route path="part-usage" element={<PartUsageManagement />} />
+        <Route path="inventory" element={<InventoryPartUsageCombined />} />
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />

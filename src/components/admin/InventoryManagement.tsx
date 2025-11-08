@@ -253,41 +253,21 @@ const InventoryManagement: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
-      <Card 
-        style={{ 
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        }}
-      >
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', color: '#1f2937' }}>
-              <DatabaseOutlined style={{ marginRight: '12px', color: '#3b82f6' }} />
-              Quản lý tồn kho
-            </h2>
-            <p style={{ color: '#6b7280', fontSize: '15px' }}>Quản lý tồn kho phụ tùng tại các trung tâm dịch vụ</p>
-          </div>
+    <div>
+      <Card>
+        <div className="flex justify-between items-center mb-6">
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleAdd}
             size="large"
-            style={{
-              height: '48px',
-              fontSize: '16px',
-              fontWeight: 600,
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              border: 'none',
-            }}
           >
             Thêm tồn kho
           </Button>
         </div>
 
         {/* Search Bar */}
-        <Card style={{ marginBottom: '24px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+        <div className="mb-6">
           <Input
             placeholder="Tìm kiếm theo tên phụ tùng hoặc trung tâm dịch vụ..."
             prefix={<SearchOutlined />}
@@ -295,90 +275,62 @@ const InventoryManagement: React.FC = () => {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             allowClear
-            style={{ borderRadius: '8px' }}
           />
-        </Card>
+        </div>
 
         {/* Statistics */}
-        <Row gutter={16} style={{ marginBottom: '24px' }}>
+        <Row gutter={16} className="mb-6">
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Tổng bản ghi</span>}
+                title="Tổng bản ghi"
                 value={stats.total}
-                prefix={<DatabaseOutlined style={{ color: '#3b82f6' }} />}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#1e40af' }}
+                prefix={<DatabaseOutlined />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Tồn kho thấp</span>}
+                title="Tồn kho thấp"
                 value={stats.lowStock}
-                prefix={<AppstoreOutlined style={{ color: '#f59e0b' }} />}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#d97706' }}
+                prefix={<AppstoreOutlined />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Tổng số lượng</span>}
+                title="Tổng số lượng"
                 value={stats.totalQuantity}
-                prefix={<AppstoreOutlined style={{ color: '#10b981' }} />}
+                prefix={<AppstoreOutlined />}
                 formatter={(value) => value.toLocaleString('vi-VN')}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#047857' }}
               />
             </Card>
           </Col>
         </Row>
 
         {/* Table */}
-        <Card style={{ borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-          <Table
-            columns={columns}
-            dataSource={filteredInventories}
-            loading={loading}
-            rowKey="inventoryID"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => (
-                <span style={{ fontSize: '14px', fontWeight: 600 }}>
-                  Tổng cộng <span style={{ color: '#3b82f6' }}>{total}</span> bản ghi
-                </span>
-              ),
-            }}
-          />
-        </Card>
+        <Table
+          columns={columns}
+          dataSource={filteredInventories}
+          loading={loading}
+          rowKey="inventoryID"
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng cộng ${total} bản ghi`,
+          }}
+        />
       </Card>
 
       {/* Detail Modal */}
       <Modal
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <InfoCircleOutlined style={{ color: '#3b82f6', fontSize: '20px' }} />
-            <span style={{ fontSize: '18px', fontWeight: 600 }}>Chi tiết tồn kho</span>
-          </div>
+          <span>
+            <InfoCircleOutlined className="mr-2 text-blue-500" />
+            Chi tiết tồn kho
+          </span>
         }
         open={detailModalVisible}
         onCancel={() => {
@@ -460,13 +412,7 @@ const InventoryManagement: React.FC = () => {
 
       {/* Create/Edit Modal */}
       <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px', fontWeight: 600 }}>
-              {editingInventory ? 'Chỉnh sửa tồn kho' : 'Thêm tồn kho mới'}
-            </span>
-          </div>
-        }
+        title={editingInventory ? 'Chỉnh sửa tồn kho' : 'Thêm tồn kho mới'}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -477,12 +423,6 @@ const InventoryManagement: React.FC = () => {
         okText="Lưu"
         cancelText="Hủy"
         width={600}
-        okButtonProps={{ 
-          style: { height: '40px', fontSize: '16px', fontWeight: 600 }
-        }}
-        cancelButtonProps={{
-          style: { height: '40px', fontSize: '16px' }
-        }}
       >
         <Form
           form={form}
@@ -491,7 +431,7 @@ const InventoryManagement: React.FC = () => {
         >
           <Form.Item
             name="partID"
-            label={<strong>Phụ tùng</strong>}
+            label="Phụ tùng"
             rules={[{ required: true, message: 'Vui lòng chọn phụ tùng' }]}
           >
             <Select 
@@ -514,7 +454,7 @@ const InventoryManagement: React.FC = () => {
 
           <Form.Item
             name="centerID"
-            label={<strong>Trung tâm dịch vụ</strong>}
+            label="Trung tâm dịch vụ"
             rules={[{ required: true, message: 'Vui lòng chọn trung tâm dịch vụ' }]}
           >
             <Select 
@@ -537,7 +477,7 @@ const InventoryManagement: React.FC = () => {
 
           <Form.Item
             name="quantity"
-            label={<strong>Số lượng</strong>}
+            label="Số lượng"
             rules={[
               { required: true, message: 'Vui lòng nhập số lượng' },
               { type: 'number', min: 0, message: 'Số lượng phải lớn hơn hoặc bằng 0' }
@@ -554,15 +494,8 @@ const InventoryManagement: React.FC = () => {
           </Form.Item>
 
           {!editingInventory && (
-            <div style={{ 
-              padding: '12px', 
-              background: '#f0f9ff', 
-              borderRadius: '8px',
-              marginTop: '8px',
-              fontSize: '13px',
-              color: '#0369a1'
-            }}>
-              <InfoCircleOutlined style={{ marginRight: '8px' }} />
+            <div className="p-3 bg-blue-50 rounded-lg mt-2 text-sm text-blue-600">
+              <InfoCircleOutlined className="mr-2" />
               Nếu tồn kho đã tồn tại cho phụ tùng và trung tâm này, số lượng sẽ được cộng thêm.
             </div>
           )}

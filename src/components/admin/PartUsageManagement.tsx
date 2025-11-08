@@ -68,19 +68,9 @@ const PartUsageManagement: React.FC = () => {
       // Load service orders
       try {
         const orders = await serviceOrderService.getAllServiceOrders();
-        console.log('Admin - Loaded service orders:', orders);
-        console.log('Admin - Orders length:', orders?.length);
-        if (orders && orders.length > 0) {
-          const firstOrder = orders[0];
-          console.log('Admin - First order:', firstOrder);
-          console.log('Admin - First order keys:', Object.keys(firstOrder));
-          console.log('Admin - First order OrderID:', firstOrder.OrderID);
-          console.log('Admin - First order orderID:', firstOrder.orderID);
-        }
         setServiceOrders(orders || []);
       } catch (err) {
         console.error('Error loading service orders:', err);
-        // Không báo lỗi nếu không load được orders vì có thể không cần thiết
       }
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -175,18 +165,14 @@ const PartUsageManagement: React.FC = () => {
 
   // Handler khi chọn Order, tự động set CenterID
   const handleOrderChange = (orderID: number) => {
-    console.log('Selected order ID:', orderID);
     const order = serviceOrders.find(o => 
       (o.OrderID === orderID) || (o.orderID === orderID)
     );
     if (order) {
-      console.log('Found order:', order);
       const center = centers.find(c => c.name === order.centerName);
       if (center) {
         form.setFieldsValue({ centerID: center.centerID });
       }
-    } else {
-      console.warn('Order not found for ID:', orderID);
     }
   };
 
@@ -263,41 +249,28 @@ const PartUsageManagement: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
-      <Card 
-        style={{ 
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        }}
-      >
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div>
+      <Card>
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', color: '#1f2937' }}>
-              <ToolOutlined style={{ marginRight: '12px', color: '#3b82f6' }} />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <ToolOutlined className="mr-2 text-blue-500" />
               Quản lý sử dụng phụ tùng
             </h2>
-            <p style={{ color: '#6b7280', fontSize: '15px' }}>Quản lý việc sử dụng phụ tùng trong các đơn dịch vụ</p>
+            <p className="text-gray-600">Quản lý việc sử dụng phụ tùng trong các đơn dịch vụ</p>
           </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleAdd}
             size="large"
-            style={{
-              height: '48px',
-              fontSize: '16px',
-              fontWeight: 600,
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              border: 'none',
-            }}
           >
             Thêm bản ghi
           </Button>
         </div>
 
         {/* Search Bar */}
-        <Card style={{ marginBottom: '24px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+        <div className="mb-6">
           <Input
             placeholder="Tìm kiếm theo tên phụ tùng..."
             prefix={<SearchOutlined />}
@@ -305,90 +278,62 @@ const PartUsageManagement: React.FC = () => {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             allowClear
-            style={{ borderRadius: '8px' }}
           />
-        </Card>
+        </div>
 
         {/* Statistics */}
-        <Row gutter={16} style={{ marginBottom: '24px' }}>
+        <Row gutter={16} className="mb-6">
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Tổng bản ghi</span>}
+                title="Tổng bản ghi"
                 value={stats.total}
-                prefix={<AppstoreOutlined style={{ color: '#3b82f6' }} />}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#1e40af' }}
+                prefix={<AppstoreOutlined />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Tổng số lượng đã dùng</span>}
+                title="Tổng số lượng đã dùng"
                 value={stats.totalQuantityUsed}
-                prefix={<ToolOutlined style={{ color: '#f59e0b' }} />}
+                prefix={<ToolOutlined />}
                 formatter={(value) => value.toLocaleString('vi-VN')}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#d97706' }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card 
-              style={{ 
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                border: 'none',
-              }}
-            >
+            <Card>
               <Statistic
-                title={<span style={{ color: '#64748b' }}>Loại phụ tùng</span>}
+                title="Loại phụ tùng"
                 value={stats.uniqueParts}
-                prefix={<AppstoreOutlined style={{ color: '#10b981' }} />}
-                valueStyle={{ fontSize: '28px', fontWeight: 700, color: '#047857' }}
+                prefix={<AppstoreOutlined />}
               />
             </Card>
           </Col>
         </Row>
 
         {/* Table */}
-        <Card style={{ borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-          <Table
-            columns={columns}
-            dataSource={filteredPartUsages}
-            loading={loading}
-            rowKey="usageID"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => (
-                <span style={{ fontSize: '14px', fontWeight: 600 }}>
-                  Tổng cộng <span style={{ color: '#3b82f6' }}>{total}</span> bản ghi
-                </span>
-              ),
-            }}
-          />
-        </Card>
+        <Table
+          columns={columns}
+          dataSource={filteredPartUsages}
+          loading={loading}
+          rowKey="usageID"
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng cộng ${total} bản ghi`,
+          }}
+        />
       </Card>
 
       {/* Detail Modal */}
       <Modal
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <InfoCircleOutlined style={{ color: '#3b82f6', fontSize: '20px' }} />
-            <span style={{ fontSize: '18px', fontWeight: 600 }}>Chi tiết bản ghi sử dụng</span>
-          </div>
+          <span>
+            <InfoCircleOutlined className="mr-2 text-blue-500" />
+            Chi tiết bản ghi sử dụng
+          </span>
         }
         open={detailModalVisible}
         onCancel={() => {
@@ -411,20 +356,16 @@ const PartUsageManagement: React.FC = () => {
         {viewingPartUsage && (
           <Descriptions bordered column={1} size="middle">
             <Descriptions.Item label="Mã bản ghi">
-              <Tag color="blue" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                #{viewingPartUsage.usageID}
-              </Tag>
+              <Tag color="blue">#{viewingPartUsage.usageID}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Đơn dịch vụ">
-              <Tag color="green" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                Order #{viewingPartUsage.orderID}
-              </Tag>
+              <Tag color="green">Order #{viewingPartUsage.orderID}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Phụ tùng">
-              <strong style={{ fontSize: '16px' }}>{viewingPartUsage.partName}</strong>
+              <strong>{viewingPartUsage.partName}</strong>
             </Descriptions.Item>
             <Descriptions.Item label="Số lượng đã dùng">
-              <Tag color="orange" style={{ fontSize: '16px', padding: '4px 12px', fontWeight: 600 }}>
+              <Tag color="orange">
                 {viewingPartUsage.quantityUsed.toLocaleString('vi-VN')}
               </Tag>
             </Descriptions.Item>
@@ -434,13 +375,7 @@ const PartUsageManagement: React.FC = () => {
 
       {/* Create Modal */}
       <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px', fontWeight: 600 }}>
-              Thêm bản ghi sử dụng phụ tùng
-            </span>
-          </div>
-        }
+        title="Thêm bản ghi sử dụng phụ tùng"
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -450,12 +385,6 @@ const PartUsageManagement: React.FC = () => {
         okText="Lưu"
         cancelText="Hủy"
         width={600}
-        okButtonProps={{ 
-          style: { height: '40px', fontSize: '16px', fontWeight: 600 }
-        }}
-        cancelButtonProps={{
-          style: { height: '40px', fontSize: '16px' }
-        }}
       >
         <Form
           form={form}
@@ -464,7 +393,7 @@ const PartUsageManagement: React.FC = () => {
         >
           <Form.Item
             name="orderID"
-            label={<strong>Đơn dịch vụ</strong>}
+            label="Đơn dịch vụ"
             rules={[{ required: true, message: 'Vui lòng chọn đơn dịch vụ' }]}
           >
             <Select 
@@ -477,45 +406,32 @@ const PartUsageManagement: React.FC = () => {
                   ? "Đang tải dữ liệu..." 
                   : "Không tìm thấy đơn dịch vụ"
               }
-              onChange={(value) => {
-                console.log('Admin - Selected order ID:', value);
-                handleOrderChange(value);
-              }}
+              onChange={handleOrderChange}
               filterOption={(input, option) => {
                 const text = (option?.children as unknown as string)?.toLowerCase() || '';
                 return text.includes(input.toLowerCase());
               }}
             >
-              {(() => {
-                const validOrders = serviceOrders.filter(order => {
+              {serviceOrders
+                .filter(order => {
                   const id = order?.OrderID || order?.orderID;
-                  const isValid = order && id;
-                  if (!isValid) {
-                    console.warn('Invalid order filtered out:', order);
-                  }
-                  return isValid;
-                });
-                
-                console.log('Admin - Total orders:', serviceOrders.length);
-                console.log('Admin - Valid orders after filter:', validOrders.length);
-                
-                return validOrders.map(order => {
+                  return order && id;
+                })
+                .map(order => {
                   const id = order.OrderID || order.orderID;
                   const displayText = `Order #${id} - ${order.customerName || ''} - ${order.centerName || ''}`;
-                  console.log('Admin - Rendering option:', { id, displayText });
                   return (
                     <Option key={id} value={id}>
                       {displayText}
                     </Option>
                   );
-                });
-              })()}
+                })}
             </Select>
           </Form.Item>
 
           <Form.Item
             name="centerID"
-            label={<strong>Trung tâm dịch vụ</strong>}
+            label="Trung tâm dịch vụ"
             rules={[{ required: true, message: 'Vui lòng chọn trung tâm dịch vụ' }]}
           >
             <Select 
@@ -540,7 +456,7 @@ const PartUsageManagement: React.FC = () => {
 
           <Form.Item
             name="partID"
-            label={<strong>Phụ tùng</strong>}
+            label="Phụ tùng"
             rules={[{ required: true, message: 'Vui lòng chọn phụ tùng' }]}
           >
             <Select 
@@ -565,7 +481,7 @@ const PartUsageManagement: React.FC = () => {
 
           <Form.Item
             name="quantityUsed"
-            label={<strong>Số lượng đã dùng</strong>}
+            label="Số lượng đã dùng"
             rules={[
               { required: true, message: 'Vui lòng nhập số lượng' },
               { type: 'number', min: 1, message: 'Số lượng phải lớn hơn 0' }
@@ -580,15 +496,8 @@ const PartUsageManagement: React.FC = () => {
             />
           </Form.Item>
 
-          <div style={{ 
-            padding: '12px', 
-            background: '#fff7ed', 
-            borderRadius: '8px',
-            marginTop: '8px',
-            fontSize: '13px',
-            color: '#d97706'
-          }}>
-            <InfoCircleOutlined style={{ marginRight: '8px' }} />
+          <div className="p-3 bg-orange-50 rounded-lg mt-2 text-sm text-orange-600">
+            <InfoCircleOutlined className="mr-2" />
             Sau khi tạo, số lượng phụ tùng sẽ được trừ khỏi tồn kho của trung tâm đã chọn.
           </div>
         </Form>
