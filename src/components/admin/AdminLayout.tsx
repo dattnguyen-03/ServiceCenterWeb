@@ -103,11 +103,11 @@ const AdminLayout: React.FC = () => {
       icon: <IdcardOutlined />,
       label: <Link to="/admin/technician-certifications">Chứng chỉ KTV</Link>,
     },
-    {
-      key: '/admin/finance',
-      icon: <DollarOutlined />,
-      label: <Link to="/admin/finance">Tài chính</Link>,
-    },
+    // {
+    //   key: '/admin/finance',
+    //   icon: <DollarOutlined />,
+    //   label: <Link to="/admin/finance">Tài chính</Link>,
+    // },
     {
       key: '/admin/messages',
       icon: <MessageOutlined />,

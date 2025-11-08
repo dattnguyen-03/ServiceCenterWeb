@@ -29,7 +29,6 @@ import PartsManagement from './components/admin/PartsManagement';
 import InventoryManagement from './components/admin/InventoryManagement';
 import TechnicianCertificationManagement from './components/admin/TechnicianCertificationManagement';
 import PartUsageManagement from './components/admin/PartUsageManagement';
-import FinancialReports from './components/admin/FinancialReports';
 import StaffManagement from './components/admin/StaffManagement';
 import AdminServicePackageManagement from './components/admin/ServicePackageManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
@@ -152,7 +151,6 @@ const AppContent: React.FC = () => {
             <Route path="quote-requests" element={<QuoteRequestManagement />} />
         <Route path="technician-certifications" element={<TechnicianCertificationManagement />} />
         <Route path="staff" element={<StaffManagement />} />
-        <Route path="finance" element={<FinancialReports />} />
         <Route path="messages" element={<ChatMessage />} />
       </Route>
 
