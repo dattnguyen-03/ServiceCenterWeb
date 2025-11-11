@@ -43,15 +43,11 @@ const MyQuotes: React.FC = () => {
     
     try {
       if (paymentMethod === 'online') {
-        // Bước 1: Approve quote trước (chỉ nếu chưa approved)
-        if (selectedQuote.status !== 'approved') {
-          await quoteService.approveQuote({
-            quoteID: selectedQuote.quoteID,
-            action: 'approve',
-          });
-        }
+        // ✅ Với online payment: KHÔNG approve quote ngay
+        // Chỉ approve khi payment completed (xử lý ở backend)
+        // Nếu hủy thanh toán, quote vẫn ở trạng thái "pending" để customer có thể xem lại và thanh toán lại
 
-        // Bước 2: Tạo payment link cho online payment
+        // Tạo payment link cho online payment
         const paymentData = {
           appointmentID: selectedQuote.appointmentID,
           amount: selectedQuote.finalAmount,

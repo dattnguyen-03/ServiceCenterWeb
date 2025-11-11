@@ -3,6 +3,7 @@ import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, 
 import { FileTextOutlined, SearchOutlined, EyeOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { serviceChecklistService, ServiceChecklist, CreateServiceChecklistRequest, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
+import { serviceOrderService, ServiceOrder } from "../../services/serviceOrderService";
 import { message } from "antd";
 
 const TechnicianChecklistView: React.FC = () => {
@@ -14,11 +15,14 @@ const TechnicianChecklistView: React.FC = () => {
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingChecklist, setEditingChecklist] = useState<ServiceChecklist | null>(null);
+  const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
   useEffect(() => {
     fetchChecklists();
+    fetchServiceOrders();
   }, []);
 
   const fetchChecklists = async () => {
@@ -34,12 +38,72 @@ const TechnicianChecklistView: React.FC = () => {
     }
   };
 
+  const fetchServiceOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const orders = await serviceOrderService.getMyServiceOrders();
+      setServiceOrders(orders);
+    } catch (err: any) {
+      console.error("Error fetching service orders:", err);
+      // Không hiển thị error vì có thể technician chưa có order nào
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
   const handleViewDetail = (checklist: ServiceChecklist) => {
     setSelectedChecklist(checklist);
     setIsDetailModalVisible(true);
   };
 
   const handleCreateChecklist = async (values: CreateServiceChecklistRequest) => {
+    // Validate: Kiểm tra xem Service Order đã hoàn tất chưa
+    const selectedOrder = serviceOrders.find(
+      order => (order.OrderID || order.orderID) === values.orderID
+    );
+    
+    console.log('=== VALIDATION DEBUG ===');
+    console.log('Creating checklist for order:', values.orderID);
+    console.log('Selected order FULL:', JSON.stringify(selectedOrder, null, 2));
+    console.log('Order status:', selectedOrder?.status, 'Type:', typeof selectedOrder?.status);
+    console.log('Is Completed?', selectedOrder?.status === 'Completed');
+    console.log('Available orders count:', availableOrders.length);
+    console.log('Available orders:', availableOrders.map(o => ({ id: o.OrderID || o.orderID, status: o.status, statusType: typeof o.status })));
+    console.log('All orders:', serviceOrders.map(o => ({ id: o.OrderID || o.orderID, status: o.status, statusType: typeof o.status })));
+    console.log('=======================');
+    
+    if (!selectedOrder) {
+      message.error('Không tìm thấy Service Order!');
+      return;
+    }
+    
+    const orderStatus = selectedOrder.status;
+    console.log('Order status value:', orderStatus, 'Type:', typeof orderStatus);
+    console.log('Status comparison:', {
+      '=== Completed': orderStatus === 'Completed'
+    });
+    
+    // Kiểm tra nhiều cách viết của Completed
+    const isCompleted = orderStatus === 'Completed';
+    
+    if (isCompleted) {
+      console.error('BLOCKED: Trying to create checklist for completed order:', values.orderID);
+      message.error('Không thể tạo checklist cho Service Order đã hoàn tất!');
+      form.setFields([{ name: 'orderID', errors: ['Không thể chọn Service Order đã hoàn tất'] }]);
+      return;
+    }
+    
+    // Double check: đảm bảo order không có trong availableOrders nếu đã completed
+    const isInAvailable = availableOrders.some(
+      o => (o.OrderID || o.orderID) === values.orderID
+    );
+    if (!isInAvailable) {
+      console.error('BLOCKED: Order not in availableOrders:', values.orderID);
+      message.error('Service Order này không khả dụng để tạo checklist!');
+      form.setFields([{ name: 'orderID', errors: ['Service Order này không khả dụng'] }]);
+      return;
+    }
+    
     setLoading(true);
     try {
       await serviceChecklistService.createChecklist(values);
@@ -56,6 +120,18 @@ const TechnicianChecklistView: React.FC = () => {
 
   const handleEditChecklist = async (values: EditServiceChecklistRequest) => {
     if (!editingChecklist) return;
+    
+    // Validate: Nếu đổi sang order khác, kiểm tra order đó có completed chưa
+    if (values.orderID !== editingChecklist.orderID) {
+      const selectedOrder = serviceOrders.find(
+        order => (order.OrderID || order.orderID) === values.orderID
+      );
+      
+      if (selectedOrder && selectedOrder.status === 'Completed') {
+        message.error('Không thể chuyển checklist sang Service Order đã hoàn tất!');
+        return;
+      }
+    }
     
     setLoading(true);
     try {
@@ -82,6 +158,28 @@ const TechnicianChecklistView: React.FC = () => {
       status: checklist.status,
       notes: checklist.notes
     });
+  };
+
+  // Lọc các Service Orders chưa hoàn tất
+  const availableOrders = serviceOrders.filter(order => {
+    const status = order.status;
+    const isNotCompleted = status !== 'Completed';
+    if (!isNotCompleted) {
+      console.log('Filtered out completed order:', order.OrderID || order.orderID, 'status:', status);
+    }
+    return isNotCompleted;
+  });
+  
+  // Lấy danh sách orders cho Edit modal: bao gồm availableOrders + order hiện tại của checklist đang edit (nếu có)
+  const getEditModalOrders = () => {
+    if (!editingChecklist) return availableOrders;
+    const currentOrder = serviceOrders.find(
+      order => (order.OrderID || order.orderID) === editingChecklist.orderID
+    );
+    if (currentOrder && !availableOrders.find(o => (o.OrderID || o.orderID) === currentOrder.OrderID || currentOrder.orderID)) {
+      return [...availableOrders, currentOrder];
+    }
+    return availableOrders;
   };
 
   const filteredChecklists = checklists.filter((checklist) => {
@@ -219,14 +317,18 @@ const TechnicianChecklistView: React.FC = () => {
             size="large"
             icon={<PlusOutlined />}
             onClick={() => setIsCreateModalVisible(true)}
+            disabled={availableOrders.length === 0}
             style={{
               borderRadius: 10,
-              background: 'linear-gradient(90deg, #ffffff 0%, #f0f9ff 100%)',
+              background: availableOrders.length === 0 
+                ? '#d1d5db' 
+                : 'linear-gradient(90deg, #ffffff 0%, #f0f9ff 100%)',
               border: '2px solid #fff',
-              color: '#0284c7',
+              color: availableOrders.length === 0 ? '#9ca3af' : '#0284c7',
               fontWeight: 700,
               height: 45
             }}
+            title={availableOrders.length === 0 ? 'Không có Service Order nào chưa hoàn tất để tạo checklist' : ''}
           >
             Thêm Checklist
           </Button>
@@ -418,13 +520,53 @@ const TechnicianChecklistView: React.FC = () => {
           <Form.Item
             label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Order ID</span>}
             name="orderID"
-            rules={[{ required: true, message: "Vui lòng nhập Order ID" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn Order ID" },
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  const selectedOrder = serviceOrders.find(
+                    order => (order.OrderID || order.orderID) === value
+                  );
+                  if (selectedOrder && selectedOrder.status === 'Completed') {
+                    return Promise.reject(new Error('Không thể chọn Service Order đã hoàn tất!'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
           >
-            <Input
-              type="number"
-              placeholder="Nhập Order ID"
+            <Select
+              placeholder="Chọn Order ID"
               size="large"
               style={{ borderRadius: 10 }}
+              loading={loadingOrders}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              onChange={(value) => {
+                // Validate ngay khi chọn
+                const selectedOrder = serviceOrders.find(
+                  order => (order.OrderID || order.orderID) === value
+                );
+                if (selectedOrder && selectedOrder.status === 'Completed') {
+                  message.error('Không thể chọn Service Order đã hoàn tất!');
+                  form.setFieldsValue({ orderID: undefined });
+                  form.setFields([{ name: 'orderID', errors: ['Không thể chọn Service Order đã hoàn tất'] }]);
+                }
+              }}
+              options={availableOrders.map(order => {
+                // Double check: không bao giờ hiển thị order completed
+                if (order.status === 'Completed') {
+                  console.error('ERROR: Completed order found in availableOrders:', order.OrderID || order.orderID);
+                }
+                return {
+                  value: order.OrderID || order.orderID,
+                  label: `Order #${order.OrderID || order.orderID} - ${order.customerName} - ${order.vehicleModel} (${order.status})`,
+                  disabled: order.status === 'Completed'
+                };
+              })}
             />
           </Form.Item>
 
@@ -513,13 +655,21 @@ const TechnicianChecklistView: React.FC = () => {
           <Form.Item
             label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Order ID</span>}
             name="orderID"
-            rules={[{ required: true, message: "Vui lòng nhập Order ID" }]}
+            rules={[{ required: true, message: "Vui lòng chọn Order ID" }]}
           >
-            <Input
-              type="number"
-              placeholder="Nhập Order ID"
+            <Select
+              placeholder="Chọn Order ID"
               size="large"
               style={{ borderRadius: 10 }}
+              loading={loadingOrders}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={getEditModalOrders().map(order => ({
+                value: order.OrderID || order.orderID,
+                label: `Order #${order.OrderID || order.orderID} - ${order.customerName} - ${order.vehicleModel} (${order.status})${order.status === 'Completed' ? ' - Đã hoàn tất' : ''}`
+              }))}
             />
           </Form.Item>
 
