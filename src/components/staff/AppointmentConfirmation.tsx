@@ -4,8 +4,8 @@ import { technicianListService, Technician } from '../../services/technicianList
 import { serviceOrderService, CreateServiceOrderRequest } from '../../services/serviceOrderService';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
-import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, message, Descriptions } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined, DollarOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
+import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, message, Descriptions, Table } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined, DollarOutlined, FileTextOutlined, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { httpClient } from '../../services/httpClient';
 import InvoiceViewer from '../common/InvoiceViewer';
@@ -884,90 +884,176 @@ const AppointmentConfirmation: React.FC = () => {
               
             </Descriptions>
 
-            {/* Chi tiết tiền bạc - Dịch vụ và Phụ tùng */}
-            {selectedAppointmentForDetail.paymentStatus === 'completed' && selectedAppointmentForDetail.paymentAmount && (
-              <>
-                <Divider>Chi tiết thanh toán</Divider>
-                {loadingQuote ? (
-                  <div className="flex justify-center py-4">
-                    <Spin />
-                  </div>
-                ) : quoteDetails && quoteDetails.parts && quoteDetails.parts.length > 0 ? (
-                  <div className="mb-4">
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', border: '1px solid #ddd', marginBottom: '16px' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#1890ff', color: '#fff' }}>
-                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>STT</th>
-                          <th style={{ padding: '10px', textAlign: 'left', border: '1px solid #ddd', fontWeight: 'bold' }}>Tên hàng hóa, dịch vụ</th>
-                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn vị</th>
-                          <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>Số lượng</th>
-                          <th style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>Đơn giá</th>
-                          <th style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>Thành tiền</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* Dịch vụ */}
-                        {(() => {
-                          const partsTotal = quoteDetails.parts.reduce((sum, p) => sum + p.totalPrice, 0);
-                          const serviceAmount = quoteDetails.finalAmount - partsTotal;
-                          return (
-                            <tr style={{ backgroundColor: '#fafafa' }}>
-                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>1</td>
-                              <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>
-                                {quoteDetails.serviceType}
-                              </td>
-                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>Gói</td>
-                              <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>1</td>
-                              <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#1890ff' }}>
-                                ₫{serviceAmount.toLocaleString('vi-VN')}
-                              </td>
-                              <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#1890ff' }}>
-                                ₫{serviceAmount.toLocaleString('vi-VN')}
-                              </td>
-                            </tr>
-                          );
-                        })()}
+            {/* Table danh sách hàng hóa, dịch vụ từ Quote */}
+            {selectedAppointmentForDetail && (selectedAppointmentForDetail.paymentStatus === 'completed' || quoteDetails) && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Danh sách hàng hóa, dịch vụ</h4>
+                  {quoteDetails?.parts && quoteDetails.parts.length > 0 && (
+                    <Tag color="blue">{quoteDetails.parts.length} phụ tùng</Tag>
+                  )}
+                </div>
+                <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', overflow: 'hidden' }}>
+                  <Table
+                    dataSource={(() => {
+                      const rows: any[] = [];
+                      let rowIndex = 1;
+                      
+                      if (quoteDetails) {
+                        // Calculate service package amount (totalAmount - parts total)
+                        const partsTotal = quoteDetails.parts && quoteDetails.parts.length > 0
+                          ? quoteService.calculatePartsTotalFromDetail(quoteDetails.parts)
+                          : 0;
+                        const servicePackageAmount = quoteDetails.totalAmount - partsTotal;
                         
-                        {/* Phụ tùng */}
-                        {quoteDetails.parts.map((part, index) => (
-                          <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa' }}>
-                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 2}</td>
-                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: '500' }}>
-                              {part.partName}
-                            </td>
-                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd' }}>Chiếc</td>
-                            <td style={{ padding: '10px', textAlign: 'center', border: '1px solid #ddd', fontWeight: 'bold' }}>
-                              {part.quantity}
-                            </td>
-                            <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#52c41a' }}>
-                              ₫{part.unitPrice.toLocaleString('vi-VN')}
-                            </td>
-                            <td style={{ padding: '10px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold', color: '#52c41a' }}>
-                              ₫{part.totalPrice.toLocaleString('vi-VN')}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ backgroundColor: '#f0f9ff', borderTop: '2px solid #1890ff' }}>
-                          <td colSpan={5} style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontSize: '15px', fontWeight: 'bold' }}>
-                            Tổng cộng:
-                          </td>
-                          <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontSize: '16px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                            ₫{quoteDetails.finalAmount.toLocaleString('vi-VN')}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                        // Add service package row if amount > 0
+                        if (servicePackageAmount > 0) {
+                          // Try to extract checklistID from description
+                          const checklistMatch = quoteDetails.description?.match(/checklist\s*#(\d+)/i);
+                          const checklistID = checklistMatch ? checklistMatch[1] : '';
+                          
+                          rows.push({
+                            key: 'service-package',
+                            rowIndex: rowIndex++,
+                            type: 'service',
+                            name: checklistID 
+                              ? `Báo giá dịch vụ + phụ tùng cho checklist #${checklistID}`
+                              : (quoteDetails.serviceType || 'Gói dịch vụ'),
+                            description: checklistID
+                              ? `Báo giá gói dịch vụ (${quoteService.formatPrice(servicePackageAmount)}) + phụ tùng (${quoteService.formatPrice(partsTotal)}) cho checklist #${checklistID}`
+                              : (quoteDetails.description || ''),
+                            unit: 'Gói',
+                            quantity: 1,
+                            unitPrice: servicePackageAmount,
+                            totalPrice: servicePackageAmount
+                          });
+                        }
+                        
+                        // Add parts rows
+                        if (quoteDetails.parts && quoteDetails.parts.length > 0) {
+                          quoteDetails.parts.forEach((part, index) => {
+                            rows.push({
+                              key: part.quotePartID || `part-${index}`,
+                              rowIndex: rowIndex++,
+                              type: 'part',
+                              name: part.partName,
+                              description: part.partDescription || '',
+                              unit: 'Chiếc',
+                              quantity: part.quantity,
+                              unitPrice: part.unitPrice,
+                              totalPrice: part.totalPrice
+                            });
+                          });
+                        }
+                      } else if (selectedAppointmentForDetail.paymentAmount && selectedAppointmentForDetail.paymentAmount > 0) {
+                        // Fallback: hiển thị gói dịch vụ với payment amount nếu không có quote details
+                        rows.push({
+                          key: 'service-package',
+                          rowIndex: rowIndex++,
+                          type: 'service',
+                          name: selectedAppointmentForDetail.serviceType || 'Gói dịch vụ',
+                          description: '',
+                          unit: 'Gói',
+                          quantity: 1,
+                          unitPrice: selectedAppointmentForDetail.paymentAmount,
+                          totalPrice: selectedAppointmentForDetail.paymentAmount
+                        });
+                      }
+                      
+                      return rows.length > 0 ? rows : [];
+                    })()}
+                    pagination={false}
+                    size="small"
+                    style={{ borderRadius: '8px' }}
+                    loading={loadingQuote}
+                    locale={{
+                      emptyText: 'Chưa có thông tin chi tiết báo giá'
+                    }}
+                    components={{
+                      header: {
+                        cell: (props: any) => (
+                          <th {...props} style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', padding: '8px 16px' }} />
+                        ),
+                      },
+                    }}
+                  >
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>STT</div>}
+                      width={60}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.rowIndex}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ fontWeight: 600 }}>Tên hàng hóa, dịch vụ</div>}
+                      width="40%"
+                      render={(_: any, record: any) => (
+                        <div>
+                          <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
+                          {record.description && (
+                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{record.description}</div>
+                          )}
+                        </div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Đơn vị tính</div>}
+                      width={100}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.unit}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Số lượng</div>}
+                      width={100}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.quantity}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Đơn giá</div>}
+                      width={150}
+                      align="right"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'right' }}>{quoteService.formatPrice(record.unitPrice)}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Thành tiền</div>}
+                      width={150}
+                      align="right"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>
+                          {quoteService.formatPrice(record.totalPrice)}
+                        </div>
+                      )}
+                    />
+                  </Table>
+                  <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderTop: '1px solid #d1d5db' }}>
+                    <div style={{ textAlign: 'right', fontSize: '12px', fontStyle: 'italic', color: '#6b7280' }}>
+                      (Thành tiền = Số lượng × Đơn giá)
+                    </div>
                   </div>
-                ) : (
-                  <div className="mb-4 p-3 bg-gray-50 rounded">
-                    <Text type="secondary" className="text-sm">
-                      Chưa có thông tin chi tiết báo giá. Tổng tiền: <Text strong>₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}</Text>
-                    </Text>
+                  <div style={{ padding: '12px 16px', backgroundColor: '#f9fafb', borderTop: '2px solid #9ca3af' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontWeight: 700, color: '#111827' }}>
+                        Tổng cộng tiền thanh toán:
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '20px', fontWeight: 700, color: '#dc2626' }}>
+                        {quoteDetails 
+                          ? quoteService.formatPrice(quoteDetails.finalAmount)
+                          : selectedAppointmentForDetail.paymentAmount 
+                            ? quoteService.formatPrice(selectedAppointmentForDetail.paymentAmount)
+                            : '0 ₫'}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </>
+                </div>
+              </div>
             )}
 
             <Divider />

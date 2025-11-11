@@ -104,13 +104,19 @@ class InvoiceService {
           
           if (quote && quote.parts && quote.parts.length > 0) {
             console.log('[Invoice] ✅ Found Quote with parts:', quote.quoteID, 'status:', quote.status, 'parts count:', quote.parts.length);
-            parts = quote.parts.map(qp => ({
-              partName: qp.partName,
-              quantity: qp.quantity,
-              unitPrice: qp.unitPrice,
-              totalPrice: qp.totalPrice,
-            }));
-            console.log('[Invoice] ✅ Mapped parts from Quote:', parts);
+            // Chỉ lấy parts có giá (totalPrice > 0 hoặc unitPrice > 0)
+            parts = quote.parts
+              .filter(qp => {
+                const totalPrice = qp.totalPrice || (qp.unitPrice || 0) * (qp.quantity || 0);
+                return totalPrice > 0;
+              })
+              .map(qp => ({
+                partName: qp.partName,
+                quantity: qp.quantity,
+                unitPrice: qp.unitPrice,
+                totalPrice: qp.totalPrice,
+              }));
+            console.log('[Invoice] ✅ Mapped parts from Quote (with price only):', parts);
           } else {
             console.log('[Invoice] No Quote found with parts for appointmentID:', targetAppointmentID);
           }
@@ -216,8 +222,13 @@ class InvoiceService {
               unitPrice: unitPrice > 0 ? unitPrice : undefined,
               totalPrice: totalPrice > 0 ? totalPrice : undefined,
             };
+          })
+          .filter(part => {
+            // Chỉ giữ lại parts có giá (totalPrice > 0 hoặc unitPrice > 0)
+            const finalTotalPrice = part.totalPrice || (part.unitPrice || 0) * (part.quantity || 0);
+            return finalTotalPrice > 0;
           });
-          console.log('[Invoice] ✅ Final mapped parts for invoice:', parts);
+          console.log('[Invoice] ✅ Final mapped parts for invoice (with price only):', parts);
         } catch (err: any) {
           console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
           // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị
@@ -307,13 +318,19 @@ class InvoiceService {
           
           if (quote && quote.parts && quote.parts.length > 0) {
             console.log('[Invoice] ✅ Found Quote with parts:', quote.quoteID, 'status:', quote.status, 'parts count:', quote.parts.length);
-            parts = quote.parts.map(qp => ({
-              partName: qp.partName,
-              quantity: qp.quantity,
-              unitPrice: qp.unitPrice,
-              totalPrice: qp.totalPrice,
-            }));
-            console.log('[Invoice] ✅ Mapped parts from Quote:', parts);
+            // Chỉ lấy parts có giá (totalPrice > 0 hoặc unitPrice > 0)
+            parts = quote.parts
+              .filter(qp => {
+                const totalPrice = qp.totalPrice || (qp.unitPrice || 0) * (qp.quantity || 0);
+                return totalPrice > 0;
+              })
+              .map(qp => ({
+                partName: qp.partName,
+                quantity: qp.quantity,
+                unitPrice: qp.unitPrice,
+                totalPrice: qp.totalPrice,
+              }));
+            console.log('[Invoice] ✅ Mapped parts from Quote (with price only):', parts);
           } else {
             console.log('[Invoice] No Quote found with parts for appointmentID:', targetAppointmentID);
           }
@@ -426,8 +443,13 @@ class InvoiceService {
               unitPrice: unitPrice > 0 ? unitPrice : undefined,
               totalPrice: totalPrice > 0 ? totalPrice : undefined,
             };
+          })
+          .filter(part => {
+            // Chỉ giữ lại parts có giá (totalPrice > 0 hoặc unitPrice > 0)
+            const finalTotalPrice = part.totalPrice || (part.unitPrice || 0) * (part.quantity || 0);
+            return finalTotalPrice > 0;
           });
-          console.log('[Invoice] ✅ Final mapped parts for invoice:', parts);
+          console.log('[Invoice] ✅ Final mapped parts for invoice (with price only):', parts);
         } catch (err: any) {
           console.error('[Invoice] ❌ Could not fetch part usage:', err.message || err);
           // Không throw error, chỉ log warning - hóa đơn vẫn có thể hiển thị

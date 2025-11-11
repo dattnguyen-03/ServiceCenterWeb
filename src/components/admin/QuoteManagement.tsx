@@ -310,12 +310,20 @@ const QuoteManagement: React.FC = () => {
                       
                       // Add service package row if amount > 0
                       if (servicePackageAmount > 0) {
+                        // Try to extract checklistID from description (format: "...cho checklist #31")
+                        const checklistMatch = selectedQuote.description?.match(/checklist\s*#(\d+)/i);
+                        const checklistID = checklistMatch ? checklistMatch[1] : '';
+                        
                         rows.push({
                           key: 'service-package',
                           rowIndex: rowIndex++,
                           type: 'service',
-                          name: selectedQuote.serviceType || 'Gói dịch vụ',
-                          description: selectedQuote.description || '',
+                          name: checklistID 
+                            ? `Báo giá dịch vụ + phụ tùng cho checklist #${checklistID}`
+                            : (selectedQuote.serviceType || 'Gói dịch vụ'),
+                          description: checklistID
+                            ? `Báo giá gói dịch vụ (${quoteService.formatPrice(servicePackageAmount)}) + phụ tùng (${quoteService.formatPrice(partsTotal)}) cho checklist #${checklistID}`
+                            : (selectedQuote.description || ''),
                           unit: 'Gói',
                           quantity: 1,
                           unitPrice: servicePackageAmount,

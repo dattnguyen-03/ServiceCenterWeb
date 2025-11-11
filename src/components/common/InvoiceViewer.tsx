@@ -283,30 +283,34 @@ const InvoiceViewer: React.FC<InvoiceViewerProps> = ({
                     </td>
                   </tr>
                   
-                  {/* Phụ tùng đã sử dụng */}
-                  {invoiceData.parts && invoiceData.parts.length > 0 && invoiceData.parts.map((part, index) => (
-                    <tr key={index}>
-                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 2}</td>
-                      <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                        {part.partName}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>Chiếc</td>
-                      <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>
-                        {part.quantity}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>
-                        {part.unitPrice ? formatCurrency(part.unitPrice) : '-'}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
-                        {part.totalPrice 
-                          ? formatCurrency(part.totalPrice)
-                          : part.unitPrice 
-                            ? formatCurrency(part.unitPrice * part.quantity)
-                            : '-'
-                        }
-                      </td>
-                    </tr>
-                  ))}
+                  {/* Phụ tùng đã sử dụng - chỉ hiển thị nếu có giá */}
+                  {invoiceData.parts && invoiceData.parts.length > 0 && invoiceData.parts
+                    .filter(part => {
+                      // Chỉ hiển thị part có totalPrice > 0 hoặc (unitPrice > 0 và quantity > 0)
+                      const totalPrice = part.totalPrice || (part.unitPrice || 0) * (part.quantity || 0);
+                      return totalPrice > 0;
+                    })
+                    .map((part, index) => {
+                      const totalPrice = part.totalPrice || (part.unitPrice || 0) * (part.quantity || 0);
+                      return (
+                        <tr key={index}>
+                          <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>{index + 2}</td>
+                          <td style={{ padding: '12px', border: '1px solid #ddd' }}>
+                            {part.partName}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>Chiếc</td>
+                          <td style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>
+                            {part.quantity || 1}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>
+                            {part.unitPrice ? formatCurrency(part.unitPrice) : formatCurrency(totalPrice / (part.quantity || 1))}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                            {formatCurrency(totalPrice)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
                 <tfoot>
                   <tr style={{ backgroundColor: '#f5f5f5' }}>

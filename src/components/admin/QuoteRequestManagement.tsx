@@ -294,48 +294,133 @@ const QuoteRequestManagement: React.FC = () => {
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>
                 <ShoppingCartOutlined style={{ marginRight: '8px' }} />
-                Danh sách phụ tùng ({selectedRequest.partsCount})
+                Danh sách hàng hóa, dịch vụ
               </h4>
               
               <Table
-                dataSource={selectedRequest.parts}
+                dataSource={(() => {
+                  const rows: any[] = [];
+                  let rowIndex = 1;
+                  
+                  // Thêm gói dịch vụ nếu có giá
+                  const servicePackagePrice = selectedRequest.servicePackagePrice || 0;
+                  if (servicePackagePrice > 0) {
+                    rows.push({
+                      key: 'service-package',
+                      rowIndex: rowIndex++,
+                      type: 'service',
+                      name: `Báo giá dịch vụ + phụ tùng cho checklist #${selectedRequest.checklistID}`,
+                      description: `Báo giá gói dịch vụ (${quoteRequestService.formatPrice(servicePackagePrice)}) + phụ tùng (${quoteRequestService.formatPrice(selectedRequest.totalPartsValue || 0)}) cho checklist #${selectedRequest.checklistID}`,
+                      unit: 'Gói',
+                      quantity: 1,
+                      unitPrice: servicePackagePrice,
+                      totalPrice: servicePackagePrice
+                    });
+                  }
+                  
+                  // Thêm phụ tùng
+                  if (selectedRequest.parts && selectedRequest.parts.length > 0) {
+                    selectedRequest.parts.forEach((part, index) => {
+                      rows.push({
+                        key: part.partID || `part-${index}`,
+                        rowIndex: rowIndex++,
+                        type: 'part',
+                        name: part.partName,
+                        description: part.partDescription || '',
+                        unit: 'Chiếc',
+                        quantity: part.quantity,
+                        unitPrice: part.unitPrice,
+                        totalPrice: part.totalPrice
+                      });
+                    });
+                  }
+                  
+                  return rows.length > 0 ? rows : [];
+                })()}
                 pagination={false}
                 size="small"
-                columns={[
-                  {
-                    title: 'Tên phụ tùng',
-                    dataIndex: 'partName',
-                    key: 'partName',
-                  },
-                  {
-                    title: 'Số lượng',
-                    dataIndex: 'quantity',
-                    key: 'quantity',
-                    width: 80,
-                  },
-                  {
-                    title: 'Đơn giá',
-                    dataIndex: 'unitPrice',
-                    key: 'unitPrice',
-                    width: 120,
-                    render: (price: number) => quoteRequestService.formatPrice(price),
-                  },
-                  {
-                    title: 'Thành tiền',
-                    dataIndex: 'totalPrice',
-                    key: 'totalPrice',
-                    width: 120,
-                    render: (price: number) => (
-                      <span style={{ fontWeight: 600, color: '#10b981' }}>
-                        {quoteRequestService.formatPrice(price)}
-                      </span>
+                style={{ borderRadius: '8px' }}
+                components={{
+                  header: {
+                    cell: (props: any) => (
+                      <th {...props} style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', padding: '8px 16px' }} />
                     ),
                   },
-                ]}
-              />
-
-              <div style={{ textAlign: 'right', marginTop: '12px', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
-                Tổng phụ tùng: {quoteRequestService.formatPrice(selectedRequest.totalPartsValue)}
+                }}
+              >
+                <Table.Column 
+                  title={<div style={{ textAlign: 'center', fontWeight: 600 }}>STT</div>} 
+                  width={60} 
+                  align="center" 
+                  render={(_: any, record: any) => (
+                    <div style={{ textAlign: 'center' }}>{record.rowIndex}</div>
+                  )} 
+                />
+                <Table.Column 
+                  title={<div style={{ fontWeight: 600 }}>Tên hàng hóa, dịch vụ</div>} 
+                  width="40%" 
+                  render={(_: any, record: any) => (
+                    <div>
+                      <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
+                      {record.description && (
+                        <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                          {record.description}
+                        </div>
+                      )}
+                    </div>
+                  )} 
+                />
+                <Table.Column 
+                  title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Đơn vị tính</div>} 
+                  width={100} 
+                  align="center" 
+                  render={(_: any, record: any) => (
+                    <div style={{ textAlign: 'center' }}>{record.unit}</div>
+                  )} 
+                />
+                <Table.Column 
+                  title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Số lượng</div>} 
+                  width={100} 
+                  align="center" 
+                  render={(_: any, record: any) => (
+                    <div style={{ textAlign: 'center' }}>{record.quantity}</div>
+                  )} 
+                />
+                <Table.Column 
+                  title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Đơn giá</div>} 
+                  width={150} 
+                  align="right" 
+                  render={(_: any, record: any) => (
+                    <div style={{ textAlign: 'right' }}>{quoteRequestService.formatPrice(record.unitPrice)}</div>
+                  )} 
+                />
+                <Table.Column 
+                  title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Thành tiền</div>} 
+                  width={150} 
+                  align="right" 
+                  render={(_: any, record: any) => (
+                    <div style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>
+                      {quoteRequestService.formatPrice(record.totalPrice)}
+                    </div>
+                  )} 
+                />
+              </Table>
+              
+              <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderTop: '1px solid #d1d5db' }}>
+                <div style={{ textAlign: 'right', fontSize: '12px', fontStyle: 'italic', color: '#6b7280' }}>
+                  (Thành tiền = Số lượng × Đơn giá)
+                </div>
+              </div>
+              
+              <div style={{ padding: '12px 16px', backgroundColor: '#f9fafb', borderTop: '2px solid #9ca3af' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontWeight: 700, color: '#111827' }}>
+                    Tổng cộng tiền thanh toán:
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: '20px', fontWeight: 700, color: '#dc2626' }}>
+                    {quoteRequestService.formatPrice((selectedRequest.servicePackagePrice || 0) + (selectedRequest.totalPartsValue || 0))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

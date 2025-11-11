@@ -21,6 +21,7 @@ export interface QuoteRequest {
   checklistItem: string;
   partsCount: number;
   totalPartsValue: number;
+  servicePackagePrice?: number;
   notes: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;

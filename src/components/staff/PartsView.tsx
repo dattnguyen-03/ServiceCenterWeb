@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, Input, Card, Row, Col, Statistic, Tag, Spin, Empty, 
-  Modal, Descriptions, Button
+  Modal, Descriptions, Button, Tabs, Form, InputNumber, Select, Space, Popconfirm
 } from 'antd';
 import { 
   SearchOutlined, AppstoreOutlined, DollarOutlined, 
-  WarningOutlined, EyeOutlined, InfoCircleOutlined
+  WarningOutlined, EyeOutlined, InfoCircleOutlined, 
+  PlusOutlined, DeleteOutlined, ToolOutlined
 } from '@ant-design/icons';
 import { partService, Part } from '../../services/partService';
+import { partUsageService, PartUsage, CreatePartUsageRequest } from '../../services/partUsageService';
+import { serviceOrderService, ServiceOrder } from '../../services/serviceOrderService';
+import { useAuth } from '../../contexts/AuthContext';
+import { showSuccess, showError } from '../../utils/sweetAlert';
 
 const { Search } = Input;
+const { Option } = Select;
+const { TabPane } = Tabs;
 
 const StaffPartsView: React.FC = () => {
   const [parts, setParts] = useState<Part[]>([]);
