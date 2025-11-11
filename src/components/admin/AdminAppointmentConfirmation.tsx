@@ -341,6 +341,13 @@ const AdminAppointmentConfirmation: React.FC = () => {
   useEffect(() => {
     fetchAppointments();
     fetchTechnicians();
+    
+    // Auto-refresh appointments every 10 seconds to catch payment status updates
+    const interval = setInterval(() => {
+      fetchAppointments();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -843,9 +850,9 @@ const AdminAppointmentConfirmation: React.FC = () => {
                     {selectedAppointmentForDetail.paymentMethod ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div>
-                          {/* <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'} style={{ marginRight: '8px' }}>
+                          <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'} style={{ marginRight: '8px' }}>
                             {selectedAppointmentForDetail.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
-                          </Tag> */}
+                          </Tag>
                           {selectedAppointmentForDetail.paymentStatus && (
                             <Tag 
                               color={
@@ -853,15 +860,17 @@ const AdminAppointmentConfirmation: React.FC = () => {
                                 selectedAppointmentForDetail.paymentStatus === 'pending' ? 'orange' : 'red'
                               }
                             >
-                              {selectedAppointmentForDetail.paymentStatus}
+                              {selectedAppointmentForDetail.paymentStatus === 'completed' ? 'Đã thanh toán' : 
+                               selectedAppointmentForDetail.paymentStatus === 'pending' ? 'Chờ thanh toán' : 
+                               'Thất bại'}
                             </Tag>
                           )}
                         </div>
-                        {/* {selectedAppointmentForDetail.paymentAmount && (
+                        {selectedAppointmentForDetail.paymentAmount && (
                           <Text strong style={{ fontSize: '16px', color: '#10b981' }}>
                             ₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}
                           </Text>
-                        )} */}
+                        )}
                       </div>
                     ) : (
                       <Text type="secondary" style={{ fontSize: '14px' }}>Chưa thanh toán</Text>
