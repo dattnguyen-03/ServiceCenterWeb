@@ -154,7 +154,16 @@ const StaffDashboard: React.FC = () => {
       // Load month revenue (filtered by centerID)
       try {
         const monthData = await adminService.getMonthRevenue(undefined, undefined, centerID);
-        setMonthRevenue(monthData);
+        if (monthData && typeof monthData === 'object') {
+          setMonthRevenue({
+            totalRevenue: monthData.totalRevenue || monthData.TotalRevenue || 0,
+            totalPayments: monthData.totalPayments || monthData.TotalPayments || 0,
+            onlineRevenue: monthData.onlineRevenue || monthData.OnlineRevenue || 0,
+            cashRevenue: monthData.cashRevenue || monthData.CashRevenue || 0,
+            onlinePayments: monthData.onlinePayments || monthData.OnlinePayments || 0,
+            cashPayments: monthData.cashPayments || monthData.CashPayments || 0
+          });
+        }
       } catch (error) {
         console.warn('Cannot load month revenue:', error);
       }
@@ -162,38 +171,79 @@ const StaffDashboard: React.FC = () => {
       // Load today revenue (filtered by centerID)
       try {
         const todayData = await adminService.getTodayRevenue(undefined, undefined, centerID);
-        setTodayRevenue(todayData);
+        if (todayData && typeof todayData === 'object') {
+          setTodayRevenue({
+            totalRevenue: todayData.totalRevenue || todayData.TotalRevenue || 0,
+            totalPayments: todayData.totalPayments || todayData.TotalPayments || 0,
+            onlineRevenue: todayData.onlineRevenue || todayData.OnlineRevenue || 0,
+            cashRevenue: todayData.cashRevenue || todayData.CashRevenue || 0,
+            onlinePayments: todayData.onlinePayments || todayData.OnlinePayments || 0,
+            cashPayments: todayData.cashPayments || todayData.CashPayments || 0
+          });
+        }
       } catch (error) {
         console.warn('Cannot load today revenue:', error);
       }
       
       // Calculate date range based on selected period
       const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentDate = now.getDate();
+      
       let dateFrom: Date;
-      let dateTo: Date = now;
+      let dateTo: Date;
       
       switch (selectedPeriod) {
         case 'today':
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          dateFrom = new Date(currentYear, currentMonth, currentDate);
+          dateTo = new Date(currentYear, currentMonth, currentDate);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         case 'week':
-          dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          dateFrom = new Date(currentYear, currentMonth, currentDate - 7);
+          dateTo = new Date(currentYear, currentMonth, currentDate);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         case 'month':
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+          dateFrom = new Date(currentYear, currentMonth, 1);
+          const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+          dateTo = new Date(lastDayOfMonth);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         default:
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+          dateFrom = new Date(currentYear, currentMonth, 1);
+          const lastDay = new Date(currentYear, currentMonth + 1, 0);
+          dateTo = new Date(lastDay);
+          dateTo.setHours(23, 59, 59, 999);
       }
+      
+      // Format dates as YYYY-MM-DD
+      const formatDate = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const dateFromStr = formatDate(dateFrom);
+      const dateToStr = formatDate(dateTo);
+      
+      console.log('[StaffDashboard] Loading chart data:', { selectedPeriod, dateFrom: dateFromStr, dateTo: dateToStr, centerID });
       
       // Load revenue by service (filtered by centerID)
       try {
-        const serviceData = await adminService.getRevenueByService(
-          dateFrom.toISOString().split('T')[0],
-          dateTo.toISOString().split('T')[0],
-          centerID
-        );
-        setRevenueByService(serviceData);
+        const serviceData = await adminService.getRevenueByService(dateFromStr, dateToStr, centerID);
+        console.log('[StaffDashboard] Revenue by service:', serviceData);
+        if (Array.isArray(serviceData)) {
+          setRevenueByService(serviceData.map(item => ({
+            serviceType: item.serviceType || item.ServiceType || '',
+            revenue: item.revenue || item.Revenue || 0,
+            count: item.count || item.Count || 0
+          })));
+        } else {
+          setRevenueByService([]);
+        }
       } catch (error) {
         console.warn('Cannot load revenue by service:', error);
         setRevenueByService([]);
@@ -202,12 +252,21 @@ const StaffDashboard: React.FC = () => {
       // Load revenue by period (for chart, filtered by centerID)
       try {
         const periodData = await adminService.getRevenueByPeriod(
-          dateFrom.toISOString().split('T')[0],
-          dateTo.toISOString().split('T')[0],
+          dateFromStr,
+          dateToStr,
           selectedPeriod === 'month' ? 'day' : 'day',
           centerID
         );
-        setRevenueByPeriod(periodData);
+        console.log('[StaffDashboard] Revenue by period:', periodData);
+        if (Array.isArray(periodData)) {
+          setRevenueByPeriod(periodData.map(item => ({
+            period: item.period || item.Period || '',
+            totalRevenue: item.totalRevenue || item.TotalRevenue || 0,
+            totalPayments: item.totalPayments || item.TotalPayments || 0
+          })));
+        } else {
+          setRevenueByPeriod([]);
+        }
       } catch (error) {
         console.warn('Cannot load revenue by period:', error);
         setRevenueByPeriod([]);
@@ -274,16 +333,23 @@ const StaffDashboard: React.FC = () => {
   ];
 
   // Prepare chart data
-  const chartData = revenueByPeriod.map(item => ({
+  const chartData = revenueByPeriod.length > 0 ? revenueByPeriod.map(item => ({
     name: item.period,
-    revenue: item.totalRevenue,
-    payments: item.totalPayments
-  }));
+    revenue: item.totalRevenue || 0,
+    payments: item.totalPayments || 0
+  })) : [];
 
-  const pieData = revenueByService.map(item => ({
-    name: item.serviceType,
-    value: item.revenue
-  }));
+  const pieData = revenueByService.length > 0 ? revenueByService.map(item => ({
+    name: item.serviceType || 'Khác',
+    value: item.revenue || 0
+  })) : [];
+  
+  console.log('[StaffDashboard] Chart data prepared:', { 
+    chartDataLength: chartData.length, 
+    pieDataLength: pieData.length,
+    chartData: chartData.slice(0, 3),
+    pieData: pieData.slice(0, 3)
+  });
 
   if (loading) {
     return (
@@ -419,10 +485,16 @@ const StaffDashboard: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              <p>Chưa có dữ liệu doanh thu</p>
-              </div>
-            )}
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <BarChart3 className="w-12 h-12 mb-3 text-gray-300" />
+              <p className="text-base font-medium">Chưa có dữ liệu doanh thu</p>
+              <p className="text-sm mt-1">
+                {monthRevenue.totalRevenue > 0 
+                  ? `Có ${monthRevenue.totalPayments} thanh toán nhưng không có dữ liệu trong khoảng thời gian này`
+                  : 'Chưa có thanh toán nào trong tháng này'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Revenue by Service Pie Chart */}
@@ -452,9 +524,15 @@ const StaffDashboard: React.FC = () => {
               </RechartsPieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              <p>Chưa có dữ liệu dịch vụ</p>
-                  </div>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <PieChart className="w-12 h-12 mb-3 text-gray-300" />
+              <p className="text-base font-medium">Chưa có dữ liệu dịch vụ</p>
+              <p className="text-sm mt-1">
+                {monthRevenue.totalRevenue > 0 
+                  ? 'Có thanh toán nhưng chưa có dữ liệu theo dịch vụ'
+                  : 'Chưa có thanh toán nào'}
+              </p>
+            </div>
           )}
                 </div>
                 </div>

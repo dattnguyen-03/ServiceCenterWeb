@@ -145,30 +145,63 @@ const AdminDashboard: React.FC = () => {
       
       // Calculate date range based on selected period
       const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentDate = now.getDate();
+      
       let dateFrom: Date;
-      let dateTo: Date = now;
+      let dateTo: Date;
       
       switch (selectedPeriod) {
         case 'today':
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          dateFrom = new Date(currentYear, currentMonth, currentDate);
+          dateTo = new Date(currentYear, currentMonth, currentDate);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         case 'week':
-          dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          dateFrom = new Date(currentYear, currentMonth, currentDate - 7);
+          dateTo = new Date(currentYear, currentMonth, currentDate);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         case 'month':
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+          dateFrom = new Date(currentYear, currentMonth, 1);
+          const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+          dateTo = new Date(lastDayOfMonth);
+          dateTo.setHours(23, 59, 59, 999);
           break;
         default:
-          dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+          dateFrom = new Date(currentYear, currentMonth, 1);
+          const lastDay = new Date(currentYear, currentMonth + 1, 0);
+          dateTo = new Date(lastDay);
+          dateTo.setHours(23, 59, 59, 999);
       }
+      
+      // Format dates as YYYY-MM-DD
+      const formatDate = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const dateFromStr = formatDate(dateFrom);
+      const dateToStr = formatDate(dateTo);
+      
+      console.log('[Dashboard] Loading chart data:', { selectedPeriod, dateFrom: dateFromStr, dateTo: dateToStr });
       
       // Load revenue by service
       try {
-        const serviceData = await adminService.getRevenueByService(
-          dateFrom.toISOString().split('T')[0],
-          dateTo.toISOString().split('T')[0]
-        );
-        setRevenueByService(serviceData);
+        const serviceData = await adminService.getRevenueByService(dateFromStr, dateToStr);
+        console.log('[Dashboard] Revenue by service:', serviceData);
+        if (Array.isArray(serviceData)) {
+          setRevenueByService(serviceData.map(item => ({
+            serviceType: item.serviceType || item.ServiceType || '',
+            revenue: item.revenue || item.Revenue || 0,
+            count: item.count || item.Count || 0
+          })));
+        } else {
+          setRevenueByService([]);
+        }
       } catch (error) {
         console.warn('Cannot load revenue by service:', error);
         setRevenueByService([]);
@@ -177,11 +210,20 @@ const AdminDashboard: React.FC = () => {
       // Load revenue by period (for chart)
       try {
         const periodData = await adminService.getRevenueByPeriod(
-          dateFrom.toISOString().split('T')[0],
-          dateTo.toISOString().split('T')[0],
+          dateFromStr,
+          dateToStr,
           selectedPeriod === 'month' ? 'day' : 'day'
         );
-        setRevenueByPeriod(periodData);
+        console.log('[Dashboard] Revenue by period:', periodData);
+        if (Array.isArray(periodData)) {
+          setRevenueByPeriod(periodData.map(item => ({
+            period: item.period || item.Period || '',
+            totalRevenue: item.totalRevenue || item.TotalRevenue || 0,
+            totalPayments: item.totalPayments || item.TotalPayments || 0
+          })));
+        } else {
+          setRevenueByPeriod([]);
+        }
       } catch (error) {
         console.warn('Cannot load revenue by period:', error);
         setRevenueByPeriod([]);
@@ -189,11 +231,17 @@ const AdminDashboard: React.FC = () => {
       
       // Load revenue by center
       try {
-        const centerData = await adminService.getRevenueByCenter(
-          dateFrom.toISOString().split('T')[0],
-          dateTo.toISOString().split('T')[0]
-        );
-        setRevenueByCenter(centerData);
+        const centerData = await adminService.getRevenueByCenter(dateFromStr, dateToStr);
+        if (Array.isArray(centerData)) {
+          setRevenueByCenter(centerData.map(item => ({
+            centerID: item.centerID || item.CenterID || 0,
+            centerName: item.centerName || item.CenterName || '',
+            revenue: item.revenue || item.Revenue || 0,
+            count: item.count || item.Count || 0
+          })));
+        } else {
+          setRevenueByCenter([]);
+        }
       } catch (error) {
         console.warn('Cannot load revenue by center:', error);
         setRevenueByCenter([]);
@@ -266,16 +314,23 @@ const AdminDashboard: React.FC = () => {
   ];
 
   // Prepare chart data
-  const chartData = revenueByPeriod.map(item => ({
+  const chartData = revenueByPeriod.length > 0 ? revenueByPeriod.map(item => ({
     name: item.period,
-    revenue: item.totalRevenue,
-    payments: item.totalPayments
-  }));
+    revenue: item.totalRevenue || 0,
+    payments: item.totalPayments || 0
+  })) : [];
 
-  const pieData = revenueByService.map(item => ({
-    name: item.serviceType,
-    value: item.revenue
-  }));
+  const pieData = revenueByService.length > 0 ? revenueByService.map(item => ({
+    name: item.serviceType || 'Khác',
+    value: item.revenue || 0
+  })) : [];
+  
+  console.log('[Dashboard] Chart data prepared:', { 
+    chartDataLength: chartData.length, 
+    pieDataLength: pieData.length,
+    chartData: chartData.slice(0, 3),
+    pieData: pieData.slice(0, 3)
+  });
 
   const centerChartData = revenueByCenter.map(item => ({
     name: item.centerName,
