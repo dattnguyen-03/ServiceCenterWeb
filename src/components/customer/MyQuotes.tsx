@@ -491,17 +491,151 @@ const MyQuotes: React.FC = () => {
       >
         {selectedQuote && (
           <div>
+            {/* Thông tin cơ bản */}
             <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
               <h4 style={{ marginBottom: '12px', color: '#374151' }}>Thông tin báo giá:</h4>
               <div style={{ fontSize: '14px', color: '#6b7280' }}>
                 <div><strong>Xe:</strong> {selectedQuote.vehicleModel}</div>
                 <div><strong>Dịch vụ:</strong> {selectedQuote.serviceType}</div>
-                <div><strong>Tổng giá:</strong> {quoteService.formatPrice(selectedQuote.totalAmount)}</div>
-                {selectedQuote.discountAmount && selectedQuote.discountAmount > 0 && (
-                  <div><strong>Giảm giá:</strong> -{quoteService.formatPrice(selectedQuote.discountAmount)}</div>
+                <div><strong>Trung tâm:</strong> {selectedQuote.centerName}</div>
+              </div>
+            </div>
+
+            {/* Table danh sách hàng hóa, dịch vụ */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
+                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Danh sách hàng hóa, dịch vụ</h4>
+                {selectedQuote.parts && selectedQuote.parts.length > 0 && (
+                  <Tag color="blue">{selectedQuote.parts.length} phụ tùng</Tag>
                 )}
-                <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1890ff', marginTop: '8px' }}>
-                  <strong>Thành tiền: {quoteService.formatPrice(selectedQuote.finalAmount)}</strong>
+              </div>
+              <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', overflow: 'hidden' }}>
+                <Table
+                  dataSource={(() => {
+                    const rows: any[] = [];
+                    let rowIndex = 1;
+                    
+                    // Calculate service package amount (totalAmount - parts total)
+                    const partsTotal = selectedQuote.parts && selectedQuote.parts.length > 0
+                      ? quoteService.calculatePartsTotalFromDetail(selectedQuote.parts)
+                      : 0;
+                    const servicePackageAmount = selectedQuote.totalAmount - partsTotal;
+                    
+                    // Add service package row if amount > 0
+                    if (servicePackageAmount > 0) {
+                      rows.push({
+                        key: 'service-package',
+                        rowIndex: rowIndex++,
+                        type: 'service',
+                        name: selectedQuote.serviceType || 'Gói dịch vụ',
+                        description: selectedQuote.description || '',
+                        unit: 'Gói',
+                        quantity: 1,
+                        unitPrice: servicePackageAmount,
+                        totalPrice: servicePackageAmount
+                      });
+                    }
+                    
+                    // Add parts rows
+                    if (selectedQuote.parts && selectedQuote.parts.length > 0) {
+                      selectedQuote.parts.forEach((part, index) => {
+                        rows.push({
+                          key: part.quotePartID || `part-${index}`,
+                          rowIndex: rowIndex++,
+                          type: 'part',
+                          name: part.partName,
+                          description: part.partDescription || '',
+                          unit: 'Chiếc',
+                          quantity: part.quantity,
+                          unitPrice: part.unitPrice,
+                          totalPrice: part.totalPrice
+                        });
+                      });
+                    }
+                    
+                    return rows.length > 0 ? rows : [];
+                  })()}
+                  pagination={false}
+                  size="small"
+                  style={{ borderRadius: '8px' }}
+                  components={{
+                    header: {
+                      cell: (props: any) => (
+                        <th {...props} style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', padding: '8px 16px' }} />
+                      ),
+                    },
+                  }}
+                >
+                  <Table.Column
+                    title={<div style={{ textAlign: 'center', fontWeight: 600 }}>STT</div>}
+                    width={60}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div style={{ textAlign: 'center' }}>{record.rowIndex}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div style={{ fontWeight: 600 }}>Tên hàng hóa, dịch vụ</div>}
+                    width="40%"
+                    render={(_: any, record: any) => (
+                      <div>
+                        <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
+                        {record.description && (
+                          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{record.description}</div>
+                        )}
+                      </div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Đơn vị tính</div>}
+                    width={100}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div style={{ textAlign: 'center' }}>{record.unit}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Số lượng</div>}
+                    width={100}
+                    align="center"
+                    render={(_: any, record: any) => (
+                      <div style={{ textAlign: 'center' }}>{record.quantity}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Đơn giá</div>}
+                    width={150}
+                    align="right"
+                    render={(_: any, record: any) => (
+                      <div style={{ textAlign: 'right' }}>{quoteService.formatPrice(record.unitPrice)}</div>
+                    )}
+                  />
+                  <Table.Column
+                    title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Thành tiền</div>}
+                    width={150}
+                    align="right"
+                    render={(_: any, record: any) => (
+                      <div style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>
+                        {quoteService.formatPrice(record.totalPrice)}
+                      </div>
+                    )}
+                  />
+                </Table>
+                <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderTop: '1px solid #d1d5db' }}>
+                  <div style={{ textAlign: 'right', fontSize: '12px', fontStyle: 'italic', color: '#6b7280' }}>
+                    (Thành tiền = Số lượng × Đơn giá)
+                  </div>
+                </div>
+                <div style={{ padding: '12px 16px', backgroundColor: '#f9fafb', borderTop: '2px solid #9ca3af' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 700, color: '#111827' }}>
+                      Tổng cộng tiền thanh toán:
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '20px', fontWeight: 700, color: '#dc2626' }}>
+                      {quoteService.formatPrice(selectedQuote.finalAmount)}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

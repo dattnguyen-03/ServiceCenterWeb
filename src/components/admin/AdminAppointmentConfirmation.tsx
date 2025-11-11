@@ -5,9 +5,10 @@ import { serviceOrderService, CreateServiceOrderRequest } from '../../services/s
 import { httpClient } from '../../services/httpClient';
 import { useAuth } from '../../contexts/AuthContext';
 import InvoiceViewer from '../common/InvoiceViewer';
+import { quoteService, Quote } from '../../services/quoteService';
 import { User, CheckCircle, Clock, AlertCircle, RefreshCw, UserCheck, Car, Wrench, Calendar, MapPin } from 'lucide-react';
-import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message, Descriptions } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
+import { Card, Button, Modal, Select, Typography, Space, Tag, Tooltip, Badge, Divider, Spin, Input, Form, DatePicker, message, Descriptions, Table } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, UserOutlined, CarOutlined, ToolOutlined, CalendarOutlined, EnvironmentOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 
 const { Title, Text } = Typography;
@@ -29,6 +30,8 @@ const AdminAppointmentConfirmation: React.FC = () => {
   const [selectedPaymentID, setSelectedPaymentID] = useState<number | undefined>(undefined);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedAppointmentForDetail, setSelectedAppointmentForDetail] = useState<Appointment | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -522,9 +525,20 @@ const AdminAppointmentConfirmation: React.FC = () => {
                     <Button
                       type="default"
                       icon={<EyeOutlined />}
-                      onClick={() => {
+                      onClick={async () => {
                         setSelectedAppointmentForDetail(appointment);
                         setDetailModalVisible(true);
+                        // Fetch quote for this appointment
+                        setLoadingQuote(true);
+                        try {
+                          const quote = await quoteService.getQuoteByAppointment(appointment.appointmentID);
+                          setSelectedQuote(quote);
+                        } catch (err) {
+                          console.log('No quote found for this appointment');
+                          setSelectedQuote(null);
+                        } finally {
+                          setLoadingQuote(false);
+                        }
                       }}
                       size="small"
                     >
@@ -756,86 +770,252 @@ const AdminAppointmentConfirmation: React.FC = () => {
         onCancel={() => {
           setDetailModalVisible(false);
           setSelectedAppointmentForDetail(null);
+          setSelectedQuote(null);
         }}
         footer={null}
         width={700}
       >
         {selectedAppointmentForDetail && (
           <div>
-            <Descriptions bordered column={2} size="small" className="mb-4">
-              <Descriptions.Item label="Khách hàng" span={2}>
-                <div className="flex items-center space-x-2">
-                  <UserOutlined className="text-blue-500" />
-                  <Text strong>{selectedAppointmentForDetail.userName}</Text>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Xe">
-                <div className="flex items-center space-x-2">
-                  <CarOutlined className="text-green-500" />
-                  <Text>{selectedAppointmentForDetail.vehicleModel}</Text>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Dịch vụ">
-                <div className="flex items-center space-x-2">
-                  <ToolOutlined className="text-orange-500" />
-                  <Text>{selectedAppointmentForDetail.serviceType}</Text>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Trung tâm">
-                <div className="flex items-center space-x-2">
-                  <EnvironmentOutlined className="text-purple-500" />
-                  <Text>{selectedAppointmentForDetail.centerName}</Text>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày hẹn">
-                <div className="flex items-center space-x-2">
-                  <CalendarOutlined className="text-indigo-500" />
-                  <Text>{new Date(selectedAppointmentForDetail.requestedDate).toLocaleDateString('vi-VN')}</Text>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Trạng thái">
-                <Tag 
-                  color={
-                    selectedAppointmentForDetail.status.toLowerCase() === 'confirmed' ? 'green' :
-                    selectedAppointmentForDetail.status.toLowerCase() === 'pending' ? 'orange' : 
-                    selectedAppointmentForDetail.status.toLowerCase() === 'completed' ? 'blue' : 'red'
-                  }
-                >
-                  {selectedAppointmentForDetail.status}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Thanh toán" span={2}>
-                {selectedAppointmentForDetail.paymentMethod ? (
-                  <div className="space-y-2">
-                    <div>
-                      <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'}>
-                        {selectedAppointmentForDetail.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
-                      </Tag>
-                      {selectedAppointmentForDetail.paymentStatus && (
-                        <Tag 
-                          color={
-                            selectedAppointmentForDetail.paymentStatus === 'completed' ? 'green' :
-                            selectedAppointmentForDetail.paymentStatus === 'pending' ? 'orange' : 'red'
-                          }
-                          className="ml-2"
-                        >
-                          {selectedAppointmentForDetail.paymentStatus}
-                        </Tag>
-                      )}
+            {/* Thông tin cơ bản */}
+            <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '16px', color: '#374151', fontSize: '16px', fontWeight: 600 }}>Thông tin lịch hẹn</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Khách hàng</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UserOutlined style={{ color: '#3b82f6' }} />
+                      <Text strong style={{ fontSize: '14px' }}>{selectedAppointmentForDetail.userName}</Text>
                     </div>
-                    {selectedAppointmentForDetail.paymentAmount && (
-                      <Text strong className="text-lg text-green-600">
-                        ₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Xe</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CarOutlined style={{ color: '#10b981' }} />
+                      <Text style={{ fontSize: '14px' }}>{selectedAppointmentForDetail.vehicleModel}</Text>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Dịch vụ</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ToolOutlined style={{ color: '#f97316' }} />
+                      <Text style={{ fontSize: '14px' }}>{selectedAppointmentForDetail.serviceType}</Text>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Trung tâm</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <EnvironmentOutlined style={{ color: '#8b5cf6' }} />
+                      <Text style={{ fontSize: '14px' }}>{selectedAppointmentForDetail.centerName}</Text>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Ngày hẹn</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CalendarOutlined style={{ color: '#6366f1' }} />
+                      <Text style={{ fontSize: '14px' }}>
+                        {new Date(selectedAppointmentForDetail.requestedDate).toLocaleDateString('vi-VN')}
                       </Text>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Trạng thái</div>
+                    <Tag 
+                      color={
+                        selectedAppointmentForDetail.status.toLowerCase() === 'confirmed' ? 'green' :
+                        selectedAppointmentForDetail.status.toLowerCase() === 'pending' ? 'orange' : 
+                        selectedAppointmentForDetail.status.toLowerCase() === 'completed' ? 'blue' : 'red'
+                      }
+                      style={{ fontSize: '13px', padding: '4px 12px' }}
+                    >
+                      {selectedAppointmentForDetail.status}
+                    </Tag>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Thanh toán</div>
+                    {selectedAppointmentForDetail.paymentMethod ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div>
+                          {/* <Tag color={selectedAppointmentForDetail.paymentMethod === 'online' ? 'blue' : 'orange'} style={{ marginRight: '8px' }}>
+                            {selectedAppointmentForDetail.paymentMethod === 'online' ? '💳 Online' : '💵 Cash'}
+                          </Tag> */}
+                          {selectedAppointmentForDetail.paymentStatus && (
+                            <Tag 
+                              color={
+                                selectedAppointmentForDetail.paymentStatus === 'completed' ? 'green' :
+                                selectedAppointmentForDetail.paymentStatus === 'pending' ? 'orange' : 'red'
+                              }
+                            >
+                              {selectedAppointmentForDetail.paymentStatus}
+                            </Tag>
+                          )}
+                        </div>
+                        {/* {selectedAppointmentForDetail.paymentAmount && (
+                          <Text strong style={{ fontSize: '16px', color: '#10b981' }}>
+                            ₫{selectedAppointmentForDetail.paymentAmount.toLocaleString('vi-VN')}
+                          </Text>
+                        )} */}
+                      </div>
+                    ) : (
+                      <Text type="secondary" style={{ fontSize: '14px' }}>Chưa thanh toán</Text>
                     )}
                   </div>
-                ) : (
-                  <Text type="secondary">Chưa thanh toán</Text>
-                )}
-              </Descriptions.Item>
-            </Descriptions>
+                </div>
+              </div>
+            </div>
 
-            <Divider />
+            <Divider style={{ margin: '20px 0' }} />
+
+            {/* Table danh sách hàng hóa, dịch vụ từ Quote */}
+            {selectedQuote && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Danh sách hàng hóa, dịch vụ</h4>
+                  {selectedQuote.parts && selectedQuote.parts.length > 0 && (
+                    <Tag color="blue">{selectedQuote.parts.length} phụ tùng</Tag>
+                  )}
+                </div>
+                <div style={{ border: '1px solid #d1d5db', borderRadius: '8px', overflow: 'hidden' }}>
+                  <Table
+                    dataSource={(() => {
+                      const rows: any[] = [];
+                      let rowIndex = 1;
+                      
+                      // Calculate service package amount (totalAmount - parts total)
+                      const partsTotal = selectedQuote.parts && selectedQuote.parts.length > 0
+                        ? quoteService.calculatePartsTotalFromDetail(selectedQuote.parts)
+                        : 0;
+                      const servicePackageAmount = selectedQuote.totalAmount - partsTotal;
+                      
+                      // Add service package row if amount > 0
+                      if (servicePackageAmount > 0) {
+                        rows.push({
+                          key: 'service-package',
+                          rowIndex: rowIndex++,
+                          type: 'service',
+                          name: selectedQuote.serviceType || 'Gói dịch vụ',
+                          description: selectedQuote.description || '',
+                          unit: 'Gói',
+                          quantity: 1,
+                          unitPrice: servicePackageAmount,
+                          totalPrice: servicePackageAmount
+                        });
+                      }
+                      
+                      // Add parts rows
+                      if (selectedQuote.parts && selectedQuote.parts.length > 0) {
+                        selectedQuote.parts.forEach((part, index) => {
+                          rows.push({
+                            key: part.quotePartID || `part-${index}`,
+                            rowIndex: rowIndex++,
+                            type: 'part',
+                            name: part.partName,
+                            description: part.partDescription || '',
+                            unit: 'Chiếc',
+                            quantity: part.quantity,
+                            unitPrice: part.unitPrice,
+                            totalPrice: part.totalPrice
+                          });
+                        });
+                      }
+                      
+                      return rows.length > 0 ? rows : [];
+                    })()}
+                    pagination={false}
+                    size="small"
+                    style={{ borderRadius: '8px' }}
+                    loading={loadingQuote}
+                    components={{
+                      header: {
+                        cell: (props: any) => (
+                          <th {...props} style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', padding: '8px 16px' }} />
+                        ),
+                      },
+                    }}
+                  >
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>STT</div>}
+                      width={60}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.rowIndex}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ fontWeight: 600 }}>Tên hàng hóa, dịch vụ</div>}
+                      width="40%"
+                      render={(_: any, record: any) => (
+                        <div>
+                          <div style={{ fontWeight: 500, color: '#111827' }}>{record.name}</div>
+                          {record.description && (
+                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{record.description}</div>
+                          )}
+                        </div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Đơn vị tính</div>}
+                      width={100}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.unit}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'center', fontWeight: 600 }}>Số lượng</div>}
+                      width={100}
+                      align="center"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'center' }}>{record.quantity}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Đơn giá</div>}
+                      width={150}
+                      align="right"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'right' }}>{quoteService.formatPrice(record.unitPrice)}</div>
+                      )}
+                    />
+                    <Table.Column
+                      title={<div style={{ textAlign: 'right', fontWeight: 600 }}>Thành tiền</div>}
+                      width={150}
+                      align="right"
+                      render={(_: any, record: any) => (
+                        <div style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>
+                          {quoteService.formatPrice(record.totalPrice)}
+                        </div>
+                      )}
+                    />
+                  </Table>
+                  <div style={{ padding: '8px 16px', backgroundColor: '#f9fafb', borderTop: '1px solid #d1d5db' }}>
+                    <div style={{ textAlign: 'right', fontSize: '12px', fontStyle: 'italic', color: '#6b7280' }}>
+                      (Thành tiền = Số lượng × Đơn giá)
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px 16px', backgroundColor: '#f9fafb', borderTop: '2px solid #9ca3af' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontWeight: 700, color: '#111827' }}>
+                        Tổng cộng tiền thanh toán:
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '20px', fontWeight: 700, color: '#dc2626' }}>
+                        {quoteService.formatPrice(selectedQuote.finalAmount)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Divider style={{ margin: '20px 0' }} />
 
             <div className="flex flex-wrap gap-2 justify-end">
               {selectedAppointmentForDetail.status.toLowerCase() === 'pending' && (
