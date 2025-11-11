@@ -90,6 +90,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ selectedUserId }) => {
       const boxes = await chatMessageService.getMessageBoxes();
       setMessageBoxes(boxes);
     } catch (error: any) {
+      // Nếu không có hội thoại nào, đây là trạng thái bình thường, không phải lỗi
+      if (error.message?.includes('Không có hội thoại nào') || 
+          error.message?.includes('Không có hội thoại')) {
+        setMessageBoxes([]); // Set empty array để hiển thị empty state
+        return; // Không hiển thị error dialog
+      }
+      
       // Nếu lỗi do thiếu cột Status trong database
       if (error.message?.includes('Status') || error.message?.includes('Invalid column')) {
         showError(

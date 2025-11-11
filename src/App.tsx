@@ -36,11 +36,8 @@ import StaffProfile from './components/staff/StaffProfile';
 import ServiceProgress from './components/staff/ServiceProgress';
 import CustomerVehicleManagement from './components/staff/CustomerVehicleManagement';
 import Billing from './components/staff/Billing';
-import TechnicianDashboard from './components/technician/TechnicianDashboard';
-import WorkOrders from './components/technician/WorkOrders';
 import HomeRoute from './components/home/HomeRoute';
 import AppointmentBookingManagement from './components/customer/AppointmentBookingManagement';
-import TechnicianSchedule from './components/technician/Schedule';
 import TechnicianPartsView from './components/technician/PartsView';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import StaffPartsView from './components/staff/PartsView';
@@ -183,12 +180,9 @@ const AppContent: React.FC = () => {
         }
       >
         <Route index element={<Navigate to="dashboard" />} />
-        <Route path="dashboard" element={<TechnicianDashboard />} />
-        <Route path="work-orders" element={<WorkOrders />} />
         <Route path="service-order-progress" element={<ServiceOrderProgress />} />
         <Route path="checklists" element={<TechnicianChecklistView />} />
         <Route path="parts" element={<TechnicianPartsView />} />
-        <Route path="schedule" element={<TechnicianSchedule />} />
         <Route path="parts-usage" element={<PartsUsage />} />
         <Route path="part-usage" element={<TechnicianPartUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />

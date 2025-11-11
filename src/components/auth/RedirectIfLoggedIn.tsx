@@ -17,7 +17,7 @@ const RedirectIfLoggedIn: React.FC<RedirectIfLoggedInProps> = ({ children }) => 
       case 'staff':
         return <Navigate to="/staff/dashboard" replace />;
       case 'technician':
-        return <Navigate to="/technician" replace />;
+        return <Navigate to="/technician/service-order-progress" replace />;
       case 'customer':
         return <Navigate to="/customer/dashboard" replace />;
       default:
