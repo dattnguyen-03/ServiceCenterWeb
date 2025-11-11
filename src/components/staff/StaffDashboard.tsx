@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, DollarSign, TrendingUp, Activity, Calendar, Clock, BarChart3, PieChart, Building2, Loader2 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import adminService from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAllUsers } from '../../services/userService';
@@ -69,7 +69,6 @@ const StaffDashboard: React.FC = () => {
     // Get centerID from user
     if (user?.centerID) {
       setCenterID(user.centerID);
-      loadDashboardData();
     } else {
       setLoading(false);
     }
@@ -88,6 +87,34 @@ const StaffDashboard: React.FC = () => {
     return () => clearInterval(timer);
   }, [user]);
 
+  // Load center name when centerID is available
+  useEffect(() => {
+    const loadCenterName = async () => {
+      if (centerID) {
+        try {
+          const center = await serviceCenterService.getServiceCenterById(centerID);
+          if (center) {
+            setCenterName(center.name);
+          } else {
+            setCenterName('Không tìm thấy');
+          }
+        } catch (error) {
+          console.error('Error loading center name:', error);
+          setCenterName('Không tìm thấy');
+        }
+      }
+    };
+    
+    loadCenterName();
+  }, [centerID]);
+
+  // Load dashboard data when centerID is available
+  useEffect(() => {
+    if (centerID) {
+      loadDashboardData();
+    }
+  }, [centerID]);
+
   useEffect(() => {
     if (centerID) {
       loadRevenueData();
@@ -97,19 +124,6 @@ const StaffDashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Load center name
-      if (centerID) {
-        try {
-          const centers = await serviceCenterService.getServiceCenters();
-          const center = centers.find(c => c.centerID === centerID);
-          if (center) {
-            setCenterName(center.name);
-          }
-        } catch (error) {
-          console.error('Error loading center:', error);
-        }
-      }
       
       // Load revenue data
       await loadRevenueData();

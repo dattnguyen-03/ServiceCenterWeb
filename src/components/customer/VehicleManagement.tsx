@@ -222,8 +222,7 @@ const VehicleManagement: React.FC = () => {
 
                   {/* Content */}
                   <div className="p-4 space-y-3">
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* <div className="grid grid-cols-2 gap-2">
                       <div style={{
                         background: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)',
                         padding: 10,
@@ -247,7 +246,7 @@ const VehicleManagement: React.FC = () => {
                           {(vehicle.mileage || 0).toLocaleString()}
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* VIN */}
                     <div style={{

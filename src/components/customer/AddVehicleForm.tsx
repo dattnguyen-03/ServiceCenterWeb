@@ -160,18 +160,18 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
           <Form.Item
             label="VIN (Vehicle Identification Number)"
             name="vin"
-            rules={[
-              { required: true, message: 'Vui lòng nhập VIN' },
-              { min: 17, message: 'VIN phải có đúng 17 ký tự' },
-              { max: 17, message: 'VIN phải có đúng 17 ký tự' },
-              { 
-                pattern: /^[A-HJ-NPR-Z0-9]{17}$/i, 
-                message: 'VIN phải có đúng 17 ký tự và không chứa các ký tự I, O, Q' 
-              }
-            ]}
+            // rules={[
+            //   { required: true, message: 'Vui lòng nhập VIN' },
+            //   { min: 17, message: 'VIN phải có đúng 17 ký tự' },
+            //   { max: 17, message: 'VIN phải có đúng 17 ký tự' },
+            //   { 
+            //     pattern: /^[A-HJ-NPR-Z0-9]{17}$/i, 
+            //     message: 'VIN phải có đúng 17 ký tự và không chứa các ký tự I, O, Q' 
+            //   }
+            // ]}
           >
             <Input 
-              placeholder="Nhập VIN của xe (17 ký tự)" 
+              placeholder="Nhập VIN của xe " 
               size="large"
               maxLength={17}
               style={{ textTransform: 'uppercase' }}
