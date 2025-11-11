@@ -298,7 +298,7 @@ const VehicleDetail: React.FC = () => {
               }}
               bodyStyle={{ padding: 24 }}
             >
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
+              {/* <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>
                  Thống kê
               </h3>
               
@@ -326,7 +326,7 @@ const VehicleDetail: React.FC = () => {
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>
                   {(vehicle.mileage || 0).toLocaleString()} km
                 </div>
-              </div>
+              </div> */}
 
               <div style={{
                 background: maintenanceStatus.color === 'green' ? 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)' : maintenanceStatus.color === 'orange' ? 'linear-gradient(135deg, #fefce8 0%, #f9fafb 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #f9fafb 100%)',

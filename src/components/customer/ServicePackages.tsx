@@ -720,7 +720,23 @@ const ServicePackages: React.FC = () => {
         </div>
 
         <div className="steps-container">
-          <Steps current={currentStep}>
+          <Steps 
+            current={currentStep}
+            onChange={(step) => {
+              // Cho phép click vào bất kỳ step nào để quay về step đó
+              // Nếu đi tới step sau, cần có dữ liệu cần thiết
+              if (step <= currentStep) {
+                // Quay lại step trước - luôn cho phép
+                setCurrentStep(step);
+              } else if (step === 1 && selectedCenter) {
+                // Đi tới step 2 - cần đã chọn center
+                setCurrentStep(step);
+              } else if (step === 2 && selectedCenter && selectedPackage) {
+                // Đi tới step 3 - cần đã chọn center và package
+                setCurrentStep(step);
+              }
+            }}
+          >
             <Step title="Chọn Trung Tâm" icon={<EnvironmentOutlined />} />
             <Step title="Chọn Gói Dịch Vụ" icon={<GiftOutlined />} />
             <Step title="Xác Nhận & Đặt Lịch" icon={<CheckCircleOutlined />} />
