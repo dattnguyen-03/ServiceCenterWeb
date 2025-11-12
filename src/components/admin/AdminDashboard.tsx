@@ -595,7 +595,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Real-time Stats */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+      {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Activity className="w-5 h-5 mr-2 text-blue-500" />
@@ -624,7 +624,7 @@ const AdminDashboard: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </div> */}
 
       {/* Payment Method Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -656,7 +656,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Parts Alert */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        {/* <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Package className="w-5 h-5 mr-2 text-red-500" />
             Phụ tùng cần bổ sung
@@ -682,7 +682,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
