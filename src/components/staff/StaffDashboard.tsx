@@ -582,7 +582,7 @@ const StaffDashboard: React.FC = () => {
       </div>
 
       {/* Real-time Stats */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+      {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Activity className="w-5 h-5 mr-2 text-blue-500" />
@@ -611,7 +611,7 @@ const StaffDashboard: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </div> */}
 
       {/* Payment Method Breakdown */}
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
