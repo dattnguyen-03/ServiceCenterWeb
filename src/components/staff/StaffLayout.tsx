@@ -2,7 +2,6 @@ import React from 'react';
 import { Layout, Menu, Avatar, Dropdown, Space } from 'antd';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import NotificationBell from '../common/NotificationBell';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -142,7 +141,6 @@ const StaffLayout: React.FC = () => {
             Service Center Management System
           </div>
           <Space align="center" size="middle">
-            <NotificationBell userRole="staff" />
             <Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
             <Dropdown menu={{ 
               items: [
