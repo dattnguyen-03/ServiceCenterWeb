@@ -104,6 +104,8 @@ export interface CreateVehicleRequest {
   year: number;
   notes?: string;
   lastServiceDate?: string;
+  odometer: number;
+  lastServiceOdometer: number;
 }
 
 export interface EditVehicleRequest {
@@ -115,6 +117,7 @@ export interface EditVehicleRequest {
   notes?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
+  odometer: number;
 }
 
 export interface VehicleResponse {
@@ -126,6 +129,8 @@ export interface VehicleResponse {
   notes?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
+  odometer?: number;
+  lastServiceOdometer?: number;
   customerId?: string;
   batteryCapacity?: string;
   mileage?: number;
@@ -658,4 +663,44 @@ export interface DeleteMessageBoxRequest {
 
 export interface DeleteMessageBoxResponse {
   message: string;
+}
+
+// Reminder Types
+export interface Reminder {
+  reminderID: number;
+  userID: number;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+export interface ViewReminderDTO {
+  reminderID: number;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+export interface CountReminderDTO {
+  unreadCount: number;
+}
+
+export interface CreateReminderRequest {
+  userID: number;
+  title: string;
+  message: string;
+}
+
+export interface EditReminderRequest {
+  reminderID: number;
+  title: string;
+  message: string;
+}
+
+export interface CleanReminderResponse {
+  success: boolean;
+  message: string;
+  deletedCount?: number;
 }

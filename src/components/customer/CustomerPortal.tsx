@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import NotificationBell from '../common/NotificationBell';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -98,11 +99,14 @@ const CustomerPortal: React.FC = () => {
           <div className="flex items-center space-x-4">
             <Button icon={<GlobalOutlined />}>Tiếng Việt</Button>
             {user ? (
-              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <>
+                <NotificationBell userRole="customer" />
+                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <a onClick={e => e.preventDefault()}>
                   <Avatar icon={<UserOutlined />} />
                 </a>
               </Dropdown>
+              </>
             ) : (
               <Space>
                 <Link to="/login">

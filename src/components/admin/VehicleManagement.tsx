@@ -300,6 +300,12 @@ const VehicleManagement: React.FC = () => {
                       <span className="text-gray-600 w-24">Năm:</span>
                       <span className="ml-2 font-medium">{selectedVehicle.year || 'Chưa có'}</span>
                     </div>
+                    <div className="flex items-center text-sm">
+                      <span className="text-gray-600 w-24">Odometer:</span>
+                      <span className="ml-2 font-medium text-green-600">
+                        {(selectedVehicle.odometer || 0).toLocaleString()} km
+                      </span>
+                    </div>
                   </div>
                 </div>
 

@@ -60,6 +60,7 @@ import MyQuotes from './components/customer/MyQuotes';
 import StaffQuoteManagementCombined from './components/staff/StaffQuoteManagementCombined';
 import StaffInventoryManagement from './components/staff/StaffInventoryManagement';
 import ChatMessage from './components/common/ChatMessage';
+import ReminderManagement from './components/admin/ReminderManagement';
 
 const AppContent: React.FC = () => {
   const { isLoading } = useAuth();
@@ -143,6 +144,7 @@ const AppContent: React.FC = () => {
         <Route path="quotes" element={<QuoteManagementCombined />} />
         <Route path="technician-certifications" element={<TechnicianCertificationManagement />} />
         <Route path="staff" element={<StaffManagement />} />
+        <Route path="reminders" element={<ReminderManagement />} />
         <Route path="messages" element={<ChatMessage />} />
       </Route>
 

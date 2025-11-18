@@ -4,7 +4,6 @@ import { LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell
 import adminService from '../../services/adminService';
 import { getAllUsers } from '../../services/userService';
 import serviceCenterService from '../../services/serviceCenterService';
-import { mockParts, mockServiceTickets } from '../../data/mockData';
 
 interface RevenueData {
   totalRevenue: number;

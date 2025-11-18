@@ -120,6 +120,14 @@ export const API_CONFIG = {
     SERVICE_HISTORY: {
       GET: '/ViewServiceHistoryAPI/GetServiceHistory',
     },
+    REMINDER: {
+      COUNT: '/CountReminderAPI',
+      VIEW: '/ViewReminderAPI',
+      GET_ALL: '/GetReminderAPI',
+      CREATE: '/CreateReminderAPI',
+      EDIT: '/EditReminderAPI',
+      CLEAN: '/CleanReminderAPI',
+    },
   }
 };
 export const HTTP_STATUS = {

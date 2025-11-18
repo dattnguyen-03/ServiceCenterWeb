@@ -28,6 +28,8 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         notes: initialData.notes,
         lastServiceDate: initialData.lastServiceDate ? dayjs(initialData.lastServiceDate) : undefined,
         nextServiceDate: initialData.nextServiceDate ? dayjs(initialData.nextServiceDate) : undefined,
+        odometer: initialData.odometer || 0,
+        lastServiceOdometer: initialData.lastServiceOdometer || 0,
       });
     }
   }, [initialData, form]);
@@ -53,6 +55,7 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
           notes: values.notes,
           lastServiceDate: values.lastServiceDate ? values.lastServiceDate.format('YYYY-MM-DD') : undefined,
           nextServiceDate: values.nextServiceDate ? values.nextServiceDate.format('YYYY-MM-DD') : undefined,
+          odometer: values.odometer || 0,
         };
 
         const response = await vehicleService.editVehicle(editData);
@@ -72,6 +75,8 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
           year: values.year,
           notes: values.notes,
           lastServiceDate: values.lastServiceDate ? values.lastServiceDate.format('YYYY-MM-DD') : undefined,
+          odometer: values.odometer || 0,
+          lastServiceOdometer: values.lastServiceOdometer || 0,
         };
 
         console.log('Sending create data:', createData);
@@ -117,6 +122,8 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         onFinish={handleSubmit}
         initialValues={{
           year: new Date().getFullYear(),
+          odometer: 0,
+          lastServiceOdometer: 0,
         }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -198,6 +205,54 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
               style={{ textTransform: 'uppercase' }}
             />
           </Form.Item>
+
+          <Form.Item
+            label="Odometer hiện tại (km)"
+            name="odometer"
+            rules={[
+              { required: true, message: 'Vui lòng nhập chỉ số Odometer' },
+              { type: 'number', min: 0, message: 'Odometer phải lớn hơn hoặc bằng 0' }
+            ]}
+          >
+            <InputNumber 
+              placeholder="Nhập số km hiện tại" 
+              size="large"
+              className="w-full"
+              min={0}
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+            />
+          </Form.Item>
+
+          {!isEditing && (
+            <Form.Item
+              label="Odometer lần bảo dưỡng cuối (km)"
+              name="lastServiceOdometer"
+              dependencies={['odometer']}
+              rules={[
+                { required: true, message: 'Vui lòng nhập Odometer lần bảo dưỡng cuối' },
+                { type: 'number', min: 0, message: 'Odometer phải lớn hơn hoặc bằng 0' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const odometer = getFieldValue('odometer');
+                    if (!value || !odometer || odometer >= value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Odometer hiện tại phải lớn hơn hoặc bằng Odometer lần bảo dưỡng cuối'));
+                  },
+                }),
+              ]}
+            >
+              <InputNumber 
+                placeholder="Nhập số km lần bảo dưỡng cuối" 
+                size="large"
+                className="w-full"
+                min={0}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+              />
+            </Form.Item>
+          )}
 
           <Form.Item
             label="Ngày bảo dưỡng cuối cùng"

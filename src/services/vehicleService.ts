@@ -10,6 +10,8 @@ export interface CreateVehicleRequest {
   year: number;
   notes?: string;
   lastServiceDate?: string;
+  odometer: number;
+  lastServiceOdometer: number;
 }
 
 export interface EditVehicleRequest {
@@ -21,6 +23,7 @@ export interface EditVehicleRequest {
   notes?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
+  odometer: number;
 }
 
 export interface VehicleResponse {
@@ -33,6 +36,8 @@ export interface VehicleResponse {
   notes?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
+  odometer?: number;
+  lastServiceOdometer?: number;
 }
 
 export interface GetVehicleRequest {
@@ -238,6 +243,22 @@ class VehicleService {
 
     if (!data.year || data.year < 1900 || data.year > new Date().getFullYear() + 1) {
       errors.push('Năm sản xuất không hợp lệ');
+    }
+
+    // Validate Odometer
+    if (data.odometer === undefined || data.odometer < 0) {
+      errors.push('Chỉ số Odometer không hợp lệ');
+    }
+
+    // Validate LastServiceOdometer for CreateVehicleRequest
+    if ('lastServiceOdometer' in data) {
+      const createData = data as CreateVehicleRequest;
+      if (createData.lastServiceOdometer === undefined || createData.lastServiceOdometer < 0) {
+        errors.push('Chỉ số Odometer lần bảo dưỡng cuối không hợp lệ');
+      }
+      if (createData.odometer < createData.lastServiceOdometer) {
+        errors.push('Odometer hiện tại không được nhỏ hơn Odometer lần bảo dưỡng cuối');
+      }
     }
 
     return errors;

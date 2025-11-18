@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Button, Modal, Spin, Card, Tag, Timeline, Input, Tooltip } from 'antd';
+import { Row, Col, Button, Modal, Spin, Card, Tag, Input, Tooltip } from 'antd';
 import { CarOutlined, PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { VehicleResponse } from '../../types/api';
 import { vehicleService } from '../../services/vehicleService';
@@ -243,7 +243,7 @@ const VehicleManagement: React.FC = () => {
                       }}>
                         <div style={{ fontSize: 11, color: '#166534', fontWeight: 600, marginBottom: 4 }}> Km</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#16a34a' }}>
-                          {(vehicle.mileage || 0).toLocaleString()}
+                          {(vehicle.odometer || 0).toLocaleString()}
                         </div>
                       </div>
                     </div> */}
@@ -409,6 +409,12 @@ const VehicleManagement: React.FC = () => {
                     #{selectedVehicle.vehicleID}
                   </Tag>
                 </div>
+                <div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Odometer</div>
+                  <Tag style={{ borderRadius: 6, fontWeight: 600, padding: '2px 8px' }} color="cyan">
+                    {(selectedVehicle.odometer || 0).toLocaleString()} km
+                  </Tag>
+                </div>
                 {selectedVehicle.notes && (
                   <div style={{ gridColumn: '1 / -1' }}>
                     <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, fontWeight: 600 }}>Ghi chú</div>
@@ -460,115 +466,12 @@ const VehicleManagement: React.FC = () => {
                 }}>
                   <div style={{ fontSize: 11, color: '#166534', marginBottom: 4, fontWeight: 600 }}> Quãng đường</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>
-                    {(selectedVehicle.mileage || 0).toLocaleString()} km
+                    {(selectedVehicle.odometer || 0).toLocaleString()} km
                   </div>
                 </div>
               </div>
             </Card> */}
 
-            {/* Maintenance History */}
-            <Card 
-              style={{
-                borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                border: '1px solid #e5e7eb'
-              }}
-              bodyStyle={{ padding: 16 }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1f2937', marginBottom: 16 }}>
-                Lịch sử bảo dưỡng
-              </div>
-              <Timeline
-                items={[
-                  {
-                    dot: (
-                      <div style={{
-                        width: 32,
-                        height: 32,
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        borderRadius: 50,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        boxShadow: '0 2px 6px rgba(34, 197, 94, 0.3)'
-                      }}>
-                        ✓
-                      </div>
-                    ),
-                    children: (
-                      <div style={{
-                        background: 'linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)',
-                        border: '1px solid #dcfce7',
-                        borderRadius: 8,
-                        padding: 12,
-                        marginLeft: 12
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
-                          <div>
-                            <p style={{ fontWeight: 600, fontSize: 14, color: '#1f2937', margin: 0, marginBottom: 2 }}>
-                              Bảo dưỡng cuối cùng
-                            </p>
-                            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Kiểm tra tổng thể</p>
-                          </div>
-                          <Tag style={{ borderRadius: 4, fontWeight: 600, fontSize: 11 }} color="green">
-                             Hoàn tất
-                          </Tag>
-                        </div>
-                        <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>
-                           {selectedVehicle.lastServiceDate ? new Date(selectedVehicle.lastServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
-                        </p>
-                      </div>
-                    )
-                  },
-                  {
-                    dot: (
-                      <div style={{
-                        width: 32,
-                        height: 32,
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        borderRadius: 50,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)'
-                      }}>
-                        ⏱
-                      </div>
-                    ),
-                    children: (
-                      <div style={{
-                        background: 'linear-gradient(135deg, #fefce8 0%, #f9fafb 100%)',
-                        border: '1px solid #fef08a',
-                        borderRadius: 8,
-                        padding: 12,
-                        marginLeft: 12
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
-                          <div>
-                            <p style={{ fontWeight: 600, fontSize: 14, color: '#1f2937', margin: 0, marginBottom: 2 }}>
-                              Bảo dưỡng tiếp theo
-                            </p>
-                            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Bảo dưỡng định kỳ</p>
-                          </div>
-                          <Tag style={{ borderRadius: 4, fontWeight: 600, fontSize: 11 }} color="orange">
-                            Sắp đến
-                          </Tag>
-                        </div>
-                        <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>
-                          {selectedVehicle.nextServiceDate ? new Date(selectedVehicle.nextServiceDate).toLocaleDateString('vi-VN') : 'Chưa có'}
-                        </p>
-                      </div>
-                    )
-                  }
-                ]}
-              />
-            </Card>
           </div>
         )}
       </Modal>

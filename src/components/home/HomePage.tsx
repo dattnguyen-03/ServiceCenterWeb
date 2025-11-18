@@ -166,7 +166,7 @@ const CustomerVehicleDashboard = () => {
                      <Card bodyStyle={{ padding: 16 }} className="bg-green-50 border-green-100">
                       <Statistic
                         title={<span className="text-gray-600">Quãng đường</span>}
-                        value={`${vehicle.mileage.toLocaleString()} km`}
+                        value={`${((vehicle as any).odometer || (vehicle as any).mileage || 0).toLocaleString()} km`}
                         prefix={<DashboardOutlined />}
                         valueStyle={{ color: '#16a34a', fontWeight: 600 }}
                       />

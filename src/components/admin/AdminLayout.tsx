@@ -2,6 +2,7 @@ import React from 'react';
 import { Layout, Menu, Avatar, Dropdown, Space } from 'antd';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import NotificationBell from '../common/NotificationBell';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -17,6 +18,7 @@ import {
   DatabaseOutlined,
   IdcardOutlined,
   MessageOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -102,6 +104,11 @@ const AdminLayout: React.FC = () => {
       icon: <MessageOutlined />,
       label: <Link to="/admin/messages">Tin nhắn</Link>,
     },
+    {
+      key: '/admin/reminders',
+      icon: <BellOutlined />,
+      label: <Link to="/admin/reminders">Quản lý Nhắc nhở</Link>,
+    },
   ];
 
   return (
@@ -141,7 +148,8 @@ const AdminLayout: React.FC = () => {
           <div className="text-lg font-semibold">
             Service Center Management System
           </div>
-          <Space align="center">
+          <Space align="center" size="middle">
+            <NotificationBell userRole="admin" />
             <Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
             <Dropdown menu={{ 
               items: [

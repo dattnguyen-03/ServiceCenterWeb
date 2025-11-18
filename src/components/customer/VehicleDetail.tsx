@@ -324,7 +324,7 @@ const VehicleDetail: React.FC = () => {
               }}>
                 <div style={{ fontSize: 12, color: '#166534', marginBottom: 4, fontWeight: 600 }}> Quãng đường</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#16a34a' }}>
-                  {(vehicle.mileage || 0).toLocaleString()} km
+                  {(vehicle.odometer || 0).toLocaleString()} km
                 </div>
               </div> */}
 

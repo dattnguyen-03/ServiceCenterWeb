@@ -9,7 +9,7 @@ import {
   BarChartOutlined,
   PieChartOutlined
 } from '@ant-design/icons';
-import { LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { paymentService, Payment } from '../../services/paymentService';
 import { appointmentService } from '../../services/appointmentService';
 import { AppointmentSummary } from '../../types/api';
@@ -156,7 +156,7 @@ const CustomerDashboard: React.FC = () => {
     const result = Array.from(monthlyData.entries())
       .map(([month, totalAmount]) => ({
         date: month,
-        amount: totalAmount // Convert to millions
+        amount: totalAmount // Keep original amount, don't divide
       }))
       .sort((a, b) => {
         const [monthA, yearA] = a.date.split('/').map(Number);
@@ -278,15 +278,51 @@ const CustomerDashboard: React.FC = () => {
               <div className="mb-6">
                 <Card className="shadow-sm" style={{ borderRadius: 16 }}>
                   <Title level={4} className="mb-4">Biểu đồ chi tiêu theo thời gian</Title>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlyPaymentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => [`${value.toFixed(1)} VNĐ`, 'Tổng chi tiêu']} />
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart 
+                      data={monthlyPaymentData}
+                      layout="horizontal"
+                      margin={{ top: 20, right: 50, left: 80, bottom: 20 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#0088FE" stopOpacity={0.8}/>
+                          <stop offset="100%" stopColor="#00C49F" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis 
+                        type="number" 
+                        tickFormatter={(value) => `${value.toLocaleString('vi-VN')} VNĐ`}
+                        stroke="#666"
+                        domain={[0, 'dataMax + 500']}
+                      />
+                      <YAxis 
+                        type="category" 
+                        dataKey="date" 
+                        width={60}
+                        stroke="#666"
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => [`${value.toLocaleString('vi-VN')} VNĐ`, 'Tổng chi tiêu']}
+                        labelStyle={{ color: '#333' }}
+                        contentStyle={{ 
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Legend />
-                      <Line type="monotone" dataKey="amount" stroke="#0088FE" strokeWidth={2} name="Chi tiêu trong tháng " />
-                    </LineChart>
+                      <Bar 
+                        dataKey="amount" 
+                        fill="#0088FE"
+                        name="Chi tiêu trong tháng"
+                        radius={[0, 8, 8, 0]}
+                        maxBarSize={60}
+                        minPointSize={5}
+                      />
+                    </BarChart>
                   </ResponsiveContainer>
                 </Card>
               </div>
