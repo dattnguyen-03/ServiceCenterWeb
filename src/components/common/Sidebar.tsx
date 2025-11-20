@@ -38,7 +38,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           { id: 'checklists', label: 'Service Checklist', icon: FileText },
           { id: 'parts', label: 'Danh mục phụ tùng', icon: Package },
           { id: 'parts-usage', label: 'Kiểm tra phụ tùng', icon: Car },
-          { id: 'part-usage', label: 'Sử dụng phụ tùng', icon: Wrench },
           // { id: 'messages', label: 'Tin nhắn', icon: MessageOutlined },
           { id: 'profile', label: 'Hồ sơ cá nhân', icon: UserOutlined }
         ];

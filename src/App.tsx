@@ -52,7 +52,6 @@ import StaffServiceOrderManagement from './components/staff/ServiceOrderManageme
 import ServiceChecklistManagement from './components/admin/ServiceChecklistManagement';
 import TechnicianChecklistView from './components/technician/TechnicianChecklistView';
 import PartsUsage from './components/technician/PartsUsage';
-import TechnicianPartUsage from './components/technician/TechnicianPartUsage';
 import StaffChecklistView from './components/staff/StaffChecklistView';
 import PaymentSuccess from './components/common/PaymentSuccess';
 import QuoteManagementCombined from './components/admin/QuoteManagementCombined';
@@ -186,7 +185,6 @@ const AppContent: React.FC = () => {
         <Route path="checklists" element={<TechnicianChecklistView />} />
         <Route path="parts" element={<TechnicianPartsView />} />
         <Route path="parts-usage" element={<PartsUsage />} />
-        <Route path="part-usage" element={<TechnicianPartUsage />} />
         <Route path="profile" element={<TechnicianProfile />} />
         <Route path="messages" element={<ChatMessage />} />
       </Route>
