@@ -15,6 +15,7 @@ interface AddVehicleFormProps {
 const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess, onCancel }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [formValid, setFormValid] = useState(false);
   const isEditing = !!initialData;
 
   // Set initial values when editing
@@ -31,8 +32,41 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         odometer: initialData.odometer || 0,
         lastServiceOdometer: initialData.lastServiceOdometer || 0,
       });
+      // Validate form after setting values
+      form.validateFields().then(() => setFormValid(true)).catch(() => setFormValid(false));
+    } else {
+      // For new vehicle, form starts invalid
+      setFormValid(false);
     }
   }, [initialData, form]);
+
+  // Check form validity when values change
+  const handleValuesChange = (changedValues: any, allValues: any) => {
+    const fieldsToCheck = ['model', 'year', 'licensePlate', 'odometer', 'vin', 'notes'];
+    if (!isEditing) {
+      fieldsToCheck.push('lastServiceOdometer');
+    }
+    
+    // Check if all required fields have values (including notes)
+    const allFieldsFilled = fieldsToCheck.every(field => {
+      const value = allValues[field];
+      // For number fields (year, odometer, lastServiceOdometer), 0 is valid
+      if (field === 'year' || field === 'odometer' || field === 'lastServiceOdometer') {
+        return value !== undefined && value !== null && value !== '';
+      }
+      // For string fields (including notes), check if not empty
+      return value !== undefined && value !== null && value !== '';
+    });
+    
+    if (allFieldsFilled) {
+      // Validate fields to ensure they pass validation rules
+      form.validateFields(fieldsToCheck)
+        .then(() => setFormValid(true))
+        .catch(() => setFormValid(false));
+    } else {
+      setFormValid(false);
+    }
+  };
 
   const handleSubmit = async (values: any) => {
     setLoading(true);
@@ -120,11 +154,13 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
+        onValuesChange={handleValuesChange}
         initialValues={{
           year: new Date().getFullYear(),
           odometer: 0,
           lastServiceOdometer: 0,
         }}
+        validateTrigger="onBlur"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Form.Item
@@ -167,15 +203,15 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
           <Form.Item
             label="VIN (Vehicle Identification Number)"
             name="vin"
-            // rules={[
-            //   { required: true, message: 'Vui lòng nhập VIN' },
-            //   { min: 17, message: 'VIN phải có đúng 17 ký tự' },
-            //   { max: 17, message: 'VIN phải có đúng 17 ký tự' },
-            //   { 
-            //     pattern: /^[A-HJ-NPR-Z0-9]{17}$/i, 
-            //     message: 'VIN phải có đúng 17 ký tự và không chứa các ký tự I, O, Q' 
-            //   }
-            // ]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập VIN' },
+              { min: 17, message: 'VIN phải có đúng 17 ký tự' },
+              { max: 17, message: 'VIN phải có đúng 17 ký tự' },
+              { 
+                pattern: /^[A-HJ-NPR-Z0-9]{17}$/i, 
+                message: 'VIN phải có đúng 17 ký tự và không chứa các ký tự I, O, Q' 
+              }
+            ]}
           >
             <Input 
               placeholder="Nhập VIN của xe " 
@@ -271,11 +307,13 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
             label="Ghi chú"
             name="notes"
             rules={[
+              { required: true, message: 'Vui lòng nhập ghi chú' },
+              { min: 1, message: 'Ghi chú không được để trống' },
               { max: 500, message: 'Ghi chú không được vượt quá 500 ký tự' }
             ]}
           >
             <Input.TextArea 
-              placeholder="Ghi chú về xe (tùy chọn)"
+              placeholder="Ghi chú về xe"
               rows={3}
               maxLength={500}
               showCount
@@ -298,6 +336,8 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
             size="large"
             icon={<SaveOutlined />}
             className="!bg-blue-600 hover:!bg-blue-700"
+            disabled={!formValid && !isEditing}
+            title={!formValid && !isEditing ? 'Vui lòng điền đầy đủ các trường bắt buộc' : ''}
           >
             {loading ? (isEditing ? 'Đang cập nhật...' : 'Đang thêm...') : (isEditing ? 'Cập nhật xe' : 'Thêm xe')}
           </Button>

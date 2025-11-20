@@ -168,7 +168,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ userRole = 'custome
             />
           )}
         </div>
-        {userRole === 'customer' && reminders.length > 0 && (
+        {/* {userRole === 'customer' && reminders.length > 0 && (
           <Button
             type="text"
             size="small"
@@ -182,7 +182,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ userRole = 'custome
           >
             Dọn dẹp
           </Button>
-        )}
+        )} */}
       </div>
 
       {/* Content */}
