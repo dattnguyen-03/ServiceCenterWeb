@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select } from "antd";
+import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select, Tooltip } from "antd";
 import { FileTextOutlined, SearchOutlined, EyeOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { serviceChecklistService, ServiceChecklist, CreateServiceChecklistRequest, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
@@ -19,11 +19,20 @@ const TechnicianChecklistView: React.FC = () => {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [createFormValid, setCreateFormValid] = useState(false);
 
   useEffect(() => {
     fetchChecklists();
     fetchServiceOrders();
   }, []);
+
+  // Validate form khi modal mở
+  useEffect(() => {
+    if (isCreateModalVisible) {
+      setCreateFormValid(false);
+      form.resetFields();
+    }
+  }, [isCreateModalVisible]);
 
   const fetchChecklists = async () => {
     setLoading(true);
@@ -110,6 +119,7 @@ const TechnicianChecklistView: React.FC = () => {
       message.success('Tạo checklist thành công!');
       setIsCreateModalVisible(false);
       form.resetFields();
+      setCreateFormValid(false);
       await fetchChecklists();
     } catch (error: any) {
       message.error(error.message || 'Lỗi tạo checklist');
@@ -316,7 +326,11 @@ const TechnicianChecklistView: React.FC = () => {
             type="primary"
             size="large"
             icon={<PlusOutlined />}
-            onClick={() => setIsCreateModalVisible(true)}
+            onClick={() => {
+              setIsCreateModalVisible(true);
+              setCreateFormValid(false);
+              form.resetFields();
+            }}
             disabled={availableOrders.length === 0}
             style={{
               borderRadius: 10,
@@ -488,17 +502,24 @@ const TechnicianChecklistView: React.FC = () => {
         onCancel={() => {
           setIsCreateModalVisible(false);
           form.resetFields();
+          setCreateFormValid(false);
         }}
         onOk={() => form.submit()}
         okText="Tạo Checklist"
         cancelText="Hủy"
         okButtonProps={{
+          disabled: !createFormValid,
+          title: !createFormValid ? 'Vui lòng điền đầy đủ thông tin bắt buộc (Order ID, Tên hạng mục, Trạng thái)' : '',
           style: {
             borderRadius: 8,
-            background: 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)',
+            background: createFormValid 
+              ? 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)'
+              : '#d1d5db',
             border: 'none',
             fontWeight: 600,
-            height: 40
+            height: 40,
+            cursor: createFormValid ? 'pointer' : 'not-allowed',
+            opacity: createFormValid ? 1 : 0.6
           }
         }}
         cancelButtonProps={{
@@ -515,6 +536,33 @@ const TechnicianChecklistView: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleCreateChecklist}
+          onValuesChange={async () => {
+            // Validate form khi có thay đổi
+            try {
+              await form.validateFields(['orderID', 'itemName', 'status']);
+              const values = form.getFieldsValue();
+              // Kiểm tra cả giá trị và validation rules
+              const isValid = values.orderID && 
+                             values.itemName && 
+                             values.itemName.trim() !== '' &&
+                             values.status;
+              
+              // Kiểm tra thêm: Order không được là Completed
+              if (isValid && values.orderID) {
+                const selectedOrder = serviceOrders.find(
+                  order => (order.OrderID || order.orderID) === values.orderID
+                );
+                if (selectedOrder && selectedOrder.status === 'Completed') {
+                  setCreateFormValid(false);
+                  return;
+                }
+              }
+              
+              setCreateFormValid(!!isValid);
+            } catch {
+              setCreateFormValid(false);
+            }
+          }}
           style={{ marginTop: '16px' }}
         >
           <Form.Item
