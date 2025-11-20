@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Table, Button, Input, Modal, Form, InputNumber, Tag, Space, 
-  Descriptions, notification, Row, Col, Statistic, Divider
+  Descriptions, notification, Row, Col, Statistic, Divider, Popconfirm
 } from 'antd';
 import {
   EyeOutlined, CheckCircleOutlined, ClockCircleOutlined,
   ShoppingCartOutlined, UserOutlined, CarOutlined, 
-  ToolOutlined, DollarOutlined, FileTextOutlined
+  ToolOutlined, DollarOutlined, FileTextOutlined, DeleteOutlined
 } from '@ant-design/icons';
 import { quoteRequestService, QuoteRequest, CreateQuoteFromRequestRequest } from '../../services/quoteRequestService';
 import { showSuccess, showError } from '../../utils/sweetAlert';
@@ -80,6 +80,16 @@ const StaffQuoteRequestManagement: React.FC = () => {
       showError('Lỗi tạo báo giá', error.message);
     } finally {
       setCreatingQuote(false);
+    }
+  };
+
+  const handleDeleteQuoteRequest = async (quoteRequestID: number) => {
+    try {
+      await quoteRequestService.deleteQuoteRequest(quoteRequestID);
+      showSuccess('Thành công', 'Xóa yêu cầu báo giá thành công và đã hoàn lại inventory');
+      await fetchQuoteRequests();
+    } catch (error: any) {
+      showError('Lỗi xóa yêu cầu báo giá', error.message);
     }
   };
 
@@ -199,6 +209,24 @@ const StaffQuoteRequestManagement: React.FC = () => {
               Tạo báo giá
             </Button>
           )}
+          <Popconfirm
+            title="Xóa yêu cầu báo giá"
+            description="Bạn có chắc chắn muốn xóa yêu cầu báo giá này? Hệ thống sẽ hoàn lại inventory đã reserve."
+            onConfirm={() => handleDeleteQuoteRequest(record.quoteRequestID)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+              className="text-red-600"
+            >
+              Xóa
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },

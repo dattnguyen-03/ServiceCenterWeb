@@ -207,6 +207,21 @@ class QuoteService {
   }
 
   /**
+   * Xóa báo giá (Admin/Staff)
+   */
+  async deleteQuote(quoteID: number): Promise<string> {
+    try {
+      const response = await httpClient.delete<{ message: string }>(
+        `/DeleteQuoteAPI/${quoteID}`
+      );
+      return response.message || 'Xóa báo giá thành công';
+    } catch (error: any) {
+      console.error('Error deleting quote:', error);
+      throw new Error(error.message || 'Lỗi xóa báo giá');
+    }
+  }
+
+  /**
    * Tạo Quote từ yêu cầu của Technician
    * (Method này sẽ được gọi từ PartsUsage component)
    */

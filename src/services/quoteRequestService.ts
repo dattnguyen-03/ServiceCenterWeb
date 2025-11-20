@@ -96,6 +96,26 @@ class QuoteRequestService {
   }
 
   /**
+   * Xóa hoàn toàn Quote Request (Admin/Staff)
+   */
+  async deleteQuoteRequest(quoteRequestID: number): Promise<string> {
+    try {
+      const response = await httpClient.delete<{ success: boolean; message: string }>(
+        `/QuoteRequestAPI/${quoteRequestID}`
+      );
+      
+      if (response.success) {
+        return response.message || 'Xóa yêu cầu báo giá thành công';
+      } else {
+        throw new Error(response.message || 'Lỗi xóa yêu cầu báo giá');
+      }
+    } catch (error: any) {
+      console.error('Error deleting quote request:', error);
+      throw new Error(error.message || 'Lỗi xóa yêu cầu báo giá');
+    }
+  }
+
+  /**
    * Format ngày tháng
    */
   formatDate(dateString: string): string {

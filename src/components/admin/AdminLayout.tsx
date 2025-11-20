@@ -63,11 +63,11 @@ const AdminLayout: React.FC = () => {
       icon: <ShoppingCartOutlined />,
       label: <Link to="/admin/service-orders">Quản Lý Đơn Hàng Dịch Vụ</Link>,
     },
-    {
-      key: '/admin/service-checklists',
-      icon: <FileTextOutlined />,
-      label: <Link to="/admin/service-checklists">Service Checklist</Link>,
-    },
+    // {
+    //   key: '/admin/service-checklists',
+    //   icon: <FileTextOutlined />,
+    //   label: <Link to="/admin/service-checklists">Service Checklist</Link>,
+    // },
     {
       key: '/admin/service-centers',
       icon: <BankOutlined />,

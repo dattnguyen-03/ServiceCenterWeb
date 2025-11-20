@@ -86,8 +86,8 @@ const ServiceOrderProgress: React.FC = () => {
         return { icon: <CheckCircleOutlined />, color: 'green', text: '✓ Hoàn tất' };
       case 'inprogress':
         return { icon: <ClockCircleOutlined />, color: 'blue', text: 'Đang bảo dưỡng' };
-      case 'pending':
-        return { icon: <WarningOutlined />, color: 'orange', text: 'Chờ xử lý' };
+      // case 'pending':
+      //   return { icon: <WarningOutlined />, color: 'orange', text: 'Chờ xử lý' };
       case 'cancelled':
       case 'closed':
         return { icon: <CloseCircleOutlined />, color: 'red', text: 'Đã hủy' };
@@ -177,12 +177,12 @@ const ServiceOrderProgress: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Card style={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-              <Statistic
+              {/* <Statistic
                 title={<span style={{ color: '#6b7280' }}>Chờ xử lý</span>}
                 value={pendingOrders}
                 prefix={<WarningOutlined style={{ color: '#f59e0b' }} />}
                 valueStyle={{ color: '#f59e0b', fontWeight: 700 }}
-              />
+              /> */}
             </Card>
           </Col>
         </Row>
@@ -359,9 +359,9 @@ const ServiceOrderProgress: React.FC = () => {
                   size="large"
                   placeholder="Chọn trạng thái mới"
                 >
-                  <Select.Option value="Pending">
+                  {/* <Select.Option value="Pending">
                     <WarningOutlined style={{ marginRight: '8px' }} /> Chờ xử lý
-                  </Select.Option>
+                  </Select.Option> */}
                   <Select.Option value="InProgress">
                     <ClockCircleOutlined style={{ marginRight: '8px' }} /> Đang bảo dưỡng
                   </Select.Option>
