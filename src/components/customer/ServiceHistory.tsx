@@ -223,7 +223,7 @@ const ServiceHistory: React.FC = () => {
                 </div>
               ) : !selectedVehicleId ? (
                 <div style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>🚗</div>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}></div>
                   <p style={{ fontSize: 16, fontWeight: 600, color: '#6b7280', marginBottom: 8 }}>
                     Vui lòng chọn xe để xem lịch sử
                   </p>

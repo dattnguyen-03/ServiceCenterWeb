@@ -206,7 +206,7 @@ const AppointmentPage: React.FC = () => {
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
-            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Xe 🚗</span>}
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Xe</span>}
             name="car"
             rules={[{ required: true, message: "Vui lòng nhập tên xe" }]}
           >
