@@ -69,7 +69,9 @@ class VehicleService {
       return { success: true, message: 'Tạo xe thành công' };
     } catch (error: any) {
       console.error('Error creating vehicle:', error);
-      throw new Error(error.message || 'Không thể tạo xe mới');
+      // Giữ nguyên message từ backend (ví dụ: "Biển số xe đã tồn tại trong hệ thống.")
+      const errorMessage = error.message || 'Không thể tạo xe mới';
+      throw new Error(errorMessage);
     }
   }
 
@@ -152,8 +154,27 @@ class VehicleService {
       // Fallback
       return [];
     } catch (error: any) {
+      // Nếu là lỗi 404 với message về việc chưa có xe, trả về mảng rỗng thay vì throw error
+      const errorMessage = error.message || '';
+      
+      // Kiểm tra nếu là lỗi endpoint không tồn tại thì vẫn throw
+      if (errorMessage.includes('API endpoint không tồn tại')) {
+        console.error('Error getting vehicles:', error);
+        throw error;
+      }
+      
+      // Nếu là message về việc chưa có xe hoặc không tìm thấy người dùng (nhưng đã authenticated)
+      // thì trả về mảng rỗng (không phải lỗi)
+      if (errorMessage.includes('chưa có xe') || 
+          errorMessage.includes('Người dùng hiện chưa có xe nào') ||
+          errorMessage.includes('Không tìm thấy người dùng')) {
+        console.log('Chưa có xe nào, trả về danh sách rỗng');
+        return [];
+      }
+      
+      // Các lỗi khác vẫn throw
       console.error('Error getting vehicles:', error);
-      throw new Error(error.message || 'Không thể lấy danh sách xe');
+      throw new Error(errorMessage || 'Không thể lấy danh sách xe');
     }
   }
 

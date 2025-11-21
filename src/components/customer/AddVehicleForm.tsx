@@ -230,7 +230,7 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
               { max: 20, message: 'Biển số xe không được vượt quá 20 ký tự' },
               { 
                 pattern: /^[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}$/, 
-                message: 'Biển số xe đã tồn tại' 
+                message: 'Biển số xe không đúng định dạng (VD: 30A-12345)' 
               }
             ]}
           >
@@ -256,7 +256,7 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
               className="w-full"
               min={0}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+              parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
             />
           </Form.Item>
 
@@ -285,7 +285,7 @@ const AddVehicleForm: React.FC<AddVehicleFormProps> = ({ initialData, onSuccess,
                 className="w-full"
                 min={0}
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
               />
             </Form.Item>
           )}
