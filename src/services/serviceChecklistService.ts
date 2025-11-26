@@ -80,11 +80,11 @@ export const serviceChecklistService = {
     }
   },
 
-  // Get service checklists for the logged-in technician
-  getMyChecklists: async (): Promise<ServiceChecklist[]> => {
+  // Get service checklists for the logged-in technician - now returns grouped format
+  getMyChecklists: async (): Promise<ServiceChecklistGroup[]> => {
     try {
       console.log('[serviceChecklistService] Fetching checklists...');
-      const response = await httpClient.get<ServiceChecklist[]>('/ViewServiceChecklistAPI');
+      const response = await httpClient.get<ServiceChecklistGroup[]>('/ViewServiceChecklistAPI');
       
       console.log('[serviceChecklistService] Raw response:', response);
       console.log('[serviceChecklistService] Response type:', typeof response);

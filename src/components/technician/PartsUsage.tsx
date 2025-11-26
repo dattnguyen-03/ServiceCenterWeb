@@ -8,7 +8,7 @@ import {
   SendOutlined, EyeOutlined, DollarOutlined, AppstoreOutlined 
 } from '@ant-design/icons';
 import { partService, Part } from '../../services/partService';
-import { serviceChecklistService, ServiceChecklist } from '../../services/serviceChecklistService';
+import { serviceChecklistService, ServiceChecklistGroup, ChecklistItem } from '../../services/serviceChecklistService';
 import { quoteService, CreateQuoteRequestFromTechnician } from '../../services/quoteService';
 import { serviceOrderService, ServiceOrder } from '../../services/serviceOrderService';
 import { quoteRequestService, QuoteRequest } from '../../services/quoteRequestService';
@@ -24,8 +24,8 @@ const PartsUsage: React.FC = () => {
   const [isChecklistModalVisible, setIsChecklistModalVisible] = useState(false);
   const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
   const [availableParts, setAvailableParts] = useState<Part[]>([]);
-  const [checklists, setChecklists] = useState<ServiceChecklist[]>([]);
-  const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
+  const [checklists, setChecklists] = useState<ServiceChecklistGroup[]>([]);
+  const [selectedChecklistGroup, setSelectedChecklistGroup] = useState<ServiceChecklistGroup | null>(null);
   const [loading, setLoading] = useState(false);
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
@@ -128,76 +128,101 @@ const PartsUsage: React.FC = () => {
         };
 
         setSelectedParts(prev => [...prev, selectedPart]);
-        form.resetFields();
-        setIsModalVisible(false);
+        form.resetFields(); // Reset form để có thể thêm phụ tùng khác
+        
+        notification.success({
+          message: 'Thêm thành công',
+          description: `Đã thêm ${part.name} vào danh sách`,
+          duration: 2
+        });
+        
+        // Không đóng modal để có thể tiếp tục thêm phụ tùng khác
       }
     });
   };
 
-  const handleSelectChecklist = (checklist: ServiceChecklist) => {
-    setSelectedChecklist(checklist);
-    
-    // Nếu status là "NeedReplace", mở modal chọn phụ tùng
-    // Nếu không phải "NeedReplace", vẫn có thể gửi báo giá theo gói dịch vụ (không cần chọn phụ tùng)
-    if (checklist.status === 'NeedReplace') {
-      setIsModalVisible(true); // Mở modal chọn phụ tùng
-    }
-    // Nếu không phải NeedReplace, vẫn có thể gửi báo giá (theo gói dịch vụ, không cần phụ tùng)
-  };
+  // handleSelectChecklist removed - using selectedChecklistGroup directly
 
   const handleSendQuoteRequest = async () => {
-    if (!selectedChecklist) {
+    if (!selectedChecklistGroup) {
       notification.warning({
         message: 'Thiếu thông tin',
-        description: 'Vui lòng chọn checklist'
-      });
-      return;
-    }
-
-    // Nếu status là "NeedReplace", phải có ít nhất một phụ tùng
-    // Nếu không phải "NeedReplace", có thể gửi báo giá theo gói dịch vụ (không cần phụ tùng)
-    if (selectedChecklist.status === 'NeedReplace' && selectedParts.length === 0) {
-      notification.warning({
-        message: 'Thiếu thông tin',
-        description: 'Checklist cần thay thế phụ tùng, vui lòng chọn ít nhất một phụ tùng'
+        description: 'Vui lòng chọn nhóm checklist'
       });
       return;
     }
 
     try {
-      console.log('Creating quote request with:', {
-        checklistID: selectedChecklist.checklistID,
-        appointmentID: selectedChecklist.appointmentID,
-        selectedChecklist: selectedChecklist
-      });
+      setLoading(true);
 
-      const quoteRequest: CreateQuoteRequestFromTechnician = {
-        checklistID: selectedChecklist.checklistID,
-        appointmentID: selectedChecklist.appointmentID,
-        parts: selectedParts.map(part => ({
-          partID: part.partID,
-          quantity: part.quantity,
-          unitPrice: part.price,
-          totalPrice: part.price * part.quantity
-        })),
-        notes: selectedChecklist.status === 'NeedReplace' 
-          ? `Yêu cầu báo giá từ Technician cho checklist #${selectedChecklist.checklistID} - ${selectedChecklist.itemName} (Cần thay thế phụ tùng)`
-          : `Yêu cầu báo giá từ Technician cho checklist #${selectedChecklist.checklistID} - ${selectedChecklist.itemName} (Theo gói dịch vụ đã chọn)`
+      // Lấy các checklist items cần thay thế
+      const needReplaceItems = selectedChecklistGroup.checklistItems.filter(
+        item => item.status === 'NeedReplace'
+      );
+
+      // Chuẩn bị parts data
+      const parts = selectedParts.map(part => ({
+        partID: part.partID,
+        quantity: part.quantity,
+        unitPrice: part.price,
+        totalPrice: part.totalPrice
+      }));
+
+      // Tạo notes tổng hợp cho tất cả items
+      let notes = '';
+      if (needReplaceItems.length > 0) {
+        notes = `Yêu cầu báo giá cho Order #${selectedChecklistGroup.orderID} - ${needReplaceItems.length} hạng mục cần thay thế: ${needReplaceItems.map(item => item.itemName).join(', ')}`;
+        const itemNotes = needReplaceItems.filter(item => item.notes).map(item => `${item.itemName}: ${item.notes}`);
+        if (itemNotes.length > 0) {
+          notes += `. Ghi chú: ${itemNotes.join('; ')}`;
+        }
+      } else {
+        notes = `Báo giá theo gói dịch vụ cho Order #${selectedChecklistGroup.orderID} - tất cả hạng mục`;
+      }
+
+      // Sử dụng checklistID đầu tiên làm đại diện cho group
+      const representativeChecklistID = selectedChecklistGroup.checklistItems[0]?.checklistID;
+      
+      if (!representativeChecklistID) {
+        showError(
+          'Lỗi dữ liệu',
+          'Không tìm thấy checklistID hợp lệ'
+        );
+        return;
+      }
+
+      // Gửi 1 request duy nhất với checklistID đại diện
+      const requestData: CreateQuoteRequestFromTechnician = {
+        checklistID: representativeChecklistID,
+        appointmentID: selectedChecklistGroup.appointmentID,
+        parts: parts,
+        notes: notes
       };
 
-      const result = await quoteService.createQuoteFromTechnicianRequest(quoteRequest);
-      showSuccess('Thành công', result);
+      await quoteService.createQuoteFromTechnicianRequest(requestData);
       
-      // Reload quote requests để cập nhật trạng thái
-      await loadQuoteRequests();
-      
-      // Reset form
+      showSuccess(
+        'Gửi yêu cầu báo giá thành công!',
+        needReplaceItems.length > 0 
+          ? `Đã gửi yêu cầu báo giá cho Order #${selectedChecklistGroup.orderID} với ${needReplaceItems.length} hạng mục cần thay thế`
+          : `Đã gửi yêu cầu báo giá theo gói dịch vụ cho Order #${selectedChecklistGroup.orderID}`
+      );
+
+      // Reset selections after success
+      setSelectedChecklistGroup(null);
       setSelectedParts([]);
-      setSelectedChecklist(null);
-      setIsModalVisible(false);
       
+      // Reload data
+      loadChecklists();
+      loadQuoteRequests();
     } catch (error: any) {
-      showError('Lỗi gửi yêu cầu', error.message);
+      console.error('Error in handleSendQuoteRequest:', error);
+      showError(
+        'Lỗi gửi yêu cầu báo giá',
+        error.message || 'Đã xảy ra lỗi không xác định'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,10 +304,10 @@ const PartsUsage: React.FC = () => {
   const checklistColumns = [
     {
       title: 'ID',
-      dataIndex: 'checklistID',
-      key: 'checklistID',
+      dataIndex: 'orderID',
+      key: 'orderID',
       width: 80,
-      render: (id: number) => <Tag color="blue">#{id}</Tag>,
+      render: (orderID: number) => <Tag color="blue">#{orderID}</Tag>,
     },
     {
       title: 'Khách hàng',
@@ -297,30 +322,50 @@ const PartsUsage: React.FC = () => {
     },
     {
       title: 'Hạng mục',
-      dataIndex: 'itemName',
-      key: 'itemName',
-      render: (text: string) => (
-        <Tag color="orange" style={{ borderRadius: 12 }}>
-          {text}
-        </Tag>
+      key: 'checklistItems',
+      render: (_: any, record: ServiceChecklistGroup) => (
+        <div>
+          {record.checklistItems?.map((item: ChecklistItem) => (
+            <Tag
+              key={item.checklistID}
+              color={item.status === 'NeedReplace' ? 'orange' : 'blue'}
+              style={{ margin: '2px', borderRadius: 12 }}
+            >
+              {item.itemName}
+            </Tag>
+          ))}
+          <div style={{ fontSize: '11px', color: '#666', marginTop: 4 }}>
+            {record.checklistItems?.length || 0} hạng mục
+          </div>
+        </div>
       ),
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        if (status === 'NeedReplace') {
-          return (
-            <Tag color="orange" style={{ borderRadius: 12, fontWeight: 600 }}>
-              ⚠ Cần thay thế
-            </Tag>
-          );
-        }
+      render: (_: any, record: ServiceChecklistGroup) => {
+        const needReplaceCount = record.checklistItems?.filter((item: ChecklistItem) => item.status === 'NeedReplace').length || 0;
+        const completedCount = record.checklistItems?.filter((item: ChecklistItem) => item.status === 'Completed').length || 0;
+        const totalCount = record.checklistItems?.length || 0;
+
         return (
-          <Tag color="blue" style={{ borderRadius: 12, fontWeight: 600 }}>
-            ✓ Theo gói dịch vụ
-          </Tag>
+          <div>
+            {needReplaceCount > 0 && (
+              <Tag color="orange" style={{ borderRadius: 12, margin: '1px' }}>
+                ⚠ Cần thay thế ({needReplaceCount})
+              </Tag>
+            )}
+            {completedCount > 0 && (
+              <Tag color="blue" style={{ borderRadius: 12, margin: '1px' }}>
+                ✓ Theo gói ({completedCount})
+              </Tag>
+            )}
+            {totalCount - needReplaceCount - completedCount > 0 && (
+              <Tag color="green" style={{ borderRadius: 12, margin: '1px' }}>
+                ✓ Khác ({totalCount - needReplaceCount - completedCount})
+              </Tag>
+            )}
+          </div>
         );
       },
     },
@@ -334,8 +379,8 @@ const PartsUsage: React.FC = () => {
       title: 'Thao tác',
       key: 'action',
       width: 200,
-      render: (_: any, record: ServiceChecklist) => {
-        // Kiểm tra xem Service Order của checklist này đã completed chưa
+      render: (_: any, record: ServiceChecklistGroup) => {
+        // Kiểm tra xem Service Order này đã completed chưa
         const relatedOrder = serviceOrders.find(order => {
           const orderId = order.OrderID || order.orderID;
           return orderId === record.orderID;
@@ -346,42 +391,43 @@ const PartsUsage: React.FC = () => {
           relatedOrder.status?.toLowerCase() === 'done'
         );
 
-        // Kiểm tra xem có quote request đã được duyệt cho checklist này chưa
-        const approvedQuoteRequest = quoteRequests.find(qr => 
-          qr.checklistID === record.checklistID && 
-          qr.status?.toLowerCase() === 'approved'
+        // Kiểm tra xem có item nào cần thay thế không
+        const hasNeedReplace = record.checklistItems?.some((item: ChecklistItem) => item.status === 'NeedReplace');
+
+        // Kiểm tra xem có quote request đã được duyệt cho bất kỳ item nào không
+        const hasApprovedQuote = record.checklistItems?.some((item: ChecklistItem) =>
+          quoteRequests.some(qr => 
+            qr.checklistID === item.checklistID && 
+            qr.status?.toLowerCase() === 'approved'
+          )
         );
-        
-        const hasApprovedQuote = !!approvedQuoteRequest;
 
         return (
           <Space size="small">
             <Button
               icon={<EyeOutlined />}
               onClick={() => {
-                setSelectedChecklist(record);
+                setSelectedChecklistGroup(record);
                 setIsChecklistModalVisible(true);
               }}
               size="small"
             >
-              Xem
+              Xem chi tiết
             </Button>
             {!isOrderCompleted && !hasApprovedQuote && (
               <Button
                 type="primary"
-                icon={record.status === 'NeedReplace' ? <ShoppingCartOutlined /> : <SendOutlined />}
+                icon={hasNeedReplace ? <ShoppingCartOutlined /> : <SendOutlined />}
                 onClick={() => {
-                  if (record.status === 'NeedReplace') {
-                    handleSelectChecklist(record);
-                  } else {
-                    // Nếu không phải NeedReplace, chọn checklist và cho phép gửi báo giá ngay
-                    setSelectedChecklist(record);
-                    setSelectedParts([]); // Không cần phụ tùng
+                  setSelectedChecklistGroup(record);
+                  setSelectedParts([]);
+                  if (hasNeedReplace) {
+                    setIsModalVisible(true); // Mở modal chọn phụ tùng
                   }
                 }}
                 size="small"
               >
-                {record.status === 'NeedReplace' ? 'Chọn phụ tùng' : 'Gửi báo giá'}
+                {hasNeedReplace ? 'Chọn phụ tùng' : 'Gửi báo giá'}
               </Button>
             )}
             {isOrderCompleted && (
@@ -500,38 +546,34 @@ const PartsUsage: React.FC = () => {
         />
       </Card>
 
-      {/* Selected Checklist Info - Hiển thị khi đã chọn checklist */}
-      {selectedChecklist && (
+      {/* Selected Checklist Group Info */}
+      {selectedChecklistGroup && (
         <Card 
           title={
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                {selectedChecklist.status === 'NeedReplace' ? (
-                  <ShoppingCartOutlined style={{ color: '#10b981' }} />
-                ) : (
-                  <SendOutlined style={{ color: '#3b82f6' }} />
-                )}
+                <ShoppingCartOutlined style={{ color: '#10b981' }} />
                 <span style={{ fontSize: '18px', fontWeight: 600 }}>
-                  {selectedChecklist.status === 'NeedReplace' ? 'Phụ tùng đã chọn' : 'Thông tin báo giá'}
+                  Đơn hàng #{selectedChecklistGroup.orderID}
                 </span>
               </div>
-              {selectedChecklist && (
-                <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: 400 }}>
-                  Checklist #{selectedChecklist.checklistID} - {selectedChecklist.itemName} | 
-                  Khách hàng: <strong>{selectedChecklist.customerName}</strong> | 
-                  Xe: <strong>{selectedChecklist.vehicleModel}</strong> | 
-                  Trạng thái: <strong>{selectedChecklist.status === 'NeedReplace' ? 'Cần thay thế phụ tùng' : 'Theo gói dịch vụ'}</strong>
-                </div>
-              )}
+              <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: 400 }}>
+                Khách hàng: <strong>{selectedChecklistGroup.customerName}</strong> | 
+                Xe: <strong>{selectedChecklistGroup.vehicleModel}</strong> | 
+                Ngày tạo: <strong>{new Date(selectedChecklistGroup.createDate).toLocaleDateString('vi-VN')}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                {selectedChecklistGroup.checklistItems?.length || 0} hạng mục checklist
+              </div>
             </div>
           }
           extra={
             <Space>
-              {selectedChecklist?.status === 'NeedReplace' && (
+              {selectedChecklistGroup.checklistItems?.some(item => item.status === 'NeedReplace') && (
                 <Button 
                   icon={<PlusOutlined />} 
                   onClick={() => setIsModalVisible(true)}
-                  disabled={!selectedChecklist}
+                  disabled={!selectedChecklistGroup}
                 >
                   Thêm phụ tùng
                 </Button>
@@ -540,7 +582,7 @@ const PartsUsage: React.FC = () => {
                 type="primary"
                 icon={<SendOutlined />}
                 onClick={handleSendQuoteRequest}
-                disabled={!selectedChecklist}
+                disabled={!selectedChecklistGroup}
               >
                 Gửi yêu cầu báo giá
               </Button>
@@ -552,31 +594,61 @@ const PartsUsage: React.FC = () => {
             marginBottom: '24px'
           }}
         >
-          {selectedChecklist?.status === 'NeedReplace' && selectedParts.length > 0 ? (
-            <Table
-              columns={columns}
-              dataSource={selectedParts}
-              rowKey="partID"
-              pagination={false}
-              footer={() => (
-                <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
-                  Tổng cộng: {partService.formatPrice(calculateTotal())}
+          {/* Show checklist items */}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ marginBottom: '12px' }}>Hạng mục checklist:</h4>
+            {selectedChecklistGroup.checklistItems?.map((item: ChecklistItem) => (
+              <div key={item.checklistID} style={{ 
+                padding: '8px 12px', 
+                margin: '4px 0',
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px',
+                backgroundColor: '#f9fafb'
+              }}>
+                <div style={{ fontWeight: 500 }}>{item.itemName}</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  Trạng thái: <Tag color={item.status === 'NeedReplace' ? 'orange' : 'blue'}>
+                    {item.status === 'NeedReplace' ? 'Cần thay thế' : 'Theo gói dịch vụ'}
+                  </Tag>
                 </div>
-              )}
-            />
-          ) : selectedChecklist?.status !== 'NeedReplace' ? (
+                {item.notes && (
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    Ghi chú: {item.notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Show selected parts if any */}
+          {selectedChecklistGroup.checklistItems?.some(item => item.status === 'NeedReplace') && selectedParts.length > 0 ? (
+            <div>
+              <h4 style={{ marginBottom: '12px' }}>Phụ tùng đã chọn:</h4>
+              <Table
+                columns={columns}
+                dataSource={selectedParts}
+                rowKey="partID"
+                pagination={false}
+                footer={() => (
+                  <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
+                    Tổng cộng: {partService.formatPrice(calculateTotal())}
+                  </div>
+                )}
+              />
+            </div>
+          ) : selectedChecklistGroup.checklistItems?.some(item => item.status === 'NeedReplace') ? (
             <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
               <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                Checklist này sẽ được báo giá theo <strong>gói dịch vụ</strong> mà khách hàng đã chọn ban đầu.
-              </p>
-              <p style={{ fontSize: '14px', color: '#9ca3af' }}>
-                Nhấn "Gửi yêu cầu báo giá" để gửi yêu cầu đến Admin/Staff.
+                Vui lòng chọn phụ tùng cần thay thế.
               </p>
             </div>
           ) : (
             <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
               <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                Vui lòng chọn phụ tùng cần thay thế.
+                Các hạng mục này sẽ được báo giá theo <strong>gói dịch vụ</strong> mà khách hàng đã chọn.
+              </p>
+              <p style={{ fontSize: '14px', color: '#9ca3af' }}>
+                Nhấn "Gửi yêu cầu báo giá" để gửi yêu cầu đến Admin/Staff.
               </p>
             </div>
           )}
@@ -590,26 +662,47 @@ const PartsUsage: React.FC = () => {
             <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
               Chọn phụ tùng cho checklist
             </div>
-            {selectedChecklist && (
+            {selectedChecklistGroup && (
               <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 400 }}>
-                Checklist #{selectedChecklist.checklistID} - {selectedChecklist.itemName}
+                Đơn hàng #{selectedChecklistGroup.orderID} - {selectedChecklistGroup.customerName} ({selectedChecklistGroup.vehicleModel})
+              </div>
+            )}
+            {selectedParts.length > 0 && (
+              <div style={{ fontSize: '13px', color: '#10b981', fontWeight: 500, marginTop: '4px' }}>
+                Đã chọn {selectedParts.length} phụ tùng
               </div>
             )}
           </div>
         }
-        open={isModalVisible && !!selectedChecklist}
+        open={isModalVisible && !!selectedChecklistGroup}
         onOk={handleAddPart}
         onCancel={() => {
           setIsModalVisible(false);
-          if (!selectedParts.length) {
-            setSelectedChecklist(null);
-          }
+          form.resetFields();
         }}
-        okText="Thêm"
-        cancelText="Hủy"
+        okText="Thêm phụ tùng"
+        cancelText={selectedParts.length > 0 ? "Hoàn thành" : "Hủy"}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => {
+              setIsModalVisible(false);
+              form.resetFields();
+            }}
+          >
+            {selectedParts.length > 0 ? "Hoàn thành" : "Hủy"}
+          </Button>,
+          <Button 
+            key="submit" 
+            type="primary"
+            onClick={handleAddPart}
+          >
+            Thêm phụ tùng
+          </Button>
+        ]}
         width={700}
       >
-        {selectedChecklist && (
+        {selectedChecklistGroup && (
           <div style={{ 
             marginBottom: '20px', 
             padding: '12px', 
@@ -621,12 +714,75 @@ const PartsUsage: React.FC = () => {
               <strong>Thông tin checklist:</strong>
             </div>
             <div style={{ fontSize: '13px', color: '#374151' }}>
-              <div>Khách hàng: <strong>{selectedChecklist.customerName}</strong></div>
-              <div>Xe: <strong>{selectedChecklist.vehicleModel}</strong></div>
-              <div>Hạng mục: <Tag color="orange">{selectedChecklist.itemName}</Tag></div>
+              <div>Khách hàng: <strong>{selectedChecklistGroup.customerName}</strong></div>
+              <div>Xe: <strong>{selectedChecklistGroup.vehicleModel}</strong></div>
+              <div>
+                Hạng mục cần phụ tùng: {selectedChecklistGroup.checklistItems?.filter(item => item.status === 'NeedReplace').map(item => (
+                  <Tag key={item.checklistID} color="orange" style={{ margin: '2px' }}>{item.itemName}</Tag>
+                ))}
+              </div>
             </div>
           </div>
         )}
+        
+        {/* Hiển thị danh sách phụ tùng đã chọn */}
+        {selectedParts.length > 0 && (
+          <div style={{
+            marginBottom: '20px',
+            padding: '12px',
+            background: '#f0fdf4',
+            borderRadius: '8px',
+            border: '1px solid #bbf7d0'
+          }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534', marginBottom: '8px' }}>
+              Phụ tùng đã chọn:
+            </div>
+            <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+              {selectedParts.map((part) => (
+                <div key={part.partID} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '6px 8px',
+                  marginBottom: '4px',
+                  background: '#ffffff',
+                  borderRadius: '4px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 500, color: '#374151' }}>
+                      {part.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      SL: {part.quantity} - {partService.formatPrice(part.totalPrice)}
+                    </div>
+                  </div>
+                  <Button
+                    type="text"
+                    size="small"
+                    danger
+                    onClick={() => handleRemovePart(part.partID)}
+                    style={{ marginLeft: '8px' }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              textAlign: 'right',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#10b981',
+              marginTop: '8px',
+              paddingTop: '8px',
+              borderTop: '1px solid #d1fae5'
+            }}>
+              Tổng: {partService.formatPrice(calculateTotal())}
+            </div>
+          </div>
+        )}
+        
         <Form form={form} layout="vertical">
           <Form.Item
             name="partID"
@@ -668,14 +824,14 @@ const PartsUsage: React.FC = () => {
         open={isChecklistModalVisible}
         onCancel={() => {
           setIsChecklistModalVisible(false);
-          setSelectedChecklist(null);
+          setSelectedChecklistGroup(null);
         }}
         footer={[
           <Button 
             key="close" 
             onClick={() => {
               setIsChecklistModalVisible(false);
-              setSelectedChecklist(null);
+              setSelectedChecklistGroup(null);
             }}
           >
             Đóng
@@ -683,40 +839,72 @@ const PartsUsage: React.FC = () => {
         ]}
         width={700}
       >
-        {selectedChecklist && (
-          <Descriptions bordered column={1} size="middle">
-            <Descriptions.Item label="ID Checklist">
-              <Tag color="blue">#{selectedChecklist.checklistID}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Order ID">
-              {selectedChecklist.orderID}
-            </Descriptions.Item>
-            <Descriptions.Item label="Khách hàng">
-              <strong>{selectedChecklist.customerName}</strong>
-            </Descriptions.Item>
-            <Descriptions.Item label="Xe">
-              {selectedChecklist.vehicleModel}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trung tâm">
-              {selectedChecklist.centerName}
-            </Descriptions.Item>
-            <Descriptions.Item label="Hạng mục">
-              <Tag color="orange" style={{ borderRadius: 12 }}>
-                {selectedChecklist.itemName}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag color="orange" style={{ borderRadius: 12, fontWeight: 600 }}>
-                ⚠ Cần thay thế
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Ghi chú">
-              {selectedChecklist.notes || 'Không có ghi chú'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày tạo">
-              {new Date(selectedChecklist.createDate).toLocaleString('vi-VN')}
-            </Descriptions.Item>
-          </Descriptions>
+        {selectedChecklistGroup && (
+          <div>
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="Order ID">
+                <Tag color="blue">#{selectedChecklistGroup.orderID}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Khách hàng">
+                <strong>{selectedChecklistGroup.customerName}</strong>
+              </Descriptions.Item>
+              <Descriptions.Item label="Xe">
+                {selectedChecklistGroup.vehicleModel}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trung tâm">
+                {selectedChecklistGroup.centerName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Số hạng mục cần thay thế">
+                <Tag color="orange" style={{ borderRadius: 12, fontWeight: 600 }}>
+                  {selectedChecklistGroup.checklistItems.filter(item => item.status === 'NeedReplace').length} hạng mục
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Tổng hạng mục">
+                <Tag color="blue" style={{ borderRadius: 12 }}>
+                  {selectedChecklistGroup.checklistItems.length} hạng mục
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+            
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ marginBottom: 12, color: '#1890ff' }}>Danh sách tất cả hạng mục:</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {selectedChecklistGroup.checklistItems.map((item, index) => (
+                  <Tag 
+                    key={index}
+                    color={item.status === 'NeedReplace' ? 'orange' : item.status === 'Completed' ? 'green' : 'blue'} 
+                    style={{ 
+                      borderRadius: 12, 
+                      padding: '4px 12px',
+                      margin: '2px',
+                      fontSize: '13px'
+                    }}
+                  >
+                    {item.itemName} {item.status === 'NeedReplace' ? '(Cần thay thế)' : item.status === 'Completed' ? '(Hoàn thành)' : ''}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            
+            {selectedChecklistGroup.checklistItems.some(item => item.status === 'NeedReplace' && item.notes) && (
+              <div style={{ marginTop: 16 }}>
+                <h4 style={{ marginBottom: 8, color: '#1890ff' }}>Ghi chú hạng mục cần thay thế:</h4>
+                {selectedChecklistGroup.checklistItems
+                  .filter(item => item.status === 'NeedReplace' && item.notes)
+                  .map((item, index) => (
+                    <div key={index} style={{ marginBottom: 8, padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                      <strong>{item.itemName}:</strong> {item.notes}
+                    </div>
+                  ))}
+              </div>
+            )}
+            
+            <Descriptions bordered column={1} size="small" style={{ marginTop: 16 }}>
+              <Descriptions.Item label="Ngày tạo">
+                {new Date(selectedChecklistGroup.createDate).toLocaleString('vi-VN')}
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
         )}
       </Modal>
     </div>
