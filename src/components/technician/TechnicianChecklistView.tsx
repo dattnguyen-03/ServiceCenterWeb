@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select, Tooltip } from "antd";
+import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Form, Select, Tooltip, Checkbox } from "antd";
 import { FileTextOutlined, SearchOutlined, EyeOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { serviceChecklistService, ServiceChecklist, CreateServiceChecklistRequest, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
+import { serviceChecklistService, ServiceChecklist, EditServiceChecklistRequest } from "../../services/serviceChecklistService";
 import { serviceOrderService, ServiceOrder } from "../../services/serviceOrderService";
 import { message } from "antd";
+import { httpClient } from "../../services/httpClient";
 
 const TechnicianChecklistView: React.FC = () => {
   const [checklists, setChecklists] = useState<ServiceChecklist[]>([]);
@@ -20,6 +21,10 @@ const TechnicianChecklistView: React.FC = () => {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [createFormValid, setCreateFormValid] = useState(false);
+  const [selectedOrderCategories, setSelectedOrderCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [categoryStatuses, setCategoryStatuses] = useState<{[key: number]: string}>({});
 
   useEffect(() => {
     fetchChecklists();
@@ -39,9 +44,17 @@ const TechnicianChecklistView: React.FC = () => {
     try {
       const data = await serviceChecklistService.getMyChecklists();
       setChecklists(data);
+      
+      // Only show message if it's a real error, not just no data
+      if (data.length === 0) {
+        console.log("No checklists found - this is normal");
+      }
     } catch (err: any) {
       console.error("Error fetching checklists:", err);
-      message.error("Không thể tải danh sách checklist của bạn");
+      // Only show error for actual errors, not "no data" cases
+      if (!err.message.includes('chưa có checklist nào')) {
+        message.error("Không thể tải danh sách checklist của bạn");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,37 +73,157 @@ const TechnicianChecklistView: React.FC = () => {
     }
   };
 
+  const loadCategoriesFromOrder = async (orderId: number) => {
+    console.log('=== LOADING CATEGORIES FOR ORDER:', orderId);
+    setLoadingCategories(true);
+    
+    try {
+      // Tìm order được chọn
+      const selectedOrder = serviceOrders.find(order => (order.OrderID || order.orderID) === orderId);
+      console.log('Selected order:', selectedOrder);
+      
+      if (!selectedOrder) {
+        console.log('Order not found');
+        setSelectedOrderCategories([]);
+        return;
+      }
+
+      // Extract serviceType từ order
+      const serviceType = selectedOrder.serviceType;
+      console.log('ServiceType:', serviceType);
+      
+      if (!serviceType) {
+        console.log('No serviceType found in order');
+        setSelectedOrderCategories([]);
+        message.warning('Order này không có thông tin loại dịch vụ');
+        return;
+      }
+
+      // Call API để lấy tất cả service packages
+      console.log('Calling GetServicePackageAPI...');
+      const response = await httpClient.get('/GetServicePackageAPI');
+      console.log('Service packages response:', response);
+      
+      // Tìm package có tên match với serviceType
+      const packages = Array.isArray(response) ? response : (response.data || []);
+      console.log('All packages:', packages);
+      
+      const targetPackage = packages.find((pkg: any) => 
+        pkg.name === serviceType || 
+        pkg.packageName === serviceType ||
+        pkg.title === serviceType
+      );
+      
+      console.log('Target package found:', targetPackage);
+      
+      if (targetPackage && targetPackage.categories && targetPackage.categories.length > 0) {
+        // Map categories từ service package format
+        const mappedCategories = targetPackage.categories.map((cat: any) => ({
+          categoryID: cat.categoryID || cat.CategoryID || cat.id,
+          name: cat.name || cat.Name || cat.title,
+          description: cat.description || cat.Description || 'Không có mô tả'
+        }));
+        
+        console.log('Categories found from package:', mappedCategories);
+        setSelectedOrderCategories(mappedCategories);
+        
+        if (mappedCategories.length === 0) {
+          message.info('Service package này chưa có categories được cấu hình');
+        }
+      } else {
+        console.log('No matching package found or no categories in package');
+        
+        // Fallback categories dựa trên serviceType string khi không tìm thấy package
+        let fallbackCategories = [];
+        
+        if (serviceType.toLowerCase().includes('bảo dưỡng') || serviceType.toLowerCase().includes('cơ bản')) {
+          fallbackCategories = [
+            { categoryID: 1, name: 'Bảo dưỡng cơ bản', description: 'Kiểm tra tổng quát xe' },
+            { categoryID: 2, name: 'Thay dầu động cơ', description: 'Thay dầu và lọc dầu' },
+            { categoryID: 3, name: 'Kiểm tra lốp xe', description: 'Kiểm tra áp suất và độ mòn lốp' }
+          ];
+        } else if (serviceType.toLowerCase().includes('toàn diện') || serviceType.toLowerCase().includes('cao cấp')) {
+          fallbackCategories = [
+            { categoryID: 4, name: 'Bảo dưỡng toàn diện', description: 'Kiểm tra và bảo dưỡng chi tiết' },
+            { categoryID: 5, name: 'Thay phụ tùng', description: 'Thay thế các bộ phận hư hỏng' },
+            { categoryID: 6, name: 'Kiểm tra hệ thống điện', description: 'Kiểm tra mạch điện và cảm biến' },
+            { categoryID: 7, name: 'Cân bằng động cơ', description: 'Cân chỉnh và hiệu chỉnh động cơ' }
+          ];
+        } else {
+          // Default fallback
+          fallbackCategories = [
+            { categoryID: 11, name: 'Kiểm tra tổng quát', description: 'Kiểm tra tình trạng chung của xe' },
+            { categoryID: 12, name: 'Bảo dưỡng định kỳ', description: 'Bảo dưỡng theo chu kỳ quy định' },
+            { categoryID: 13, name: 'Kiểm tra an toàn', description: 'Đảm bảo các tiêu chuẩn an toàn' }
+          ];
+        }
+        
+        console.log('Using fallback categories for serviceType:', serviceType);
+        setSelectedOrderCategories(fallbackCategories);
+        message.info(`Không tìm thấy package "${serviceType}" trong hệ thống, sử dụng categories mặc định`);
+      }
+
+    } catch (error: any) {
+      console.error('Error loading categories:', error);
+      console.error('Full error:', JSON.stringify(error, null, 2));
+      
+      // Fallback categories khi có lỗi API
+      setSelectedOrderCategories([
+        { categoryID: 1, name: 'Kiểm tra động cơ', description: 'Kiểm tra tình trạng động cơ' },
+        { categoryID: 2, name: 'Thay lốp xe', description: 'Thay thế lốp xe mới' },
+        { categoryID: 3, name: 'Bảo dưỡng định kỳ', description: 'Bảo dưỡng theo chu kỳ' }
+      ]);
+      
+      // Hiển thị warning message cho user
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        message.warning(`Lỗi khi tải service packages (${error.response.status}), sử dụng categories mặc định`);
+      } else {
+        message.warning('Không thể kết nối API, sử dụng categories mặc định');
+      }
+    } finally {
+      setLoadingCategories(false);
+      console.log('=== END LOADING CATEGORIES DEBUG ===');
+    }
+  };
+
   const handleViewDetail = (checklist: ServiceChecklist) => {
     setSelectedChecklist(checklist);
     setIsDetailModalVisible(true);
   };
 
-  const handleCreateChecklist = async (values: CreateServiceChecklistRequest) => {
+  const handleCreateChecklist = async (values: any) => {
+    console.log('=== CREATE CHECKLIST DEBUG ===');
+    console.log('Form values:', values);
+    console.log('Categories type:', typeof values.categories);
+    console.log('Categories value:', values.categories);
+    
     // Validate: Kiểm tra xem Service Order đã hoàn tất chưa
     const selectedOrder = serviceOrders.find(
       order => (order.OrderID || order.orderID) === values.orderID
     );
-    
-    console.log('=== VALIDATION DEBUG ===');
-    console.log('Creating checklist for order:', values.orderID);
-    console.log('Selected order FULL:', JSON.stringify(selectedOrder, null, 2));
-    console.log('Order status:', selectedOrder?.status, 'Type:', typeof selectedOrder?.status);
-    console.log('Is Completed?', selectedOrder?.status === 'Completed');
-    console.log('Available orders count:', availableOrders.length);
-    console.log('Available orders:', availableOrders.map(o => ({ id: o.OrderID || o.orderID, status: o.status, statusType: typeof o.status })));
-    console.log('All orders:', serviceOrders.map(o => ({ id: o.OrderID || o.orderID, status: o.status, statusType: typeof o.status })));
-    console.log('=======================');
     
     if (!selectedOrder) {
       message.error('Không tìm thấy Service Order!');
       return;
     }
     
+    // Ensure categories is an array
+    const categories = Array.isArray(values.categories) ? values.categories : [];
+    console.log('Processed categories:', categories);
+    
+    if (categories.length === 0) {
+      message.error('Vui lòng chọn ít nhất một danh mục!');
+      return;
+    }
+    
+    if (!values.status) {
+      message.error('Vui lòng chọn trạng thái mặc định!');
+      return;
+    }
+    
     const orderStatus = selectedOrder.status;
-    console.log('Order status value:', orderStatus, 'Type:', typeof orderStatus);
-    console.log('Status comparison:', {
-      '=== Completed': orderStatus === 'Completed'
-    });
     
     // Kiểm tra nhiều cách viết của Completed
     const isCompleted = orderStatus === 'Completed';
@@ -115,11 +248,58 @@ const TechnicianChecklistView: React.FC = () => {
     
     setLoading(true);
     try {
-      await serviceChecklistService.createChecklist(values);
-      message.success('Tạo checklist thành công!');
+      console.log('=== CREATING CHECKLISTS ===');
+      console.log('Processing categories:', categories);
+      console.log('Categories count:', categories.length);
+      console.log('Available categories:', selectedOrderCategories);
+      console.log('Category statuses:', categoryStatuses);
+      
+      // Tạo checklist cho từng category được chọn
+      const checklistsToCreate = categories.map((categoryID: number) => {
+        const categoryInfo = selectedOrderCategories.find(cat => cat.categoryID === categoryID);
+        // Sử dụng status riêng của category nếu có, không thì dùng status tổng
+        const categoryStatus = categoryStatuses[categoryID] || values.status; 
+        
+        const checklistData = {
+          orderID: values.orderID,
+          itemName: categoryInfo?.name || `Category ${categoryID}`,
+          status: categoryStatus,
+          notes: values.notes || '' // Sử dụng notes chung
+        };
+        
+        console.log(`Creating checklist for category ${categoryID}:`, checklistData);
+        return checklistData;
+      });
+      
+      console.log('Total checklists to create:', checklistsToCreate.length);
+      console.log('Checklist data array:', checklistsToCreate);
+      
+      // Tạo từng checklist một cách tuần tự để track progress
+      const results = [];
+      for (let i = 0; i < checklistsToCreate.length; i++) {
+        const checklistData = checklistsToCreate[i];
+        console.log(`Creating checklist ${i + 1}/${checklistsToCreate.length}:`, checklistData);
+        
+        try {
+          const result = await serviceChecklistService.createChecklist(checklistData);
+          results.push(result);
+          console.log(`Successfully created checklist ${i + 1}:`, result);
+        } catch (error) {
+          console.error(`Failed to create checklist ${i + 1}:`, error);
+          throw error; // Re-throw để stop process
+        }
+      }
+      
+      console.log('All checklists created successfully:', results);
+      
+      const categoryCount = categories.length;
+      message.success(`Tạo thành công ${categoryCount} checklist cho ${categoryCount} danh mục!`);
       setIsCreateModalVisible(false);
       form.resetFields();
       setCreateFormValid(false);
+      setSelectedCategories([]);
+      setSelectedOrderCategories([]);
+      setCategoryStatuses({});
       await fetchChecklists();
     } catch (error: any) {
       message.error(error.message || 'Lỗi tạo checklist');
@@ -330,6 +510,9 @@ const TechnicianChecklistView: React.FC = () => {
               setIsCreateModalVisible(true);
               setCreateFormValid(false);
               form.resetFields();
+              setSelectedCategories([]);
+              setSelectedOrderCategories([]);
+              setCategoryStatuses({});
             }}
             disabled={availableOrders.length === 0}
             style={{
@@ -503,13 +686,16 @@ const TechnicianChecklistView: React.FC = () => {
           setIsCreateModalVisible(false);
           form.resetFields();
           setCreateFormValid(false);
+          setSelectedCategories([]);
+          setSelectedOrderCategories([]);
+          setCategoryStatuses({});
         }}
         onOk={() => form.submit()}
         okText="Tạo Checklist"
         cancelText="Hủy"
         okButtonProps={{
           disabled: !createFormValid,
-          title: !createFormValid ? 'Vui lòng điền đầy đủ thông tin bắt buộc (Order ID, Tên hạng mục, Trạng thái)' : '',
+          title: !createFormValid ? `Debug: Order: ${!!form.getFieldValue('orderID')}, Categories: ${(form.getFieldValue('categories') || []).length}, Status: ${!!form.getFieldValue('status')}, Valid: ${createFormValid}` : '',
           style: {
             borderRadius: 8,
             background: createFormValid 
@@ -536,32 +722,29 @@ const TechnicianChecklistView: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleCreateChecklist}
-          onValuesChange={async () => {
+          onValuesChange={() => {
             // Validate form khi có thay đổi
-            try {
-              await form.validateFields(['orderID', 'itemName', 'status']);
-              const values = form.getFieldsValue();
-              // Kiểm tra cả giá trị và validation rules
-              const isValid = values.orderID && 
-                             values.itemName && 
-                             values.itemName.trim() !== '' &&
-                             values.status;
-              
-              // Kiểm tra thêm: Order không được là Completed
-              if (isValid && values.orderID) {
-                const selectedOrder = serviceOrders.find(
-                  order => (order.OrderID || order.orderID) === values.orderID
-                );
-                if (selectedOrder && selectedOrder.status === 'Completed') {
-                  setCreateFormValid(false);
-                  return;
-                }
-              }
-              
-              setCreateFormValid(!!isValid);
-            } catch {
-              setCreateFormValid(false);
-            }
+            const values = form.getFieldsValue();
+            
+            // Kiểm tra basic validation - đơn giản hóa
+            const hasOrder = !!values.orderID;
+            const hasCategories = values.categories && values.categories.length > 0;
+            const hasStatus = !!values.status;
+            
+            // Chỉ cần 3 điều kiện cơ bản
+            const isValid = hasOrder && hasCategories && hasStatus;
+            
+            console.log('SIMPLE validation:', {
+              hasOrder,
+              hasCategories,
+              hasStatus,
+              isValid,
+              orderID: values.orderID,
+              categories: values.categories,
+              status: values.status
+            });
+            
+            setCreateFormValid(isValid);
           }}
           style={{ marginTop: '16px' }}
         >
@@ -602,6 +785,9 @@ const TechnicianChecklistView: React.FC = () => {
                   message.error('Không thể chọn Service Order đã hoàn tất!');
                   form.setFieldsValue({ orderID: undefined });
                   form.setFields([{ name: 'orderID', errors: ['Không thể chọn Service Order đã hoàn tất'] }]);
+                } else if (value) {
+                  // Load categories từ order
+                  loadCategoriesFromOrder(value);
                 }
               }}
               options={availableOrders.map(order => {
@@ -618,25 +804,208 @@ const TechnicianChecklistView: React.FC = () => {
             />
           </Form.Item>
 
+          {/* Categories từ Service Package */}
           <Form.Item
-            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Tên hạng mục</span>}
-            name="itemName"
-            rules={[{ required: true, message: "Vui lòng nhập tên hạng mục" }]}
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Danh mục kiểm tra và trạng thái</span>}
+            name="categories"
+            rules={[{ required: true, message: "Vui lòng chọn ít nhất một danh mục" }]}
           >
-            <Input
-              placeholder="Ví dụ: Kiểm tra pin, Kiểm tra hệ thống điện..."
-              size="large"
-              style={{ borderRadius: 10 }}
-            />
+            {selectedOrderCategories.length > 0 ? (
+              <div style={{ 
+                border: '1px solid #d1d5db', 
+                borderRadius: 10, 
+                padding: 16,
+                maxHeight: 400,
+                overflowY: 'auto'
+              }}>
+                <div style={{ marginBottom: 16 }}>
+                  <Checkbox
+                    indeterminate={selectedCategories.length > 0 && selectedCategories.length < selectedOrderCategories.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        const allCategoryIds = selectedOrderCategories.map(cat => cat.categoryID);
+                        setSelectedCategories(allCategoryIds);
+                        form.setFieldsValue({ categories: allCategoryIds });
+                        // Set default status cho tất cả
+                        const defaultStatuses: {[key: number]: string} = {};
+                        allCategoryIds.forEach(id => {
+                          if (!categoryStatuses[id]) defaultStatuses[id] = 'OK';
+                        });
+                        setCategoryStatuses(prev => ({ ...prev, ...defaultStatuses }));
+                        
+                        // Force validation update ngay lập tức
+                        setTimeout(() => {
+                          const formValues = form.getFieldsValue();
+                          const isValid = !!formValues.orderID && 
+                                        formValues.categories && 
+                                        formValues.categories.length > 0 && 
+                                        !!formValues.status;
+                          
+                          console.log('Select all - Force validation:', {
+                            orderID: formValues.orderID,
+                            categories: formValues.categories,
+                            status: formValues.status,
+                            isValid
+                          });
+                          
+                          setCreateFormValid(isValid);
+                        }, 50);
+                      } else {
+                        setSelectedCategories([]);
+                        form.setFieldsValue({ categories: [] });
+                      }
+                    }}
+                    checked={selectedCategories.length === selectedOrderCategories.length}
+                    style={{ fontWeight: 600, color: '#1f2937' }}
+                  >
+                    Chọn tất cả ({selectedCategories.length}/{selectedOrderCategories.length})
+                  </Checkbox>
+                </div>
+                
+                <div style={{ display: 'grid', gap: 16 }}>
+                  {selectedOrderCategories.map(category => {
+                    const isSelected = selectedCategories.includes(category.categoryID);
+                    return (
+                      <div 
+                        key={category.categoryID}
+                        style={{
+                          border: isSelected ? '2px solid #06b6d4' : '1px solid #d1d5db',
+                          borderRadius: 12,
+                          padding: 16,
+                          background: isSelected ? '#f0f9ff' : '#f9fafb',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ marginBottom: 12 }}>
+                          <Checkbox 
+                            checked={isSelected}
+                            onChange={(e) => {
+                              const newSelected = e.target.checked 
+                                ? [...selectedCategories, category.categoryID]
+                                : selectedCategories.filter(id => id !== category.categoryID);
+                              
+                              setSelectedCategories(newSelected);
+                              form.setFieldsValue({ categories: newSelected });
+                              
+                              // Set default status khi chọn category
+                              if (e.target.checked && !categoryStatuses[category.categoryID]) {
+                                const newStatuses = {
+                                  ...categoryStatuses,
+                                  [category.categoryID]: 'OK'
+                                };
+                                setCategoryStatuses(newStatuses);
+                                
+                                // Trigger validation ngay lập tức
+                                setTimeout(() => {
+                                  const values = form.getFieldsValue();
+                                  const isValid = !!values.orderID && 
+                                                values.categories && 
+                                                values.categories.length > 0 && 
+                                                !!values.status;
+                                  
+                                  console.log('Individual select - Force validation:', {
+                                    orderID: values.orderID,
+                                    categories: values.categories,
+                                    status: values.status,
+                                    isValid,
+                                    isChecked: e.target.checked
+                                  });
+                                  
+                                  setCreateFormValid(isValid);
+                                }, 50);
+                              }
+                            }}
+                            style={{ fontWeight: 600, fontSize: 16 }}
+                          >
+                            <span style={{ color: '#1f2937' }}>{category.name}</span>
+                          </Checkbox>
+                          <div style={{ 
+                            marginLeft: 24, 
+                            color: '#6b7280', 
+                            fontSize: 14,
+                            marginTop: 4 
+                          }}>
+                            {category.description}
+                          </div>
+                        </div>
+                        
+                        {isSelected && (
+                          <div style={{ 
+                            marginLeft: 24,
+                            marginTop: 12,
+                            paddingTop: 12,
+                            borderTop: '1px solid #e5e7eb'
+                          }}>
+                            <div style={{ width: '200px' }}>
+                              <label style={{ 
+                                display: 'block', 
+                                fontSize: 12, 
+                                fontWeight: 600,
+                                color: '#374151',
+                                marginBottom: 4
+                              }}>
+                                Trạng thái
+                              </label>
+                              <Select
+                                value={categoryStatuses[category.categoryID] || 'OK'}
+                                onChange={(value) => {
+                                  setCategoryStatuses(prev => {
+                                    const newStatuses = {
+                                      ...prev,
+                                      [category.categoryID]: value
+                                    };
+                                    
+                                    // Trigger validation update đơn giản
+                                    setTimeout(() => {
+                                      const formValues = form.getFieldsValue();
+                                      const isValid = !!formValues.orderID && 
+                                                    formValues.categories && 
+                                                    formValues.categories.length > 0 && 
+                                                    !!formValues.status;
+                                      
+                                      console.log('Status change - Force validation:', isValid);
+                                      setCreateFormValid(isValid);
+                                    }, 50);
+                                    
+                                    return newStatuses;
+                                  });
+                                }}
+                                size="small"
+                                style={{ width: '100%' }}
+                                options={[
+                                  { value: 'OK', label: '✓ OK' },
+                                  { value: 'NotOK', label: '❌ Not OK' },
+                                  { value: 'NeedReplace', label: '⚠ Cần thay thế' }
+                                ]}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                color: '#6b7280', 
+                padding: 20,
+                border: '1px dashed #d1d5db',
+                borderRadius: 10
+              }}>
+                {loadingCategories ? 'Đang tải danh mục...' : 'Vui lòng chọn Order ID trước để xem các danh mục kiểm tra'}
+              </div>
+            )}
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Trạng thái</span>}
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Trạng thái mặc định</span>}
             name="status"
-            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái mặc định" }]}
           >
             <Select
-              placeholder="Chọn trạng thái"
+              placeholder="Chọn trạng thái mặc định cho tất cả hạng mục"
               size="large"
               style={{ borderRadius: 10 }}
             >
@@ -647,12 +1016,12 @@ const TechnicianChecklistView: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Ghi chú</span>}
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Ghi chú chung</span>}
             name="notes"
           >
             <Input.TextArea
-              placeholder="Nhập ghi chú (nếu có)"
-              rows={4}
+              placeholder="Nhập ghi chú chung cho tất cả các hạng mục..."
+              rows={3}
               style={{ borderRadius: 10 }}
             />
           </Form.Item>

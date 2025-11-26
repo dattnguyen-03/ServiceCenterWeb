@@ -71,6 +71,12 @@ export const serviceChecklistService = {
       console.log('[serviceChecklistService] Response type:', typeof response);
       console.log('[serviceChecklistService] Is array?', Array.isArray(response));
       
+      // Handle empty response (when httpClient returns [] for no data)
+      if (Array.isArray(response) && response.length === 0) {
+        console.log('[serviceChecklistService] No checklists found, returning empty array');
+        return [];
+      }
+      
       // Backend returns array directly or wrapped in data
       let data: any[] = [];
       

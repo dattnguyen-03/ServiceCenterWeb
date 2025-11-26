@@ -60,7 +60,7 @@ const PaymentPage: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #f9fafb 100%)' }}>
       {/* Gradient Header */}
-      <div className="p-6 bg-gradient-to-r from-rose-600 to-pink-500 text-white rounded-b-3xl shadow-lg mb-8">
+      <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-b-3xl shadow-lg mb-8">
         <div className="flex items-center mb-3">
           <CreditCardOutlined style={{ fontSize: 32, marginRight: 12 }} />
           <h1 className="text-4xl font-bold">Thanh toán & Hóa đơn</h1>

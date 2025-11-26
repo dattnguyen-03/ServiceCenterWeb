@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Table, Tag, Space, Spin, message, Typography, Statistic, Modal, Form, Input, InputNumber, Badge, Tooltip, Divider } from 'antd';
+import { Card, Row, Col, Button, Table, Tag, Space, Spin, message, Typography, Statistic, Modal, Form, Input, InputNumber, Badge, Tooltip, Divider, Select } from 'antd';
 import { 
   GiftOutlined, 
   EditOutlined, 
@@ -13,27 +13,34 @@ import {
   SearchOutlined,
   FilterOutlined,
   ReloadOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  TagsOutlined
 } from '@ant-design/icons';
-import { ServicePackage } from '../../types/api';
+import { ServicePackage, Category } from '../../types/api';
 import { servicePackageService } from '../../services/servicePackageService';
 import servicePackageManagementService from '../../services/servicePackageManagementService';
+import { categoryService } from '../../services/categoryService';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const AdminServicePackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [createCategoryModalVisible, setCreateCategoryModalVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [form] = Form.useForm();
+  const [categoryForm] = Form.useForm();
 
   useEffect(() => {
     loadServicePackages();
+    loadCategories();
   }, []);
 
   const loadServicePackages = async () => {
@@ -50,6 +57,56 @@ const AdminServicePackageManagement: React.FC = () => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await categoryService.getCategories();
+      setCategories(categoriesData);
+    } catch (error: any) {
+      console.error('Error loading categories:', error);
+      message.error(error.message || 'Không thể tải danh sách categories');
+      setCategories([]);
+    }
+  };
+
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategories(prev => {
+      const isSelected = prev.includes(category.categoryID);
+      if (isSelected) {
+        return prev.filter(id => id !== category.categoryID);
+      } else {
+        return [...prev, category.categoryID];
+      }
+    });
+  };
+
+  const handleCreateCategory = async (values: { name: string; description: string }) => {
+    try {
+      await categoryService.createCategory({
+        name: values.name,
+        description: values.description
+      });
+      
+      message.success('Tạo category thành công!');
+      
+      // Reload categories
+      await loadCategories();
+      
+      // Close modal and reset form
+      setCreateCategoryModalVisible(false);
+      categoryForm.resetFields();
+      
+      // Auto-select the newly created category (find by name since we don't have ID)
+      const updatedCategories = await categoryService.getCategories();
+      const newCategory = updatedCategories.find(cat => cat.name === values.name);
+      if (newCategory) {
+        setSelectedCategories(prev => [...prev, newCategory.categoryID]);
+      }
+    } catch (error: any) {
+      console.error('Error creating category:', error);
+      message.error(error.message || 'Không thể tạo category');
+    }
+  };
+
   const handleViewDetail = (pkg: ServicePackage) => {
     setSelectedPackage(pkg);
     setDetailModalVisible(true);
@@ -62,12 +119,15 @@ const AdminServicePackageManagement: React.FC = () => {
       description: pkg.description,
       price: pkg.price,
     });
+    // Set selected categories if package has categories
+    setSelectedCategories(pkg.categories?.map(cat => cat.categoryID) || []);
     setEditModalVisible(true);
   };
 
   const handleAddPackage = () => {
     setSelectedPackage(null);
     form.resetFields();
+    setSelectedCategories([]);
     setAddModalVisible(true);
   };
 
@@ -94,6 +154,7 @@ const AdminServicePackageManagement: React.FC = () => {
   const handleSavePackage = async (values: any) => {
     try {
       console.log('Form values:', values);
+      console.log('Selected categories:', selectedCategories);
       
       if (selectedPackage) {
         // Edit existing package
@@ -102,30 +163,31 @@ const AdminServicePackageManagement: React.FC = () => {
           Name: values.name,
           Description: values.description,
           Price: Number(values.price),
+          CategoryIDs: selectedCategories, // Include selected categories
         };
         console.log('Selected package:', selectedPackage);
         console.log('Edit data:', editData);
-        console.log('Form values:', values);
         const result = await servicePackageManagementService.editServicePackage(editData);
         console.log('Edit result:', result);
         message.success(result.message || 'Cập nhật gói dịch vụ thành công!');
         setEditModalVisible(false);
-        await loadServicePackages();
       } else {
         // Add new package
         const createData = {
           Name: values.name,
           Description: values.description,
           Price: values.price,
+          CategoryIDs: selectedCategories, // Include selected categories
         };
         console.log('Create data:', createData);
         const result = await servicePackageManagementService.createServicePackage(createData);
         message.success(result.message || 'Thêm gói dịch vụ thành công!');
         setAddModalVisible(false);
-        await loadServicePackages();
       }
+      
       form.resetFields();
       setSelectedPackage(null);
+      setSelectedCategories([]);
       await loadServicePackages();
     } catch (error: any) {
       console.error('Error saving service package:', error);
@@ -213,6 +275,38 @@ const AdminServicePackageManagement: React.FC = () => {
       ),
     },
     {
+      title: 'Categories',
+      key: 'categories',
+      width: 200,
+      render: (_: any, record: ServicePackage) => (
+        <div className="space-y-1">
+          {record.categories && record.categories.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {record.categories.slice(0, 2).map(category => (
+                <Tag 
+                  key={category.categoryID} 
+                  color="blue" 
+                  className="text-xs"
+                >
+                  <TagsOutlined className="mr-1" />
+                  {category.name}
+                </Tag>
+              ))}
+              {record.categories.length > 2 && (
+                <Tag color="default" className="text-xs">
+                  +{record.categories.length - 2} khác
+                </Tag>
+              )}
+            </div>
+          ) : (
+            <Tag color="default" className="text-xs">
+              Chưa phân loại
+            </Tag>
+          )}
+        </div>
+      ),
+    },
+    {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
@@ -222,9 +316,9 @@ const AdminServicePackageManagement: React.FC = () => {
           <Text strong className="text-green-600 text-base">
             {servicePackageService.formatPrice(price)}
           </Text>
-          <Text type="secondary" className="text-xs ml-1">
+          {/* <Text type="secondary" className="text-xs ml-1">
             VNĐ
-          </Text>
+          </Text> */}
         </div>
       ),
     },
@@ -584,7 +678,7 @@ const AdminServicePackageManagement: React.FC = () => {
                     <Text strong className="text-3xl text-green-600">
                       {servicePackageService.formatPrice(selectedPackage.price)}
                     </Text>
-                    <div className="text-sm text-gray-500 mt-1">VNĐ</div>
+                    {/* <div className="text-sm text-gray-500 mt-1">VNĐ</div> */}
                   </div>
                 </div>
               </div>
@@ -598,6 +692,34 @@ const AdminServicePackageManagement: React.FC = () => {
                 <Text strong className="text-gray-700">Mô tả chi tiết</Text>
               </div>
               <Text className="text-gray-700 leading-relaxed">{selectedPackage.description}</Text>
+            </div>
+
+            <Divider />
+
+            {/* Categories Section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-3">
+                <TagsOutlined className="text-green-500" />
+                <Text strong className="text-gray-700">Categories</Text>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedPackage.categories && selectedPackage.categories.length > 0 ? (
+                  selectedPackage.categories.map((category: Category) => (
+                    <Tag 
+                      key={category.categoryID}
+                      color="blue"
+                      className="text-sm px-3 py-1"
+                    >
+                      <TagsOutlined className="mr-1" />
+                      {category.name}
+                    </Tag>
+                  ))
+                ) : (
+                  <Text type="secondary" italic>
+                    Chưa có categories được gán cho gói dịch vụ này
+                  </Text>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -624,6 +746,7 @@ const AdminServicePackageManagement: React.FC = () => {
         onCancel={() => {
           setEditModalVisible(false);
           setAddModalVisible(false);
+          setSelectedCategories([]);
           form.resetFields();
         }}
         footer={[
@@ -632,6 +755,7 @@ const AdminServicePackageManagement: React.FC = () => {
             onClick={() => {
               setEditModalVisible(false);
               setAddModalVisible(false);
+              setSelectedCategories([]);
               form.resetFields();
             }}
             className="px-6"
@@ -687,7 +811,7 @@ const AdminServicePackageManagement: React.FC = () => {
                 label={
                   <span className="text-gray-700 font-medium">
                     <DollarOutlined className="mr-2 text-green-500" />
-                    Giá (VNĐ)
+                    Giá
                   </span>
                 }
                 name="price"
@@ -728,6 +852,189 @@ const AdminServicePackageManagement: React.FC = () => {
                 className="rounded-lg"
                 showCount
                 maxLength={500}
+              />
+            </Form.Item>
+
+            {/* Categories Selection */}
+            <Form.Item
+              label={
+                <span className="text-gray-700 font-medium">
+                  <TagsOutlined className="mr-2 text-green-500" />
+                  Phân loại dịch vụ (Categories)
+                </span>
+              }
+            >
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="mb-3 flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Chọn các categories phù hợp cho gói dịch vụ này:
+                  </span>
+                  <Button
+                    type="dashed"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateCategoryModalVisible(true)}
+                    className="text-blue-500 border-blue-300 hover:border-blue-500"
+                  >
+                    Tạo category mới
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                  {categories.map(category => (
+                    <div
+                      key={category.categoryID}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                        selectedCategories.includes(category.categoryID)
+                          ? 'bg-blue-100 border-blue-500 shadow-sm'
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
+                      }`}
+                      onClick={() => handleCategorySelect(category)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-4 h-4 rounded-full border-2 transition-colors ${
+                          selectedCategories.includes(category.categoryID)
+                            ? 'bg-blue-500 border-blue-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedCategories.includes(category.categoryID) && (
+                            <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-800">
+                            {category.name}
+                          </div>
+                          {category.description && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {category.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {selectedCategories.length > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <span className="text-sm font-medium text-gray-700">
+                      Đã chọn: {selectedCategories.length} categories
+                    </span>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {selectedCategories.map(categoryID => {
+                        const category = categories.find(cat => cat.categoryID === categoryID);
+                        return category ? (
+                          <Tag 
+                            key={categoryID} 
+                            color="blue"
+                            closable
+                            onClose={() => handleCategorySelect(category)}
+                          >
+                            {category.name}
+                          </Tag>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Form.Item>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Create Category Modal */}
+      <Modal
+        title={
+          <div className="flex items-center py-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+              <TagsOutlined className="text-white text-lg" />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-gray-800">
+                Tạo category mới
+              </div>
+              <div className="text-sm text-gray-500">
+                Thêm category mới cho hệ thống
+              </div>
+            </div>
+          </div>
+        }
+        open={createCategoryModalVisible}
+        onCancel={() => {
+          setCreateCategoryModalVisible(false);
+          categoryForm.resetFields();
+        }}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => {
+              setCreateCategoryModalVisible(false);
+              categoryForm.resetFields();
+            }}
+            className="px-6"
+          >
+            Hủy
+          </Button>,
+          <Button
+            key="save"
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={() => categoryForm.submit()}
+            className="!bg-green-600 hover:!bg-green-700 px-6"
+          >
+            Tạo category
+          </Button>,
+        ]}
+        width={500}
+        className="rounded-lg"
+      >
+        <div className="py-4">
+          <Form
+            form={categoryForm}
+            layout="vertical"
+            onFinish={handleCreateCategory}
+            className="space-y-4"
+          >
+            <Form.Item
+              label={
+                <span className="text-gray-700 font-medium">
+                  <TagsOutlined className="mr-2 text-green-500" />
+                  Tên category
+                </span>
+              }
+              name="name"
+              rules={[
+                { required: true, message: 'Vui lòng nhập tên category' },
+                { max: 50, message: 'Tên category không được quá 50 ký tự' },
+              ]}
+            >
+              <Input 
+                placeholder="Nhập tên category" 
+                size="large"
+                className="rounded-lg"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={
+                <span className="text-gray-700 font-medium">
+                  <InfoCircleOutlined className="mr-2 text-blue-500" />
+                  Mô tả
+                </span>
+              }
+              name="description"
+              rules={[
+                { max: 200, message: 'Mô tả không được quá 200 ký tự' }
+              ]}
+            >
+              <TextArea 
+                rows={3} 
+                placeholder="Nhập mô tả cho category (không bắt buộc)" 
+                size="large"
+                className="rounded-lg"
+                showCount
+                maxLength={200}
               />
             </Form.Item>
           </Form>

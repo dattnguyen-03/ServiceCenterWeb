@@ -4,6 +4,7 @@ export interface CreateServicePackageRequest {
   Name: string;
   Description: string;
   Price: number;
+  CategoryIDs?: number[];
 }
 
 export interface EditServicePackageRequest {
@@ -11,6 +12,7 @@ export interface EditServicePackageRequest {
   Name: string;
   Description: string;
   Price: number;
+  CategoryIDs?: number[];
 }
 
 export interface DeleteServicePackageRequest {
@@ -41,7 +43,8 @@ class ServicePackageManagementService {
         {
           Name: packageData.Name.trim(),
           Description: packageData.Description?.trim() || '',
-          Price: Number(packageData.Price)
+          Price: Number(packageData.Price),
+          CategoryIds: packageData.CategoryIDs || [] // Match backend DTO property name
         }
       );
       
@@ -86,7 +89,8 @@ class ServicePackageManagementService {
           PackageID: packageData.PackageID,
           Name: packageData.Name.trim(),
           Description: packageData.Description?.trim() || '',
-          Price: Number(packageData.Price)
+          Price: Number(packageData.Price),
+          CategoryIds: packageData.CategoryIDs || [] // Match backend DTO property name
         }
       );
       

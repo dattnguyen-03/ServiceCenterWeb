@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { 
   Card, Row, Col, Button, Tag, Spin, Typography, Steps, Input, 
-  Skeleton, Empty, ConfigProvider, Select, DatePicker, Space
+  Skeleton, Empty, ConfigProvider, Select, DatePicker, Space, Modal
 } from 'antd';
 import { 
   GiftOutlined, 
@@ -42,6 +42,8 @@ const ServicePackages: React.FC = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
+  const [selectedDescriptionPackage, setSelectedDescriptionPackage] = useState<ServicePackage | null>(null);
   
   // Removed payment method - payment will be done when quote is approved
 
@@ -79,6 +81,12 @@ const ServicePackages: React.FC = () => {
   
   const handleSelectPackage = (pkg: ServicePackage) => {
     setSelectedPackage(prev => prev?.packageID === pkg.packageID ? null : pkg);
+  };
+
+  const handleShowDescription = (pkg: ServicePackage, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection
+    setSelectedDescriptionPackage(pkg);
+    setDescriptionModalVisible(true);
   };
 
   const handleSubmitBooking = async () => {
@@ -293,7 +301,7 @@ const ServicePackages: React.FC = () => {
         <Title level={2}>Chọn Gói Dịch Vụ</Title>
         <Paragraph type="secondary">Các gói bảo dưỡng được thiết kế để phù hợp với mọi nhu cầu của bạn.</Paragraph>
       </div>
-      <Row gutter={[24, 24]} justify="center">
+      <Row gutter={[24, 24]} justify="center" style={{ display: 'flex', justifyContent: 'center' }}>
         {packages.map((pkg, idx) => {
           const isSelected = selectedPackage?.packageID === pkg.packageID;
           
@@ -356,10 +364,59 @@ const ServicePackages: React.FC = () => {
                 
                 {/* Content section */}
                 <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Title level={4} style={{ marginBottom: 8, fontWeight: 800, color: '#1f2937', fontSize: 20 }}>
-                    {pkg.name.replace('Gói ', '').replace('Bảo Dưỡng ', '')}
+                  <Title 
+                    level={4} 
+                    style={{ 
+                      marginBottom: 8, 
+                      fontWeight: 800, 
+                      color: '#1f2937', 
+                      fontSize: 20, 
+                      cursor: 'pointer',
+                      transition: 'color 0.3s'
+                    }}
+                    onClick={(e) => handleShowDescription(pkg, e)}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#2563eb'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#1f2937'}
+                  >
+                    {pkg.name}
                   </Title>
-                  <Paragraph type="secondary" style={{ minHeight: 50, fontSize: 14, color: '#6b7280', marginBottom: 16, flex: 1 }}>
+                  
+                  {/* Categories */}
+                  {pkg.categories && pkg.categories.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <Text type="secondary" style={{ fontSize: 12, marginBottom: 6, display: 'block', textAlign: 'center' }}>
+                        Bao gồm:
+                      </Text>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 6,
+                        justifyContent: pkg.categories.length === 1 ? 'center' : 'flex-start',
+                        alignItems: 'center'
+                      }}>
+                        {pkg.categories.map(category => (
+                          <Tag 
+                            key={category.categoryID} 
+                            color="blue" 
+                            style={{ 
+                              fontSize: 11, 
+                              padding: '3px 8px', 
+                              marginBottom: 4,
+                              borderRadius: 12,
+                              border: 'none',
+                              background: 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)',
+                              color: 'white',
+                              fontWeight: 500
+                            }}
+                          >
+                            {category.name}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Paragraph type="secondary" style={{ minHeight: 30, fontSize: 14, color: '#6b7280', marginBottom: 16, flex: 1, display: 'none' }}>
                     {pkg.description}
                   </Paragraph>
                   
@@ -787,6 +844,76 @@ const ServicePackages: React.FC = () => {
           </Space>
         </div>
       </div>
+
+      {/* Description Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <GiftOutlined style={{ color: '#2563eb' }} />
+            <span>Chi tiết gói dịch vụ</span>
+          </div>
+        }
+        open={descriptionModalVisible}
+        onCancel={() => setDescriptionModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDescriptionModalVisible(false)}>
+            Đóng
+          </Button>
+        ]}
+        width={600}
+      >
+        {selectedDescriptionPackage && (
+          <div>
+            <Title level={4} style={{ marginBottom: 16, color: '#1f2937' }}>
+              {selectedDescriptionPackage.name}
+            </Title>
+            
+            {/* Categories */}
+            {selectedDescriptionPackage.categories && selectedDescriptionPackage.categories.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                  Gói bao gồm:
+                </Text>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {selectedDescriptionPackage.categories.map(category => (
+                    <Tag 
+                      key={category.categoryID} 
+                      color="blue" 
+                      style={{ padding: '4px 8px', fontSize: 13 }}
+                    >
+                      {category.name}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                Mô tả chi tiết:
+              </Text>
+              <Paragraph style={{ fontSize: 14, lineHeight: 1.6 }}>
+                {selectedDescriptionPackage.description}
+              </Paragraph>
+            </div>
+
+            <div style={{ padding: 16, backgroundColor: '#f8fafc', borderRadius: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text strong>Giá gói:</Text>
+                <Text strong style={{ fontSize: 18, color: '#2563eb' }}>
+                  {selectedDescriptionPackage.price === 0 ? 'Liên hệ' : servicePackageService.formatPrice(selectedDescriptionPackage.price)}
+                </Text>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <Text type="secondary">Thời hạn:</Text>
+                <Text type="secondary">
+                  {servicePackageService.formatDuration(selectedDescriptionPackage.durationMonths)}
+                </Text>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </ConfigProvider>
   );
 };

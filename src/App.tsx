@@ -30,6 +30,7 @@ import TechnicianCertificationManagement from './components/admin/TechnicianCert
 import InventoryPartUsageCombined from './components/admin/InventoryPartUsageCombined';
 import StaffManagement from './components/admin/StaffManagement';
 import AdminServicePackageManagement from './components/admin/ServicePackageManagement';
+import CategoryManagement from './components/admin/CategoryManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
 import StaffServicePackageManagement from './components/staff/ServicePackageManagement';
 import StaffProfile from './components/staff/StaffProfile';
@@ -37,7 +38,6 @@ import ServiceProgress from './components/staff/ServiceProgress';
 import CustomerVehicleManagement from './components/staff/CustomerVehicleManagement';
 import Billing from './components/staff/Billing';
 import HomeRoute from './components/home/HomeRoute';
-import AppointmentBookingManagement from './components/customer/AppointmentBookingManagement';
 import TechnicianPartsView from './components/technician/PartsView';
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import StaffPartsView from './components/staff/PartsView';
@@ -111,11 +111,9 @@ const AppContent: React.FC = () => {
         <Route path="booking" element={<AppointmentBooking />} />
         <Route path="history" element={<ServiceHistory />} />
         <Route path="payment" element={<PaymentPage />} />
-        <Route path="profile" element={<div>Profile</div>} />
         <Route path="vehicles" element={<VehicleManagement />} />
         <Route path="vehicles/:vehicleId" element={<VehicleDetail />} />
         <Route path="service-packages" element={<ServicePackages />} />
-        <Route path="management-booking" element={<AppointmentBookingManagement />} />
         <Route path="quotes" element={<MyQuotes />} />
         <Route path="parts" element={<StaffPartsView />} />
         <Route path="messages" element={<ChatMessage />} />
@@ -137,6 +135,7 @@ const AppContent: React.FC = () => {
         <Route path="parts" element={<PartsManagement />} />
         <Route path="inventory" element={<InventoryPartUsageCombined />} />
         <Route path="service-packages" element={<AdminServicePackageManagement />} />
+        <Route path="categories" element={<CategoryManagement mode="management" />} />
         <Route path="service-centers" element={<ServiceCenterManagement />} />
         <Route path="service-orders" element={<ServiceOrderManagement />} />
         <Route path="service-checklists" element={<ServiceChecklistManagement />} />

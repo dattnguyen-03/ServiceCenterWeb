@@ -568,18 +568,74 @@ export interface CreatePartRequestRequest {
 }
 
 // Service Package Types
+// Service Package và Category Types
+export interface Category {
+  categoryID: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ServiceCategory {
+  serviceCategoryID: number;
+  packageID: number;
+  categoryID: number;
+  servicePackage?: ServicePackage;
+  category?: Category;
+}
+
 export interface ServicePackage {
   packageID: number;
   name: string;
   description: string;
   price: number;
-  durationMonths: number;
+  durationMonths?: number;
+  categories?: Category[]; // Categories liên kết với package
+  serviceCategories?: ServiceCategory[]; // Junction table records
 }
 
 export interface GetServicePackageResponse {
   success: boolean;
   data: ServicePackage[];
   message?: string;
+}
+
+// ServicePackage API Types
+export interface CreateServicePackageRequest {
+  Name: string;
+  Description: string;
+  Price: number;
+  CategoryIDs?: number[];
+}
+
+export interface EditServicePackageRequest {
+  PackageID: number;
+  Name: string;
+  Description: string;
+  Price: number;
+  CategoryIDs?: number[];
+}
+
+// Category API Types
+export interface CreateCategoryRequest {
+  name: string;
+  description?: string;
+}
+
+export interface EditCategoryRequest {
+  categoryID: number;
+  name: string;
+  description?: string;
+}
+
+export interface SearchCategoryRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface LoadCategoryByServiceRequest {
+  serviceID: number;
 }
 
 // Chat Message Types

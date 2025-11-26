@@ -81,10 +81,13 @@ const PartsUsage: React.FC = () => {
       setChecklists(data);
     } catch (error: any) {
       console.error('Error loading checklists:', error);
-      notification.error({
-        message: 'Lỗi tải checklist',
-        description: error.message || 'Không thể tải danh sách checklist'
-      });
+      // Only show error for actual errors, not "no data" cases
+      if (!error.message.includes('chưa có checklist nào')) {
+        notification.error({
+          message: 'Lỗi tải checklist',
+          description: error.message || 'Không thể tải danh sách checklist'
+        });
+      }
     } finally {
       setLoading(false);
     }

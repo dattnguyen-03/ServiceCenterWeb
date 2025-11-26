@@ -53,6 +53,22 @@ class HttpClient {
         try {
           const errorData = await response.json();
           console.log(`[API Error Response] ${response.status}`, errorData);
+          
+          // Handle "no data" cases as empty array instead of error
+          if (response.status === 404 && errorData.message) {
+            const noDataMessages = [
+              'Bạn chưa có checklist nào.',
+              'Không có checklist nào.',
+              'Chưa có dữ liệu.',
+              'Không tìm thấy dữ liệu.'
+            ];
+            
+            if (noDataMessages.some(msg => errorData.message.includes(msg))) {
+              console.log(`[API No Data] Returning empty array for: ${errorData.message}`);
+              return [];
+            }
+          }
+          
           errorMessage = errorData.message || errorMessage;
         } catch {
           // If JSON parsing fails, use default message

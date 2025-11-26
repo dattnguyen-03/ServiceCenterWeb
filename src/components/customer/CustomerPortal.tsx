@@ -33,22 +33,22 @@ const CustomerPortal: React.FC = () => {
   };
 
   const userMenuItems: MenuProps['items'] = [
-    {
-      key: 'profile',
-      label: (
-        <Link to="/customer/profile">
-          <SimpleMenuItem title="Trang cá nhân" description="Xem và sửa thông tin" />
-        </Link>
-      ),
-    },
-    {
-      key: 'booking',
-      label: (
-        <Link to="/customer/management-booking">
-          <SimpleMenuItem title="Lịch hẹn" description="Quản lý lịch hẹn của bạn" />
-        </Link>
-      ),
-    },
+    // {
+    //   key: 'profile',
+    //   label: (
+    //     <Link to="/customer/profile">
+    //       <SimpleMenuItem title="Trang cá nhân" description="Xem và sửa thông tin" />
+    //     </Link>
+    //   ),
+    // },
+    // {
+    //   key: 'booking',
+    //   label: (
+    //     <Link to="/customer/management-booking">
+    //       <SimpleMenuItem title="Lịch hẹn" description="Quản lý lịch hẹn của bạn" />
+    //     </Link>
+    //   ),
+    // },
     {
       type: 'divider',
     },

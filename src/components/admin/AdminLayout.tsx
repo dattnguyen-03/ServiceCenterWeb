@@ -18,6 +18,7 @@ import {
   IdcardOutlined,
   MessageOutlined,
   BellOutlined,
+  TagsOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -52,6 +53,11 @@ const AdminLayout: React.FC = () => {
       key: '/admin/service-packages',
       icon: <GiftOutlined />,
       label: <Link to="/admin/service-packages">Gói dịch vụ</Link>,
+    },
+    {
+      key: '/admin/categories',
+      icon: <TagsOutlined />,
+      label: <Link to="/admin/categories">Danh mục dịch vụ</Link>,
     },
     {
       key: '/admin/quotes',

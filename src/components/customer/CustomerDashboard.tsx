@@ -181,7 +181,7 @@ const CustomerDashboard: React.FC = () => {
       {/* Welcome Header */}
       <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-b-3xl shadow-lg mb-8">
         <Title level={2} className="!mb-1 !text-white">
-          Chào mừng trở lại, Nguyễn Văn A! 
+          Chào mừng trở lại, {user?.name || 'Khách hàng'}!
         </Title>
         <Text className="text-blue-100 text-lg">{formattedDate}</Text>
       </div>
