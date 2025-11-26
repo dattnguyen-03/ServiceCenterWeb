@@ -1,6 +1,7 @@
 import { httpClient } from './httpClient';
 import { ApiResponse } from '../types/api';
 
+// ✅ Individual checklist (legacy format)
 export interface ServiceChecklist {
   checklistID: number;
   orderID: number;
@@ -12,6 +13,24 @@ export interface ServiceChecklist {
   vehicleModel: string;
   centerName: string;
   createDate: string;
+}
+
+// ✅ Grouped checklist format (new)
+export interface ChecklistItem {
+  checklistID: number;
+  itemName: string;
+  status: string;
+  notes: string;
+}
+
+export interface ServiceChecklistGroup {
+  orderID: number;
+  appointmentID: number;
+  customerName: string;
+  vehicleModel: string;
+  centerName: string;
+  createDate: string;
+  checklistItems: ChecklistItem[];
 }
 
 export interface CreateServiceChecklistRequest {
@@ -29,10 +48,10 @@ export interface EditServiceChecklistRequest {
 }
 
 export const serviceChecklistService = {
-  // Get all service checklists (Admin/Staff only)
-  getAllChecklists: async (): Promise<ServiceChecklist[]> => {
+  // Get all service checklists (Admin/Staff only) - grouped format
+  getAllChecklists: async (): Promise<ServiceChecklistGroup[]> => {
     try {
-      const response = await httpClient.get<ServiceChecklist[]>('/GetServiceChecklistAPI');
+      const response = await httpClient.get<ServiceChecklistGroup[]>('/GetServiceChecklistAPI');
       
       // Backend returns array directly or wrapped in data
       let data: any[] = [];
@@ -44,7 +63,7 @@ export const serviceChecklistService = {
       }
       
       // If no data or error message
-      if (data.length === 0 && response && response.message && response.message.includes('Không có checklist')) {
+      if (data.length === 0 && response && (response as any).message && (response as any).message.includes('Không có checklist')) {
         return [];
       }
       

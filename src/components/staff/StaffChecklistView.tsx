@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Table, Card, Input, Tag, Modal, Descriptions, Statistic, Button, Row, Col } from "antd";
 import { FileTextOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { serviceChecklistService, ServiceChecklist } from "../../services/serviceChecklistService";
+import { serviceChecklistService, ServiceChecklistGroup } from "../../services/serviceChecklistService";
 import { showError } from "../../utils/sweetAlert";
 
 const StaffChecklistView: React.FC = () => {
-  const [checklists, setChecklists] = useState<ServiceChecklist[]>([]);
+  const [checklists, setChecklists] = useState<ServiceChecklistGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
-  const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklist | null>(null);
+  const [selectedChecklist, setSelectedChecklist] = useState<ServiceChecklistGroup | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const StaffChecklistView: React.FC = () => {
     }
   };
 
-  const handleViewDetail = (checklist: ServiceChecklist) => {
+  const handleViewDetail = (checklist: ServiceChecklistGroup) => {
     setSelectedChecklist(checklist);
     setIsDetailModalVisible(true);
   };
@@ -48,31 +48,43 @@ const StaffChecklistView: React.FC = () => {
     }
   };
 
-  const filteredChecklists = checklists.filter((checklist) => {
-    if (!checklist) return false;
+  const filteredChecklists = checklists.filter((checklistGroup) => {
+    if (!checklistGroup) return false;
     const search = searchText.toLowerCase();
-    const matchSearch = 
-      (checklist.customerName || '').toLowerCase().includes(search) ||
-      (checklist.vehicleModel || '').toLowerCase().includes(search) ||
-      (checklist.centerName || '').toLowerCase().includes(search) ||
-      (checklist.itemName || '').toLowerCase().includes(search) ||
-      (checklist.notes || '').toLowerCase().includes(search);
     
-    const matchStatus = statusFilter === 'all' || checklist.status === statusFilter;
+    // Search in group info
+    const groupMatch = 
+      (checklistGroup.customerName || '').toLowerCase().includes(search) ||
+      (checklistGroup.vehicleModel || '').toLowerCase().includes(search) ||
+      (checklistGroup.centerName || '').toLowerCase().includes(search);
     
-    return matchSearch && matchStatus;
+    // Search in checklist items
+    const itemsMatch = checklistGroup.checklistItems?.some(item => 
+      (item.itemName || '').toLowerCase().includes(search) ||
+      (item.notes || '').toLowerCase().includes(search) ||
+      getStatusInfo(item.status).text.toLowerCase().includes(search)
+    );
+    
+    // Status filter - check if any item matches the status filter
+    const matchStatus = statusFilter === 'all' || 
+      checklistGroup.checklistItems?.some(item => item.status === statusFilter);
+    
+    return (groupMatch || itemsMatch) && matchStatus;
   });
 
-  const okCount = filteredChecklists.filter(c => c.status === 'OK').length;
-  const notOkCount = filteredChecklists.filter(c => c.status === 'NotOK').length;
-  const needReplaceCount = filteredChecklists.filter(c => c.status === 'NeedReplace').length;
+  // Count statistics from all items in all groups
+  const allItems = filteredChecklists.flatMap(group => group.checklistItems || []);
+  const okCount = allItems.filter(item => item.status === 'OK').length;
+  const notOkCount = allItems.filter(item => item.status === 'NotOK').length;
+  const needReplaceCount = allItems.filter(item => item.status === 'NeedReplace').length;
 
-  const columns: ColumnsType<ServiceChecklist> = [
+  const columns: ColumnsType<ServiceChecklistGroup> = [
     {
-      title: "ID",
-      dataIndex: "checklistID",
-      key: "checklistID",
-      width: 80,
+      title: "Order ID",
+      dataIndex: "orderID",
+      key: "orderID",
+      width: 100,
+      render: (orderID) => <span style={{ fontWeight: 600, color: '#1f2937' }}>#{orderID}</span>
     },
     {
       title: "Khách hàng",
@@ -95,32 +107,44 @@ const StaffChecklistView: React.FC = () => {
       ellipsis: true,
     },
     {
-      title: "Hạng mục",
-      dataIndex: "itemName",
-      key: "itemName",
-      width: 200,
-      render: (text) => (
-        <Tag color="blue" style={{ borderRadius: 12 }}>
-          {text}
-        </Tag>
-      ),
+      title: "Danh sách hạng mục kiểm tra",
+      key: "checklistItems",
+      render: (_, record) => (
+        <div style={{ maxWidth: 300 }}>
+          {record.checklistItems?.map((item) => {
+            const statusInfo = getStatusInfo(item.status);
+            return (
+              <Tag 
+                key={item.checklistID}
+                color={statusInfo.color}
+                style={{ 
+                  marginBottom: 4, 
+                  borderRadius: 12,
+                  fontSize: '12px'
+                }}
+              >
+                {item.itemName} ({statusInfo.text})
+              </Tag>
+            );
+          })}
+        </div>
+      )
     },
     {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
+      title: "Tổng quan",
+      key: "summary",
       width: 120,
-      render: (status) => {
-        const { text, color } = getStatusInfo(status || '');
-        return <Tag color={color}>{text}</Tag>;
-      },
-    },
-    {
-      title: "Ghi chú",
-      dataIndex: "notes",
-      key: "notes",
-      ellipsis: true,
-      render: (text) => text || '-',
+      render: (_, record) => {
+        const items = record.checklistItems || [];
+        const okCount = items.filter(item => item.status === 'OK').length;
+        const totalCount = items.length;
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#059669', fontWeight: 600 }}>{okCount}/{totalCount}</div>
+            <div style={{ fontSize: '12px', color: '#6b7280' }}>OK</div>
+          </div>
+        );
+      }
     },
     {
       title: "Ngày tạo",
@@ -133,7 +157,7 @@ const StaffChecklistView: React.FC = () => {
       title: "Thao tác",
       key: "action",
       width: 100,
-      render: (_: any, record: ServiceChecklist) => (
+      render: (_: any, record: ServiceChecklistGroup) => (
         <Button
           type="text"
           icon={<EyeOutlined />}
@@ -278,35 +302,72 @@ const StaffChecklistView: React.FC = () => {
           style={{ top: 20 }}
         >
           {selectedChecklist && (
-            <Descriptions bordered column={1} labelStyle={{ fontWeight: 600, width: '40%' }}>
-              <Descriptions.Item label="ID">
-                #{selectedChecklist.checklistID}
-              </Descriptions.Item>
-              <Descriptions.Item label="Khách hàng">
-                {selectedChecklist.customerName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Xe">
-                {selectedChecklist.vehicleModel}
-              </Descriptions.Item>
-              <Descriptions.Item label="Trung tâm">
-                {selectedChecklist.centerName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Hạng mục">
-                <Tag color="blue">{selectedChecklist.itemName}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Trạng thái">
-                {(() => {
-                  const { text, color } = getStatusInfo(selectedChecklist.status || '');
-                  return <Tag color={color}>{text}</Tag>;
-                })()}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ghi chú">
-                {selectedChecklist.notes || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày tạo">
-                {new Date(selectedChecklist.createDate).toLocaleString('vi-VN')}
-              </Descriptions.Item>
-            </Descriptions>
+            <div>
+              <Descriptions bordered column={1} labelStyle={{ fontWeight: 600, width: '40%' }}>
+                <Descriptions.Item label="Order ID">
+                  #{selectedChecklist.orderID}
+                </Descriptions.Item>
+                <Descriptions.Item label="Appointment ID">
+                  #{selectedChecklist.appointmentID}
+                </Descriptions.Item>
+                <Descriptions.Item label="Khách hàng">
+                  {selectedChecklist.customerName}
+                </Descriptions.Item>
+                <Descriptions.Item label="Xe">
+                  {selectedChecklist.vehicleModel}
+                </Descriptions.Item>
+                <Descriptions.Item label="Trung tâm">
+                  {selectedChecklist.centerName}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ngày tạo">
+                  {new Date(selectedChecklist.createDate).toLocaleString('vi-VN')}
+                </Descriptions.Item>
+              </Descriptions>
+              
+              <div style={{ marginTop: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1f2937' }}>
+                  Danh sách hạng mục kiểm tra ({selectedChecklist.checklistItems?.length || 0} mục)
+                </h3>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {selectedChecklist.checklistItems?.map((item) => {
+                    const statusInfo = getStatusInfo(item.status);
+                    return (
+                      <Card 
+                        key={item.checklistID}
+                        size="small"
+                        style={{ 
+                          border: `1px solid ${
+                            statusInfo.color === 'green' ? '#10b981' :
+                            statusInfo.color === 'red' ? '#ef4444' :
+                            statusInfo.color === 'orange' ? '#f59e0b' : '#d1d5db'
+                          }`,
+                          borderRadius: '8px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#1f2937' }}>
+                              {item.itemName}
+                            </div>
+                            {item.notes && (
+                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                                {item.notes}
+                              </div>
+                            )}
+                          </div>
+                          <Tag 
+                            color={statusInfo.color}
+                            style={{ borderRadius: '8px', fontWeight: 600 }}
+                          >
+                            {statusInfo.text}
+                          </Tag>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
         </Modal>
       </div>
