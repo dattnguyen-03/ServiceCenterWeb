@@ -56,8 +56,8 @@ class CategoryService {
   // 🗑️ Xóa category
   async deleteCategory(categoryID: number): Promise<ApiResponse> {
     try {
-      const response = await httpClient.delete('/DeleteCategoryAPI', {
-        data: { categoryID }
+      const response = await httpClient.deleteWithBody('/DeleteCategoryAPI', {
+        CategoryID: categoryID
       });
       return response;
     } catch (error) {

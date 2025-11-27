@@ -87,7 +87,7 @@ const AdminLayout: React.FC = () => {
     {
       key: '/admin/inventory',
       icon: <DatabaseOutlined />,
-      label: <Link to="/admin/inventory">Kho & Sử Dụng Phụ Tùng</Link>,
+      label: <Link to="/admin/inventory">Kho </Link>,
     },
     {
       key: '/admin/staff',

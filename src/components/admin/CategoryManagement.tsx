@@ -10,7 +10,6 @@ import {
   message, 
   Typography, 
   Tag,
-  Popconfirm,
   Tooltip,
   Divider
 } from 'antd';
@@ -26,6 +25,7 @@ import {
 } from '@ant-design/icons';
 import { Category, CreateCategoryRequest, EditCategoryRequest } from '../../types/api';
 import { categoryService } from '../../services/categoryService';
+import { showSuccess, showError, showConfirm } from '../../utils/sweetAlert';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -100,18 +100,35 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({
       setModalVisible(false);
       form.resetFields();
       await loadCategories();
+      
+      showSuccess(
+        editingCategory ? 'Cập nhật thành công' : 'Tạo thành công',
+        editingCategory ? 'Đã cập nhật category' : 'Đã tạo category mới'
+      );
     } catch (error: any) {
-      message.error(error.message || 'Có lỗi xảy ra khi lưu category');
+      showError(
+        editingCategory ? 'Lỗi cập nhật' : 'Lỗi tạo mới',
+        error.message || 'Có lỗi xảy ra khi lưu category'
+      );
     }
   };
 
   const handleDeleteCategory = async (categoryID: number, categoryName: string) => {
+    const confirmed = await showConfirm(
+      'Xác nhận xóa category',
+      `Bạn có chắc chắn muốn xóa category "${categoryName}"?`,
+      'Xóa',
+      'Hủy'
+    );
+    
+    if (!confirmed) return;
+    
     try {
       await categoryService.deleteCategory(categoryID);
-      message.success(`Đã xóa category: ${categoryName}`);
+      showSuccess('Xóa thành công', `Đã xóa category: ${categoryName}`);
       await loadCategories();
     } catch (error: any) {
-      message.error(error.message || 'Không thể xóa category này');
+      showError('Lỗi xóa category', error.message || 'Không thể xóa category này');
     }
   };
 
@@ -196,20 +213,12 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({
             />
           </Tooltip>
           <Tooltip title="Xóa">
-            <Popconfirm
-              title="Xác nhận xóa"
-              description={`Bạn có chắc chắn muốn xóa category "${record.name}"?`}
-              onConfirm={() => handleDeleteCategory(record.categoryID, record.name)}
-              okText="Xóa"
-              cancelText="Hủy"
-              okType="danger"
-            >
-              <Button
-                type="link"
-                icon={<DeleteOutlined />}
-                className="text-red-500 hover:text-red-700"
-              />
-            </Popconfirm>
+            <Button
+              type="link"
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteCategory(record.categoryID, record.name)}
+              className="text-red-500 hover:text-red-700"
+            />
           </Tooltip>
         </Space>
       ),

@@ -29,16 +29,16 @@ const InventoryPartUsageCombined: React.FC = () => {
             ),
             children: <InventoryManagement />,
           },
-          {
-            key: 'usage',
-            label: (
-              <span>
-                <ToolOutlined style={{ marginRight: 8 }} />
-                Sử Dụng Phụ Tùng
-              </span>
-            ),
-            children: <PartUsageManagement />,
-          },
+          // {
+          //   key: 'usage',
+          //   label: (
+          //     <span>
+          //       <ToolOutlined style={{ marginRight: 8 }} />
+          //       Sử Dụng Phụ Tùng
+          //     </span>
+          //   ),
+          //   children: <PartUsageManagement />,
+          // },
         ]}
       />
     </div>
