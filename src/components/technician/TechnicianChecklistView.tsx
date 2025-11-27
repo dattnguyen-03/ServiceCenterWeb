@@ -7,6 +7,12 @@ import { serviceOrderService, ServiceOrder } from "../../services/serviceOrderSe
 import { message } from "antd";
 import { httpClient } from "../../services/httpClient";
 
+interface Category {
+  categoryID: number;
+  name: string;
+  description: string;
+}
+
 const TechnicianChecklistView: React.FC = () => {
   const [checklists, setChecklists] = useState<ServiceChecklistGroup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -127,6 +133,28 @@ const TechnicianChecklistView: React.FC = () => {
         console.log('Categories found from package:', mappedCategories);
         setSelectedOrderCategories(mappedCategories);
         
+        // Auto-select all categories by default
+        const allCategoryIds = mappedCategories.map((cat: Category) => cat.categoryID);
+        setSelectedCategories(allCategoryIds);
+        form.setFieldsValue({ categories: allCategoryIds });
+        
+        // Set default status 'OK' for all categories
+        const defaultStatuses: {[key: number]: string} = {};
+        allCategoryIds.forEach((id: number) => {
+          defaultStatuses[id] = 'OK';
+        });
+        setCategoryStatuses(defaultStatuses);
+        
+        // Trigger form validation
+        setTimeout(() => {
+          const formValues = form.getFieldsValue();
+          const isValid = !!formValues.orderID && 
+                        formValues.categories && 
+                        formValues.categories.length > 0 && 
+                        !!formValues.status;
+          setCreateFormValid(isValid);
+        }, 100);
+        
         if (mappedCategories.length === 0) {
           message.info('Service package này chưa có categories được cấu hình');
         }
@@ -160,6 +188,19 @@ const TechnicianChecklistView: React.FC = () => {
         
         console.log('Using fallback categories for serviceType:', serviceType);
         setSelectedOrderCategories(fallbackCategories);
+        
+        // Auto-select all fallback categories
+        const allCategoryIds = fallbackCategories.map((cat: Category) => cat.categoryID);
+        setSelectedCategories(allCategoryIds);
+        form.setFieldsValue({ categories: allCategoryIds });
+        
+        // Set default status 'OK' for all categories
+        const defaultStatuses: {[key: number]: string} = {};
+        allCategoryIds.forEach((id: number) => {
+          defaultStatuses[id] = 'OK';
+        });
+        setCategoryStatuses(defaultStatuses);
+        
         message.info(`Không tìm thấy package "${serviceType}" trong hệ thống, sử dụng categories mặc định`);
       }
 
@@ -168,11 +209,24 @@ const TechnicianChecklistView: React.FC = () => {
       console.error('Full error:', JSON.stringify(error, null, 2));
       
       // Fallback categories khi có lỗi API
-      setSelectedOrderCategories([
+      const errorFallbackCategories = [
         { categoryID: 1, name: 'Kiểm tra động cơ', description: 'Kiểm tra tình trạng động cơ' },
         { categoryID: 2, name: 'Thay lốp xe', description: 'Thay thế lốp xe mới' },
         { categoryID: 3, name: 'Bảo dưỡng định kỳ', description: 'Bảo dưỡng theo chu kỳ' }
-      ]);
+      ];
+      setSelectedOrderCategories(errorFallbackCategories);
+      
+      // Auto-select all error fallback categories
+      const allCategoryIds = errorFallbackCategories.map((cat: Category) => cat.categoryID);
+      setSelectedCategories(allCategoryIds);
+      form.setFieldsValue({ categories: allCategoryIds });
+      
+      // Set default status 'OK' for all categories
+      const defaultStatuses: {[key: number]: string} = {};
+      allCategoryIds.forEach((id: number) => {
+        defaultStatuses[id] = 'OK';
+      });
+      setCategoryStatuses(defaultStatuses);
       
       // Hiển thị warning message cho user
       if (error.response) {
@@ -885,7 +939,7 @@ const TechnicianChecklistView: React.FC = () => {
 
           {/* Categories từ Service Package */}
           <Form.Item
-            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Danh mục kiểm tra và trạng thái</span>}
+            label={<span style={{ fontWeight: 600, color: '#1f2937' }}>Hạng mục kiểm tra (tự động chọn tất cả)</span>}
             name="categories"
             rules={[{ required: true, message: "Vui lòng chọn ít nhất một danh mục" }]}
           >
@@ -897,109 +951,27 @@ const TechnicianChecklistView: React.FC = () => {
                 maxHeight: 400,
                 overflowY: 'auto'
               }}>
-                <div style={{ marginBottom: 16 }}>
-                  <Checkbox
-                    indeterminate={selectedCategories.length > 0 && selectedCategories.length < selectedOrderCategories.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        const allCategoryIds = selectedOrderCategories.map(cat => cat.categoryID);
-                        setSelectedCategories(allCategoryIds);
-                        form.setFieldsValue({ categories: allCategoryIds });
-                        // Set default status cho tất cả
-                        const defaultStatuses: {[key: number]: string} = {};
-                        allCategoryIds.forEach(id => {
-                          if (!categoryStatuses[id]) defaultStatuses[id] = 'OK';
-                        });
-                        setCategoryStatuses(prev => ({ ...prev, ...defaultStatuses }));
-                        
-                        // Force validation update ngay lập tức
-                        setTimeout(() => {
-                          const formValues = form.getFieldsValue();
-                          const isValid = !!formValues.orderID && 
-                                        formValues.categories && 
-                                        formValues.categories.length > 0 && 
-                                        !!formValues.status;
-                          
-                          console.log('Select all - Force validation:', {
-                            orderID: formValues.orderID,
-                            categories: formValues.categories,
-                            status: formValues.status,
-                            isValid
-                          });
-                          
-                          setCreateFormValid(isValid);
-                        }, 50);
-                      } else {
-                        setSelectedCategories([]);
-                        form.setFieldsValue({ categories: [] });
-                      }
-                    }}
-                    checked={selectedCategories.length === selectedOrderCategories.length}
-                    style={{ fontWeight: 600, color: '#1f2937' }}
-                  >
-                    Chọn tất cả ({selectedCategories.length}/{selectedOrderCategories.length})
-                  </Checkbox>
+                <div style={{ marginBottom: 16, fontWeight: 600, color: '#1f2937' }}>
+                  Tất cả hạng mục được chọn mặc định ({selectedOrderCategories.length} hạng mục)
                 </div>
                 
                 <div style={{ display: 'grid', gap: 16 }}>
                   {selectedOrderCategories.map(category => {
-                    const isSelected = selectedCategories.includes(category.categoryID);
                     return (
                       <div 
                         key={category.categoryID}
                         style={{
-                          border: isSelected ? '2px solid #06b6d4' : '1px solid #d1d5db',
+                          border: '2px solid #06b6d4',
                           borderRadius: 12,
                           padding: 16,
-                          background: isSelected ? '#f0f9ff' : '#f9fafb',
-                          transition: 'all 0.2s'
+                          background: '#f0f9ff'
                         }}
                       >
                         <div style={{ marginBottom: 12 }}>
-                          <Checkbox 
-                            checked={isSelected}
-                            onChange={(e) => {
-                              const newSelected = e.target.checked 
-                                ? [...selectedCategories, category.categoryID]
-                                : selectedCategories.filter(id => id !== category.categoryID);
-                              
-                              setSelectedCategories(newSelected);
-                              form.setFieldsValue({ categories: newSelected });
-                              
-                              // Set default status khi chọn category
-                              if (e.target.checked && !categoryStatuses[category.categoryID]) {
-                                const newStatuses = {
-                                  ...categoryStatuses,
-                                  [category.categoryID]: 'OK'
-                                };
-                                setCategoryStatuses(newStatuses);
-                                
-                                // Trigger validation ngay lập tức
-                                setTimeout(() => {
-                                  const values = form.getFieldsValue();
-                                  const isValid = !!values.orderID && 
-                                                values.categories && 
-                                                values.categories.length > 0 && 
-                                                !!values.status;
-                                  
-                                  console.log('Individual select - Force validation:', {
-                                    orderID: values.orderID,
-                                    categories: values.categories,
-                                    status: values.status,
-                                    isValid,
-                                    isChecked: e.target.checked
-                                  });
-                                  
-                                  setCreateFormValid(isValid);
-                                }, 50);
-                              }
-                            }}
-                            style={{ fontWeight: 600, fontSize: 16 }}
-                          >
-                            <span style={{ color: '#1f2937' }}>{category.name}</span>
-                          </Checkbox>
+                          <div style={{ fontWeight: 600, fontSize: 16, color: '#1f2937' }}>
+                            ✓ {category.name}
+                          </div>
                           <div style={{ 
-                            marginLeft: 24, 
                             color: '#6b7280', 
                             fontSize: 14,
                             marginTop: 4 
@@ -1008,58 +980,39 @@ const TechnicianChecklistView: React.FC = () => {
                           </div>
                         </div>
                         
-                        {isSelected && (
-                          <div style={{ 
-                            marginLeft: 24,
-                            marginTop: 12,
-                            paddingTop: 12,
-                            borderTop: '1px solid #e5e7eb'
-                          }}>
-                            <div style={{ width: '200px' }}>
-                              <label style={{ 
-                                display: 'block', 
-                                fontSize: 12, 
-                                fontWeight: 600,
-                                color: '#374151',
-                                marginBottom: 4
-                              }}>
-                                Trạng thái
-                              </label>
-                              <Select
-                                value={categoryStatuses[category.categoryID] || 'OK'}
-                                onChange={(value) => {
-                                  setCategoryStatuses(prev => {
-                                    const newStatuses = {
-                                      ...prev,
-                                      [category.categoryID]: value
-                                    };
-                                    
-                                    // Trigger validation update đơn giản
-                                    setTimeout(() => {
-                                      const formValues = form.getFieldsValue();
-                                      const isValid = !!formValues.orderID && 
-                                                    formValues.categories && 
-                                                    formValues.categories.length > 0 && 
-                                                    !!formValues.status;
-                                      
-                                      console.log('Status change - Force validation:', isValid);
-                                      setCreateFormValid(isValid);
-                                    }, 50);
-                                    
-                                    return newStatuses;
-                                  });
-                                }}
-                                size="small"
-                                style={{ width: '100%' }}
-                                options={[
-                                  { value: 'OK', label: '✓ OK' },
-                                  { value: 'NotOK', label: '❌ Not OK' },
-                                  { value: 'NeedReplace', label: '⚠ Cần thay thế' }
-                                ]}
-                              />
-                            </div>
+                        <div style={{ 
+                          marginTop: 12,
+                          paddingTop: 12,
+                          borderTop: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ width: '200px' }}>
+                            <label style={{ 
+                              display: 'block', 
+                              fontSize: 12, 
+                              fontWeight: 600,
+                              color: '#374151',
+                              marginBottom: 4
+                            }}>
+                              Trạng thái
+                            </label>
+                            <Select
+                              value={categoryStatuses[category.categoryID] || 'OK'}
+                              onChange={(value) => {
+                                setCategoryStatuses(prev => ({
+                                  ...prev,
+                                  [category.categoryID]: value
+                                }));
+                              }}
+                              size="small"
+                              style={{ width: '100%' }}
+                              options={[
+                                { value: 'OK', label: '✓ OK' },
+                                { value: 'NotOK', label: '❌ Not OK' },
+                                { value: 'NeedReplace', label: '⚠ Cần thay thế' }
+                              ]}
+                            />
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
