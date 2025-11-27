@@ -226,25 +226,25 @@ const StaffManagement: React.FC = () => {
         </div>
       ),
     },
-    {
-      title: 'Chuyên môn',
-      dataIndex: 'specialization',
-      key: 'specialization',
-      width: 200,
-      render: (specializations: string[]) => (
-        <div className="flex flex-wrap gap-1">
-          {specializations.length > 0 ? (
-            specializations.map(spec => (
-              <Tag key={spec} color="purple" className="text-xs">
-                {spec}
-              </Tag>
-            ))
-          ) : (
-            <Text type="secondary" className="text-xs">Chưa có</Text>
-          )}
-        </div>
-      ),
-    },
+    // {
+    //   title: 'Chuyên môn',
+    //   dataIndex: 'specialization',
+    //   key: 'specialization',
+    //   width: 200,
+    //   render: (specializations: string[]) => (
+    //     <div className="flex flex-wrap gap-1">
+    //       {specializations.length > 0 ? (
+    //         specializations.map(spec => (
+    //           <Tag key={spec} color="purple" className="text-xs">
+    //             {spec}
+    //           </Tag>
+    //         ))
+    //       ) : (
+    //         <Text type="secondary" className="text-xs">Chưa có</Text>
+    //       )}
+    //     </div>
+    //   ),
+    // },
     {
       title: 'Liên hệ',
       key: 'contact',
@@ -274,7 +274,7 @@ const StaffManagement: React.FC = () => {
           'on-leave': 'warning',
         };
         const texts = {
-          active: 'Đang làm việc',
+          active: 'Đang hoạt động',
           'off-duty': 'Ngoài ca',
           'on-leave': 'Nghỉ phép',
         };
@@ -861,7 +861,7 @@ const StaffManagement: React.FC = () => {
             </div>
             
             <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-2 mb-3">
+              {/* <div className="flex items-center space-x-2 mb-3">
                 <TeamOutlined className="text-purple-500" />
                 <Text strong className="text-gray-700">Thông tin bổ sung</Text>
               </div>
@@ -892,7 +892,7 @@ const StaffManagement: React.FC = () => {
                     {selectedStaff.schedule.length} ca làm việc
                   </Text>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
